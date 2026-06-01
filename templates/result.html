@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+  <title>Prediction Results | Detexis AI</title>
+  <meta name="description" content="View network intrusion detection prediction results, confidence scores, and recommendations dynamically calculated by Detexis AI.">
+
+  <!-- Favicons -->
+  <link href="../static/assets/img/favicon.png" rel="icon">
+  <link href="../static/assets/img/apple-touch-icon.png" rel="apple-touch-icon">
+
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com" rel="preconnect">
+  <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&family=Raleway:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Ubuntu:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400;1,500;1,700&display=swap" rel="stylesheet">
+
+  <!-- Vendor CSS Files -->
+  <link href="../static/assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+  <link href="../static/assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
+  <link href="../static/assets/vendor/aos/aos.css" rel="stylesheet">
+  <link href="../static/assets/vendor/glightbox/css/glightbox.min.css" rel="stylesheet">
+  <link href="../static/assets/vendor/swiper/swiper-bundle.min.css" rel="stylesheet">
+
+  <!-- Main CSS File -->
+  <link href="../static/assets/css/main.css" rel="stylesheet">
+
+  <style>
+    @keyframes pulse-danger {
+      0% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.4); }
+      70% { box-shadow: 0 0 0 20px rgba(220, 53, 69, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0); }
+    }
+    @keyframes pulse-success {
+      0% { box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.4); }
+      70% { box-shadow: 0 0 0 20px rgba(40, 167, 69, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(40, 167, 69, 0); }
+    }
+    .gauge-container { position: relative; width: 200px; height: 100px; margin: 0 auto; overflow: hidden; }
+    .gauge-bg { width: 200px; height: 100px; border-radius: 100px 100px 0 0; background: #e6e6e6; position: absolute; }
+    .gauge-fill { width: 200px; height: 100px; border-radius: 100px 100px 0 0; background: linear-gradient(to right, #dc3545, #ffc107, #28a745); position: absolute; transform-origin: center bottom; }
+    .gauge-cover { width: 160px; height: 80px; border-radius: 80px 80px 0 0; background: white; position: absolute; bottom: 0; left: 20px; }
+    .gauge-value { position: absolute; bottom: 5px; left: 0; right: 0; text-align: center; font-size: 1.5rem; font-weight: 700; }
+    .btn-gradient-primary { transition: transform 0.3s ease, box-shadow 0.3s ease; }
+    .btn-gradient-primary:hover { transform: scale(1.1); box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.2); }
+    .input-summary-card { background: linear-gradient(135deg, #f8f9fa, #e9ecef); border-radius: 12px; padding: 20px; }
+    .input-summary-card .badge { font-size: 0.85rem; padding: 6px 12px; }
+  </style>
+</head>
+
+<body class="predicted-results-page">
+
+  <header id="header" class="header d-flex align-items-center sticky-top">
+    <div class="container-fluid container-xl position-relative d-flex align-items-center">
+
+      <a href="/home" class="logo d-flex align-items-center me-auto">
+        <h1 class="sitename">Detexis</h1>
+      </a>
+
+      <nav id="navmenu" class="navmenu">
+        <ul>
+          <li><a href="/home">Prediction</a></li>
+          <li><a href="/about">Graphs</a></li>
+          <li><a href="../static/Notebook.html">Notebook</a></li>
+        </ul>
+        <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
+      </nav>
+
+      <a class="btn-getstarted" href="/logout">Log Out</a>
+
+    </div>
+  </header>
+
+  <main class="main">
+
+    <!-- Page Title -->
+    <div class="page-title" data-aos="fade-down">
+      <div class="container d-lg-flex justify-content-between align-items-center">
+        <h1 class="mb-2 mb-lg-0">Predicted Results</h1>
+        <nav class="breadcrumbs">
+          <ol>
+            <li><a href="/home">Prediction</a></li>
+            <li class="current">Predicted Results</li>
+          </ol>
+        </nav>
+      </div>
+    </div><!-- End Page Title -->
+
+    <!-- Predicted Results Section -->
+    <section id="predicted-results" class="predicted-results section">
+      <div class="container" data-aos="fade-up" data-aos-delay="100">
+
+        <!-- Large Animated Threat Indicator -->
+        {% if predicted_result == 'Threat' %}
+        <div class="text-center mb-4" data-aos="zoom-in">
+          <div style="width: 120px; height: 120px; border-radius: 50%; background: linear-gradient(135deg, #dc3545, #ff6b6b); margin: 0 auto; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 30px rgba(220, 53, 69, 0.4); animation: pulse-danger 2s infinite;">
+            <i class="bi bi-exclamation-triangle-fill" style="font-size: 3rem; color: white;"></i>
+          </div>
+          <h2 class="mt-3 fw-bold" style="color: #dc3545;">⚠️ Threat Detected</h2>
+        </div>
+        {% else %}
+        <div class="text-center mb-4" data-aos="zoom-in">
+          <div style="width: 120px; height: 120px; border-radius: 50%; background: linear-gradient(135deg, #28a745, #6dd5a0); margin: 0 auto; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 30px rgba(40, 167, 69, 0.4); animation: pulse-success 2s infinite;">
+            <i class="bi bi-shield-check" style="font-size: 3rem; color: white;"></i>
+          </div>
+          <h2 class="mt-3 fw-bold" style="color: #28a745;">✅ Network Secure</h2>
+        </div>
+        {% endif %}
+
+        <div class="row gy-4">
+
+          <!-- Confidence Gauge Section -->
+          <div class="col-lg-6">
+            <div class="text-center" data-aos="zoom-in" data-aos-delay="100">
+              <h3 class="text-success fw-bold">Confidence Score</h3>
+              <div class="gauge-container">
+                <div class="gauge-bg"></div>
+                <div class="gauge-fill" style="transform: rotate({{ confidence_score / 100 * 180 - 180 }}deg);"></div>
+                <div class="gauge-cover"></div>
+                <div class="gauge-value" style="color: {% if confidence_score >= 90 %}#28a745{% elif confidence_score >= 70 %}#ffc107{% else %}#dc3545{% endif %}">{{ confidence_score }}%</div>
+              </div>
+              <p class="mt-2 text-muted">{% if confidence_score >= 90 %}Highly confident{% elif confidence_score >= 70 %}Moderately confident{% else %}Low confidence{% endif %}</p>
+            </div>
+          </div>
+
+          <!-- Predicted Result Section -->
+          <div class="col-lg-6">
+            <div class="predicted-result text-center" data-aos="fade-up" data-aos-delay="200">
+              <h3 class="fw-bold" style="{% if predicted_result == 'Threat' %}color: #dc3545;{% else %}color: #28a745;{% endif %}">Predicted Result</h3>
+              <p class="fs-5">
+                {% if predicted_result == 'Threat' %}
+                  <i class="bi bi-exclamation-triangle-fill" style="color: #dc3545;"></i>
+                {% else %}
+                  <i class="bi bi-check-circle-fill" style="color: #28a745;"></i>
+                {% endif %}
+                {% if predicted_result == 'Threat' %}
+                  <span style="color: #dc3545;">The intrusion detection model predicts a potential threat.</span>
+                {% else %}
+                  <span style="color: #28a745;">The intrusion detection model predicts no threat detected.</span>
+                {% endif %}
+              </p>
+              <p class="text-muted">
+                <strong>Confidence Score:</strong> {{ confidence_score }}%
+              </p>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="row gy-4 mt-4">
+
+          <!-- Result Info Section -->
+          <div class="col-lg-6">
+            <div class="results-info" data-aos="fade-up" data-aos-delay="300">
+              <h3 class="text-info fw-bold">Result Details</h3>
+              <ul class="list-group">
+                <li class="list-group-item"><strong>Model Accuracy:</strong> <span class="text-success">{{ accuracy }}%</span></li>
+                <li class="list-group-item"><strong>Precision:</strong> <span class="text-primary">{{ precision }}%</span></li>
+                <li class="list-group-item"><strong>Recall:</strong> <span class="text-warning">{{ recall }}%</span></li>
+                <li class="list-group-item"><strong>F1 Score:</strong> <span class="text-danger">{{ f1_score }}%</span></li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- Recommendations Section -->
+          <div class="col-lg-6">
+            <div class="recommendations" data-aos="fade-up" data-aos-delay="400">
+              <h3 class="text-warning fw-bold">Recommendations</h3>
+              <ul class="list-group">
+                {% if predicted_result == 'Threat' %}
+                  <li class="list-group-item">Enhance network security by implementing additional firewalls.</li>
+                  <li class="list-group-item">Monitor suspicious activity using advanced analytics tools.</li>
+                  <li class="list-group-item">Regularly update intrusion detection models for improved accuracy.</li>
+                {% else %}
+                  <li class="list-group-item">Continue monitoring network activity for any unusual patterns.</li>
+                  <li class="list-group-item">Ensure regular updates to security protocols.</li>
+                {% endif %}
+              </ul>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Input Summary Section -->
+        {% if input_values %}
+        <div class="row mt-4">
+          <div class="col-12">
+            <div class="input-summary-card" data-aos="fade-up" data-aos-delay="500">
+              <h3 class="text-secondary fw-bold mb-3"><i class="bi bi-list-check me-2"></i>Your Input Summary</h3>
+              <div class="d-flex flex-wrap gap-2">
+                {% for key, value in input_values.items() %}
+                <span class="badge bg-primary">{{ key }}: {{ value }}</span>
+                {% endfor %}
+              </div>
+            </div>
+          </div>
+        </div>
+        {% endif %}
+
+        <!-- Try Again Button -->
+        <div class="row mt-4">
+          <div class="col-12 text-center">
+            <a href="/home"><button class="btn btn-lg btn-gradient-primary" data-aos="zoom-in" data-aos-delay="500" style="background: linear-gradient(45deg, #4caf50, #2196f3); color: white; border-radius: 25px;">
+              <i class="bi bi-arrow-repeat me-2"></i> Try Again
+            </button></a>
+          </div>
+        </div>
+
+      </div>
+    </section><!-- /Predicted Results Section -->
+
+  </main>
+
+   <footer id="footer" class="footer">
+    <div class="container copyright text-center mt-4">
+      <p>© <span>Copyright</span> <strong class="px-1 sitename">Detexis</strong> <span>All Rights Reserved</span></p>
+      <div class="credits">
+        Designed by <a href="#">& </a> Distributed by <a href="#">Detexis</a>
+      </div>
+    </div>
+
+  </footer>
+
+  <!-- Scroll Top -->
+  <a href="#" id="scroll-top" class="scroll-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
+
+  <!-- Preloader -->
+  <div id="preloader"></div>
+
+  <!-- Vendor JS Files -->
+  <script src="../static/assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script src="../static/assets/vendor/aos/aos.js"></script>
+  <script src="../static/assets/vendor/glightbox/js/glightbox.min.js"></script>
+  <script src="../static/assets/vendor/swiper/swiper-bundle.min.js"></script>
+
+  <!-- Main JS File -->
+  <script src="../static/assets/js/main.js"></script>
+
+</body>
+
+</html>

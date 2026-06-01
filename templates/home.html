@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+  <title>Prediction Dashboard | Detexis AI</title>
+  <meta name="description" content="Predict network intrusion threats using Detexis AI. Enter network traffic parameters and get instant threat analysis with confidence scores.">
+  <meta name="keywords" content="intrusion detection, cybersecurity, machine learning, Detexis">
+
+  <!-- Favicons -->
+  <link href="../static/assets/img/favicon.png" rel="icon">
+  <link href="../static/assets/img/apple-touch-icon.png" rel="apple-touch-icon">
+
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com" rel="preconnect">
+  <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&family=Raleway:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Ubuntu:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400;1,500;1,700&display=swap" rel="stylesheet">
+
+  <!-- Vendor CSS Files -->
+  <link href="../static/assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+  <link href="../static/assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
+  <link href="../static/assets/vendor/aos/aos.css" rel="stylesheet">
+  <link href="../static/assets/vendor/glightbox/css/glightbox.min.css" rel="stylesheet">
+  <link href="../static/assets/vendor/swiper/swiper-bundle.min.css" rel="stylesheet">
+
+  <!-- Main CSS File -->
+  <link href="../static/assets/css/main.css" rel="stylesheet">
+
+</head>
+
+<body class="index-page">
+
+  <header id="header" class="header d-flex align-items-center sticky-top">
+    <div class="container-fluid container-xl position-relative d-flex align-items-center">
+
+      <a href="/home" class="logo d-flex align-items-center me-auto">
+        <h1 class="sitename">Detexis</h1>
+      </a>
+
+      <nav id="navmenu" class="navmenu">
+        <ul>
+          <li><a href="/home" class="active">Prediction</a></li>
+          <li><a href="/about">Graphs</a></li>
+          <li><a href="../static/Notebook.html">Notebook</a></li>
+        </ul>
+        <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
+      </nav>
+
+      <a class="btn-getstarted" href="/logout">Log Out</a>
+
+    </div>
+  </header>
+
+  <main class="main">
+
+    <!-- Hero Section -->
+    <section id="hero" class="hero section">
+
+      <div class="container">
+        <div class="row gy-4">
+          <div class="col-lg-6 order-2 order-lg-1 d-flex flex-column justify-content-center" data-aos="fade-up">
+            <h1>Detexis: Intrusion Detection in Enterprise Networks</h1>
+            <p>Leveraging AI and Machine Learning to enhance cybersecurity and protect enterprise networks from threats.</p>
+            <div class="d-flex">
+              <a href="#services" class="btn-get-started">Get Started</a>
+            </div>
+          </div>
+          <div class="col-lg-6 order-1 order-lg-2 hero-img" data-aos="zoom-out" data-aos-delay="100">
+            <img src="../static/assets/img/hero-img.png" class="img-fluid animated" alt="">
+          </div>
+        </div>
+      </div>
+
+    </section><!-- /Hero Section -->
+
+    <!-- Featured Services Section -->
+    <section id="featured-services" class="featured-services section">
+
+      <div class="container">
+
+        <div class="row gy-4">
+
+          <div class="col-lg-4 d-flex" data-aos="fade-up" data-aos-delay="100">
+            <div class="service-item position-relative">
+              <div class="icon"><i class="bi bi-shield-lock icon"></i></div>
+              <h4><a href="" class="stretched-link">Real-Time Detection</a></h4>
+              <p>Implementing real-time intrusion detection to safeguard enterprise networks from evolving threats.</p>
+            </div>
+          </div><!-- End Service Item -->
+
+          <div class="col-lg-4 d-flex" data-aos="fade-up" data-aos-delay="200">
+            <div class="service-item position-relative">
+              <div class="icon"><i class="bi bi-bar-chart-line icon"></i></div>
+              <h4><a href="" class="stretched-link">AI-Driven Analytics</a></h4>
+              <p>Leveraging AI and Machine Learning to analyze network traffic and identify potential vulnerabilities.</p>
+            </div>
+          </div><!-- End Service Item -->
+
+          <div class="col-lg-4 d-flex" data-aos="fade-up" data-aos-delay="300">
+            <div class="service-item position-relative">
+              <div class="icon"><i class="bi bi-cloud-check icon"></i></div>
+              <h4><a href="" class="stretched-link">Scalable Solutions</a></h4>
+              <p>Providing scalable and adaptive security solutions tailored for enterprise environments.</p>
+            </div>
+          </div><!-- End Service Item -->
+
+        </div>
+
+      </div>
+
+    </section><!-- /Featured Services Section -->
+
+
+
+    <!-- Services Section -->
+    <section id="services" class="services section light-background">
+
+      <!-- Section Title -->
+      <div class="container section-title" data-aos="fade-up">
+        <span>Prediction</span>
+        <h2>Prediction</h2>
+        <p>Provide your inputs below:</p>
+      </div><!-- End Section Title -->
+
+      <form action="/predict" method="post">
+        <div class="container">
+
+          <div class="row gy-3">
+
+            <div class="col-md-4" data-aos="fade-up" data-aos-delay="100">
+              <div class="service-item position-relative shadow-lg p-4 rounded bg-light">
+                <label for="input1" class="fw-bold text-primary">Network Packet Size <i class="bi bi-info-circle" title="Size of the network packet in bytes (0-2000)" style="cursor: help; font-size: 0.85rem;"></i></label>
+                <input type="number" id="input1" name="input1" class="form-control border-primary" min="0" max="2000" step="1" placeholder="e.g. 599" required>
+              </div>
+            </div><!-- End Input Item -->
+
+            <div class="col-md-4" data-aos="fade-up" data-aos-delay="200">
+              <div class="service-item position-relative shadow-lg p-4 rounded bg-light">
+                <label for="input2" class="fw-bold text-primary">Protocol Type <i class="bi bi-info-circle" title="Network protocol: ICMP, TCP, or UDP" style="cursor: help; font-size: 0.85rem;"></i></label>
+                <select id="input2" name="input2" class="form-control border-primary" required>
+                  <option value="">Select Option</option>
+                  <option value="0">ICMP</option>
+                  <option value="1">TCP</option>
+                  <option value="2">UDP</option>
+                </select>
+              </div>
+            </div><!-- End Input Item -->
+
+            <div class="col-md-4" data-aos="fade-up" data-aos-delay="300">
+              <div class="service-item position-relative shadow-lg p-4 rounded bg-light">
+                <label for="input3" class="fw-bold text-primary">Login Attempts <i class="bi bi-info-circle" title="Number of login attempts in this session" style="cursor: help; font-size: 0.85rem;"></i></label>
+                <input type="number" id="input3" name="input3" class="form-control border-primary" min="0" max="20" step="1" placeholder="e.g. 4" required>
+              </div>
+            </div><!-- End Input Item -->
+
+            <div class="col-md-4" data-aos="fade-up" data-aos-delay="400">
+              <div class="service-item position-relative shadow-lg p-4 rounded bg-light">
+                <label for="input4" class="fw-bold text-primary">Session Duration <i class="bi bi-info-circle" title="Duration of the session in seconds" style="cursor: help; font-size: 0.85rem;"></i></label>
+                <input type="number" id="input4" name="input4" class="form-control border-primary" min="0" max="10000" step="0.01" placeholder="e.g. 492.98" required>
+              </div>
+            </div><!-- End Input Item -->
+
+            <div class="col-md-4" data-aos="fade-up" data-aos-delay="500">
+              <div class="service-item position-relative shadow-lg p-4 rounded bg-light">
+                <label for="input5" class="fw-bold text-primary">Encryption Used <i class="bi bi-info-circle" title="Encryption algorithm used: AES, DES, or None" style="cursor: help; font-size: 0.85rem;"></i></label>
+                <select id="input5" name="input5" class="form-control border-primary" required>
+                  <option value="">Select Option</option>
+                  <option value="0">AES</option>
+                  <option value="1">DES</option>
+                  <option value="2">None</option>
+                </select>
+              </div>
+            </div><!-- End Input Item -->
+
+            <div class="col-md-4" data-aos="fade-up" data-aos-delay="600">
+              <div class="service-item position-relative shadow-lg p-4 rounded bg-light">
+                <label for="input6" class="fw-bold text-primary">IP Reputation Score <i class="bi bi-info-circle" title="IP reputation score from 0 (bad) to 1 (good)" style="cursor: help; font-size: 0.85rem;"></i></label>
+                <input type="number" id="input6" name="input6" class="form-control border-primary" min="0" max="1" step="0.01" placeholder="e.g. 0.61" required>
+              </div>
+            </div><!-- End Input Item -->
+
+            <div class="col-md-4" data-aos="fade-up" data-aos-delay="700">
+              <div class="service-item position-relative shadow-lg p-4 rounded bg-light">
+                <label for="input7" class="fw-bold text-primary">Failed Logins <i class="bi bi-info-circle" title="Number of failed login attempts" style="cursor: help; font-size: 0.85rem;"></i></label>
+                <input type="number" id="input7" name="input7" class="form-control border-primary" min="0" max="10" step="1" placeholder="e.g. 1" required>
+              </div>
+            </div><!-- End Input Item -->
+
+            <div class="col-md-4" data-aos="fade-up" data-aos-delay="800">
+              <div class="service-item position-relative shadow-lg p-4 rounded bg-light">
+                <label for="input8" class="fw-bold text-primary">Browser Type <i class="bi bi-info-circle" title="Browser used for this session" style="cursor: help; font-size: 0.85rem;"></i></label>
+                <select id="input8" name="input8" class="form-control border-primary" required>
+                  <option value="">Select Option</option>
+                  <option value="0">Chrome</option>
+                  <option value="1">Edge</option>
+                  <option value="2">Firefox</option>
+                  <option value="3">Safari</option>
+                  <option value="4">Unknown</option>
+                </select>
+              </div>
+            </div><!-- End Input Item -->
+
+            <div class="col-md-4" data-aos="fade-up" data-aos-delay="900">
+              <div class="service-item position-relative shadow-lg p-4 rounded bg-light">
+                <label for="input9" class="fw-bold text-primary">Unusual Time Access <i class="bi bi-info-circle" title="1 if accessed during unusual hours, 0 otherwise" style="cursor: help; font-size: 0.85rem;"></i></label>
+                <input type="number" id="input9" name="input9" class="form-control border-primary" min="0" max="1" step="1" placeholder="0 or 1" required>
+              </div>
+            </div><!-- End Input Item -->
+          </div>
+
+      <div class="row mt-4">
+  <div class="col-12 text-center">
+    <button type="submit" class="btn btn-success btn-lg px-5 py-3" data-aos="zoom-in" data-aos-delay="100">
+      <i class="bi bi-send-fill me-2"></i> Submit
+    </button>
+    <button type="button" class="btn btn-outline-primary btn-lg px-5 py-3 ms-3" onclick="loadSampleData()" data-aos="zoom-in" data-aos-delay="200">
+      <i class="bi bi-database-fill me-2"></i> Load Sample
+    </button>
+  </div>
+</div>
+
+        </div>
+      </form>
+
+    </section><!-- /Services Section -->
+
+
+  </main>
+
+  <footer id="footer" class="footer">
+
+    <div class="container copyright text-center mt-4">
+      <p>© <span>Copyright</span> <strong class="px-1 sitename">Detexis</strong> <span>All Rights Reserved</span></p>
+      <div class="credits">
+        Designed by <a href="#">& </a> Distributed by <a href="#">Detexis</a>
+      </div>
+    </div>
+
+  </footer>
+
+  <!-- Scroll Top -->
+  <a href="#" id="scroll-top" class="scroll-top d-flex align-items-center justify-content-center"><i
+      class="bi bi-arrow-up-short"></i></a>
+
+  <!-- Preloader -->
+  <div id="preloader"></div>
+
+  <!-- Vendor JS Files -->
+  <script src="../static/assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script src="../static/assets/vendor/php-email-form/validate.js"></script>
+  <script src="../static/assets/vendor/aos/aos.js"></script>
+  <script src="../static/assets/vendor/glightbox/js/glightbox.min.js"></script>
+  <script src="../static/assets/vendor/purecounter/purecounter_vanilla.js"></script>
+  <script src="../static/assets/vendor/imagesloaded/imagesloaded.pkgd.min.js"></script>
+  <script src="../static/assets/vendor/isotope-layout/isotope.pkgd.min.js"></script>
+  <script src="../static/assets/vendor/swiper/swiper-bundle.min.js"></script>
+
+  <!-- Main JS File -->
+  <script src="../static/assets/js/main.js"></script>
+
+  <!-- Load Sample Data -->
+  <script>
+  function loadSampleData() {
+    document.getElementById('input1').value = '599';
+    document.getElementById('input2').value = '1';
+    document.getElementById('input3').value = '4';
+    document.getElementById('input4').value = '492.98';
+    document.getElementById('input5').value = '1';
+    document.getElementById('input6').value = '0.61';
+    document.getElementById('input7').value = '1';
+    document.getElementById('input8').value = '1';
+    document.getElementById('input9').value = '0';
+  }
+  </script>
+
+  <!-- Loading Animation on Submit -->
+  <script>
+  document.querySelector('form').addEventListener('submit', function() {
+    const btn = this.querySelector('button[type="submit"]');
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status"></span> Analyzing...';
+    btn.disabled = true;
+  });
+  </script>
+
+</body>
+
+</html>

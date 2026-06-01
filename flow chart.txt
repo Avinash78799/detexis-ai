@@ -1,0 +1,98 @@
+               ┌──────────────────────────────┐
+               │ 1) Data Ingestion             │
+               │  (Kaggle IDS CSV Dataset)     │
+               └─────────────┬────────────────┘
+                             │
+                             ▼
+        ┌──────────────────────────────────────────────┐
+        │ 2) Preprocessing                              │
+        │ - Handle missing values                       │
+        │ - Encode categorical features                 │
+        │ - Scale numerical features                    │
+        │               │
+        └─────────────┬────────────────────────────────┘
+                      │
+                      ▼
+        ┌──────────────────────────────────────────────┐
+        │ 3) Feature Selection and Data Splitting  │
+        │      │
+        └─────────────┬────────────────────────────────┘
+                      │
+                      ▼
+     ┌─────────────────────────────────────────────────────────┐
+     │ 4) Model Training                                        │
+     │ ML: RF | SVM | XGB | ANN | Logistic Regression           │
+     │ Ensemble: Voting / Stacking                              │
+              │
+     └─────────────┬───────────────────────────────────────────┘
+                   │
+                   ▼
+   ┌──────────────────────────────────────────────────────┐
+   │ 5) Evaluation                                         │
+   │ Metrics: Accuracy, Precision, Recall, F1, ROC-AUC     │
+   │ Confusion Matrix visualization                        │
+   └─────────────┬────────────────────────────────────────┘
+                 │
+                 ▼
+   ┌─────────────────────────────────────────────────────────┐
+   │ 6) Save Artifacts                                        │
+   │ Save best model (.pkl) + scaler + encoder                │
+   └─────────────┬───────────────────────────────────────────┘
+                 │
+                 ▼
+   ┌─────────────────────────────────────────────────────────┐
+   │ 7) Flask Web App                                          │
+   │ User Input → Preprocess → Predict → Display Result        │
+   │ - HTML form for features                                  │
+   │ - Output: "Normal" or "Intrusion" + probability           │
+   │ Optional: REST API endpoint for automated requests        │
+   └──────────────────────────────────────────────────────────┘
+
+
+Detailed Workflow Steps
+
+1. Data Ingestion
+
+	Input: Kaggle Cybersecurity Intrusion Detection Dataset (CSV). https://www.kaggle.com/datasets/dnkumars/cybersecurity-intrusion-detection-dataset
+	Load into Pandas DataFrame.
+
+2. Preprocessing
+	
+	Handle missing values (drop or impute).
+	Label encode categorical variables.
+	Standardize numeric features.
+	
+
+3. Feature Selection and Splitting the Dataset
+
+4. Model Training
+
+	Train multiple algorithms:
+		Random Forest (RF)
+		Support Vector Machine (SVM)
+		XGBoost (XGB)
+		Artificial Neural Network (ANN)
+		Logistic Regression (LR)
+		Ensemble Model
+
+5. Evaluation
+
+	Evaluate on test set using:
+		Accuracy, Precision, Recall, F1-score, ROC-AUC.
+		Confusion matrix to see false positives & negatives.
+	XAI
+
+6. Save Artifacts
+
+	Save best performing model using joblib.
+	Save StandardScaler & LabelEncoder for Flask preprocessing.
+
+7. Flask Web App
+
+	Frontend (HTML):
+		Input form for network traffic features.
+	Backend (Flask):
+		Load saved model, scaler, encoder.
+		Preprocess incoming features.
+		Predict intrusion type.
+	Return result to user.
