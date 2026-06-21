@@ -9,8 +9,8 @@
   <meta name="keywords" content="intrusion detection, visualization, analytics, Detexis">
 
   <!-- Favicons -->
-  <link href="../static/assets/img/favicon.png" rel="icon">
-  <link href="../static/assets/img/apple-touch-icon.png" rel="apple-touch-icon">
+  <link href="/static/assets/img/favicon.png" rel="icon">
+  <link href="/static/assets/img/apple-touch-icon.png" rel="apple-touch-icon">
 
   <!-- Fonts -->
   <link href="https://fonts.googleapis.com" rel="preconnect">
@@ -18,15 +18,70 @@
   <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&family=Raleway:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Ubuntu:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400;1,500;1,700&display=swap" rel="stylesheet">
 
   <!-- Vendor CSS Files -->
-  <link href="../static/assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
-  <link href="../static/assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
-  <link href="../static/assets/vendor/aos/aos.css" rel="stylesheet">
-  <link href="../static/assets/vendor/glightbox/css/glightbox.min.css" rel="stylesheet">
-  <link href="../static/assets/vendor/swiper/swiper-bundle.min.css" rel="stylesheet">
+  <link href="/static/assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+  <link href="/static/assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
+  <link href="/static/assets/vendor/aos/aos.css" rel="stylesheet">
+  <link href="/static/assets/vendor/glightbox/css/glightbox.min.css" rel="stylesheet">
+  <link href="/static/assets/vendor/swiper/swiper-bundle.min.css" rel="stylesheet">
 
   <!-- Main CSS File -->
-  <link href="../static/assets/css/main.css" rel="stylesheet">
+  <link href="/static/assets/css/main.css?v=5.0" rel="stylesheet">
 
+  <style>
+    body {
+      background: #030712 !important;
+      color: #f3f4f6;
+    }
+    .portfolio {
+      background: #030712 !important;
+      padding: 40px 0 !important;
+    }
+    .portfolio-item {
+      background: rgba(17, 24, 39, 0.65) !important;
+      border: 1px solid rgba(255, 255, 255, 0.05) !important;
+      border-radius: 12px;
+      padding: 15px;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    }
+    .portfolio-item:hover {
+      transform: translateY(-5px);
+      border-color: rgba(6, 182, 212, 0.3) !important;
+      box-shadow: 0 10px 25px rgba(6, 182, 212, 0.15);
+    }
+    .portfolio-item img {
+      border-radius: 8px;
+    }
+    .portfolio-info {
+      background: rgba(10, 15, 30, 0.9) !important;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 0 0 12px 12px;
+      padding: 15px !important;
+      color: #ffffff !important;
+    }
+    .portfolio-info h4 {
+      color: #ffffff !important;
+      font-weight: 700;
+    }
+    .portfolio-info p {
+      color: #94a3b8 !important;
+      font-size: 0.85rem !important;
+    }
+    .portfolio-filters li {
+      color: #94a3b8 !important;
+      background: rgba(255, 255, 255, 0.03) !important;
+      border: 1px solid rgba(255, 255, 255, 0.05) !important;
+      border-radius: 50px;
+      padding: 8px 20px !important;
+      transition: all 0.25s ease !important;
+    }
+    .portfolio-filters li.filter-active, .portfolio-filters li:hover {
+      color: #ffffff !important;
+      background: #00e4c4 !important;
+      border-color: #00e4c4 !important;
+      box-shadow: 0 0 15px rgba(0, 228, 196, 0.3);
+    }
+  </style>
 </head>
 
 <body class="index-page">
@@ -35,15 +90,17 @@
   <header id="header" class="header d-flex align-items-center sticky-top">
     <div class="container-fluid container-xl position-relative d-flex align-items-center">
 
-      <a href="/home" class="logo d-flex align-items-center me-auto">
-        <h1 class="sitename">Detexis</h1>
+      <a href="/home" class="logo d-flex align-items-center me-auto text-decoration-none">
+        <h1 class="sitename" style="color:#00e4c4; font-family: var(--heading-font); letter-spacing: 1.5px;">
+          <i class="bi bi-shield-network text-info me-2"></i>Detexis
+        </h1>
       </a>
 
       <nav id="navmenu" class="navmenu">
         <ul>
           <li><a href="/home">Prediction</a></li>
-          <li><a href="/about" class="active">Graphs</a></li>
-          <li><a href="../static/Notebook.html">Notebook</a></li>
+          <li><a href="/analyze">Log Analyzer</a></li>
+          <li><a href="/correlation">Correlation Center</a></li>
         </ul>
         <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
       </nav>
@@ -79,99 +136,99 @@
           <div class="row gy-4 isotope-container" data-aos="fade-up" data-aos-delay="200">
 
             <div class="col-lg-4 col-md-6 portfolio-item isotope-item filter-app">
-              <img src="../static/download.png" class="img-fluid" alt="">
+              <img src="/static/download.png" class="img-fluid" alt="">
               <div class="portfolio-info">
                 <h4>Sample Outcomes</h4>
                 <p>Distribution of attack vs normal traffic in the dataset</p>
-                <a href="../static/download.png" title="App 1" data-gallery="portfolio-gallery-app" class="glightbox preview-link"><i class="bi bi-zoom-in"></i></a>
+                <a href="/static/download.png" title="App 1" data-gallery="portfolio-gallery-app" class="glightbox preview-link"><i class="bi bi-zoom-in"></i></a>
               </div>
             </div><!-- End Portfolio Item -->
 
             <div class="col-lg-4 col-md-6 portfolio-item isotope-item filter-app">
-              <img src="../static/download (1).png" class="img-fluid" alt="">
+              <img src="/static/download (1).png" class="img-fluid" alt="">
               <div class="portfolio-info">
                 <h4>Heat Map</h4>
                 <p>Correlation heatmap showing relationships between all features</p>
-                <a href="../static/download (1).png" title="Product 1" data-gallery="portfolio-gallery-product" class="glightbox preview-link"><i class="bi bi-zoom-in"></i></a>
+                <a href="/static/download (1).png" title="Product 1" data-gallery="portfolio-gallery-product" class="glightbox preview-link"><i class="bi bi-zoom-in"></i></a>
               </div>
             </div><!-- End Portfolio Item -->
 
             <div class="col-lg-4 col-md-6 portfolio-item isotope-item filter-app">
-              <img src="../static/download (2).png" class="img-fluid" alt="">
+              <img src="/static/download (2).png" class="img-fluid" alt="">
               <div class="portfolio-info">
                 <h4>ROC Curve</h4>
                 <p>ROC curve comparing classifier true positive vs false positive rates</p>
-                <a href="../static/download (2).png" title="Branding 1" data-gallery="portfolio-gallery-branding" class="glightbox preview-link"><i class="bi bi-zoom-in"></i></a>
+                <a href="/static/download (2).png" title="Branding 1" data-gallery="portfolio-gallery-branding" class="glightbox preview-link"><i class="bi bi-zoom-in"></i></a>
                 
               </div>
             </div><!-- End Portfolio Item -->
 
             <div class="col-lg-4 col-md-6 portfolio-item isotope-item filter-xai">
-              <img src="../static/download (4).png" class="img-fluid" alt="">
+              <img src="/static/download (4).png" class="img-fluid" alt="">
               <div class="portfolio-info">
                 <h4>SHAP Value</h4>
                 <p>SHAP feature importance showing which features influence predictions most</p>
-                <a href="../static/download (4).png" title="Branding 1" data-gallery="portfolio-gallery-book" class="glightbox preview-link"><i class="bi bi-zoom-in"></i></a>
+                <a href="/static/download (4).png" title="Branding 1" data-gallery="portfolio-gallery-book" class="glightbox preview-link"><i class="bi bi-zoom-in"></i></a>
                 
               </div>
             </div><!-- End Portfolio Item -->
 
             <div class="col-lg-4 col-md-6 portfolio-item isotope-item filter-app">
-              <img src="../static/download (3).png" class="img-fluid" alt="">
+              <img src="/static/download (3).png" class="img-fluid" alt="">
               <div class="portfolio-info">
                 <h4>Confusion Matrix </h4>
                 <p>Confusion matrix showing true/false positives and negatives</p>
-                <a href="../static/download (3).png" title="App 2" data-gallery="portfolio-gallery-app" class="glightbox preview-link"><i class="bi bi-zoom-in"></i></a>
+                <a href="/static/download (3).png" title="App 2" data-gallery="portfolio-gallery-app" class="glightbox preview-link"><i class="bi bi-zoom-in"></i></a>
                 
               </div>
             </div><!-- End Portfolio Item -->
 
             <div class="col-lg-4 col-md-6 portfolio-item isotope-item filter-xai">
-              <img src="../static/download (5).png" class="img-fluid" alt="">
+              <img src="/static/download (5).png" class="img-fluid" alt="">
               <div class="portfolio-info">
                 <h4>SHAP Water Plot</h4>
                 <p>SHAP waterfall plot showing feature contribution for individual predictions</p>
-                <a href="../static/download (5).png" title="Product 2" data-gallery="portfolio-gallery-product" class="glightbox preview-link"><i class="bi bi-zoom-in"></i></a>
+                <a href="/static/download (5).png" title="Product 2" data-gallery="portfolio-gallery-product" class="glightbox preview-link"><i class="bi bi-zoom-in"></i></a>
                 
               </div>
             </div><!-- End Portfolio Item -->
 
             <div class="col-lg-4 col-md-6 portfolio-item isotope-item filter-metric">
-              <img src="../static/download (6).png" class="img-fluid" alt="">
+              <img src="/static/download (6).png" class="img-fluid" alt="">
               <div class="portfolio-info">
                 <h4>Accuracy Score</h4>
                 <p>Accuracy comparison across all trained ML models</p>
-                <a href="../static/download (6).png" title="Branding 2" data-gallery="portfolio-gallery-branding" class="glightbox preview-link"><i class="bi bi-zoom-in"></i></a>
+                <a href="/static/download (6).png" title="Branding 2" data-gallery="portfolio-gallery-branding" class="glightbox preview-link"><i class="bi bi-zoom-in"></i></a>
                 
               </div>
             </div><!-- End Portfolio Item -->
 
             <div class="col-lg-4 col-md-6 portfolio-item isotope-item filter-metric">
-              <img src="../static/download (7).png" class="img-fluid" alt="">
+              <img src="/static/download (7).png" class="img-fluid" alt="">
               <div class="portfolio-info">
                 <h4>Precision Score</h4>
                 <p>Precision comparison across all trained ML models</p>
-                <a href="../static/download (7).png" title="Branding 2" data-gallery="portfolio-gallery-book" class="glightbox preview-link"><i class="bi bi-zoom-in"></i></a>
+                <a href="/static/download (7).png" title="Branding 2" data-gallery="portfolio-gallery-book" class="glightbox preview-link"><i class="bi bi-zoom-in"></i></a>
                 
               </div>
             </div><!-- End Portfolio Item -->
 
             <div class="col-lg-4 col-md-6 portfolio-item isotope-item filter-metric">
-              <img src="../static/download (8).png" class="img-fluid" alt="">
+              <img src="/static/download (8).png" class="img-fluid" alt="">
               <div class="portfolio-info">
                 <h4>Recall Score</h4>
                 <p>Recall comparison across all trained ML models</p>
-                <a href="../static/download (8).png" title="App 3" data-gallery="portfolio-gallery-app" class="glightbox preview-link"><i class="bi bi-zoom-in"></i></a>
+                <a href="/static/download (8).png" title="App 3" data-gallery="portfolio-gallery-app" class="glightbox preview-link"><i class="bi bi-zoom-in"></i></a>
                 
               </div>
             </div><!-- End Portfolio Item -->
 
             <div class="col-lg-4 col-md-6 portfolio-item isotope-item filter-metric">
-              <img src="../static/download (9).png" class="img-fluid" alt="">
+              <img src="/static/download (9).png" class="img-fluid" alt="">
               <div class="portfolio-info">
                 <h4>F1 Score</h4>
                 <p>F1-score comparison across all trained ML models</p>
-                <a href="../static/download (9).png" title="Product 3" data-gallery="portfolio-gallery-product" class="glightbox preview-link"><i class="bi bi-zoom-in"></i></a>
+                <a href="/static/download (9).png" title="Product 3" data-gallery="portfolio-gallery-product" class="glightbox preview-link"><i class="bi bi-zoom-in"></i></a>
                 
               </div>
             </div><!-- End Portfolio Item -->
@@ -201,17 +258,17 @@
   <div id="preloader"></div>
 
   <!-- Vendor JS Files -->
-  <script src="../static/assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
-  <script src="../static/assets/vendor/php-email-form/validate.js"></script>
-  <script src="../static/assets/vendor/aos/aos.js"></script>
-  <script src="../static/assets/vendor/glightbox/js/glightbox.min.js"></script>
-  <script src="../static/assets/vendor/purecounter/purecounter_vanilla.js"></script>
-  <script src="../static/assets/vendor/imagesloaded/imagesloaded.pkgd.min.js"></script>
-  <script src="../static/assets/vendor/isotope-layout/isotope.pkgd.min.js"></script>
-  <script src="../static/assets/vendor/swiper/swiper-bundle.min.js"></script>
+  <script src="/static/assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script src="/static/assets/vendor/php-email-form/validate.js"></script>
+  <script src="/static/assets/vendor/aos/aos.js"></script>
+  <script src="/static/assets/vendor/glightbox/js/glightbox.min.js"></script>
+  <script src="/static/assets/vendor/purecounter/purecounter_vanilla.js"></script>
+  <script src="/static/assets/vendor/imagesloaded/imagesloaded.pkgd.min.js"></script>
+  <script src="/static/assets/vendor/isotope-layout/isotope.pkgd.min.js"></script>
+  <script src="/static/assets/vendor/swiper/swiper-bundle.min.js"></script>
 
   <!-- Main JS File -->
-  <script src="../static/assets/js/main.js"></script>
+  <script src="/static/assets/js/main.js"></script>
 
 </body>
 

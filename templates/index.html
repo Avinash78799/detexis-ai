@@ -14,8 +14,8 @@
   <meta name="twitter:card" content="summary_large_image">
 
   <!-- Favicons -->
-  <link href="../static/assets/img/favicon.png" rel="icon">
-  <link href="../static/assets/img/apple-touch-icon.png" rel="apple-touch-icon">
+  <link href="/static/assets/img/favicon.png" rel="icon">
+  <link href="/static/assets/img/apple-touch-icon.png" rel="apple-touch-icon">
 
   <!-- Fonts -->
   <link href="https://fonts.googleapis.com" rel="preconnect">
@@ -23,14 +23,123 @@
   <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&family=Raleway:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Ubuntu:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400;1,500;1,700&display=swap" rel="stylesheet">
 
   <!-- Vendor CSS Files -->
-  <link href="../static/assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
-  <link href="../static/assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
-  <link href="../static/assets/vendor/aos/aos.css" rel="stylesheet">
-  <link href="../static/assets/vendor/glightbox/css/glightbox.min.css" rel="stylesheet">
-  <link href="../static/assets/vendor/swiper/swiper-bundle.min.css" rel="stylesheet">
+  <link href="/static/assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+  <link href="/static/assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
+  <link href="/static/assets/vendor/aos/aos.css" rel="stylesheet">
+  <link href="/static/assets/vendor/glightbox/css/glightbox.min.css" rel="stylesheet">
+  <link href="/static/assets/vendor/swiper/swiper-bundle.min.css" rel="stylesheet">
+
+  <style>
+    body {
+      background: #030712 !important;
+      color: #f3f4f6;
+    }
+    .hero {
+      background: radial-gradient(circle at 20% 30%, rgba(0,228,196,0.08) 0%, transparent 50%),
+                  radial-gradient(circle at 80% 70%, rgba(6,182,212,0.06) 0%, transparent 50%),
+                  #030712 !important;
+    }
+    .hero h1 {
+      background: linear-gradient(135deg, #ffffff 0%, #00e4c4 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .stats {
+      background: #020617 !important;
+    }
+    .stats-item {
+      background: rgba(10, 14, 20, 0.7) !important;
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.06) !important;
+      border-radius: 16px !important;
+      color: #cbd5e1 !important;
+      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    }
+    .stats-item:hover {
+      transform: translateY(-6px);
+      border-color: rgba(0, 228, 196, 0.35) !important;
+      box-shadow: 0 12px 32px rgba(0, 228, 196, 0.1);
+    }
+    .about {
+      background: #030712 !important;
+    }
+    .about .content h3 {
+      color: #ffffff !important;
+    }
+    .about .content ul li i {
+      color: #00e4c4 !important;
+    }
+    .about .content ul li span {
+      color: #cbd5e1 !important;
+    }
+    .about .content p {
+      color: #94a3b8 !important;
+    }
+    .about img {
+      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
+    }
+    .featured-services {
+      background: #020617 !important;
+    }
+    .tech-stack {
+      background: #030712 !important;
+    }
+    .tech-item {
+      background: rgba(10, 14, 20, 0.7) !important;
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.06) !important;
+      border-radius: 16px !important;
+      color: #cbd5e1 !important;
+      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+    }
+    .tech-item:hover {
+      transform: translateY(-6px) scale(1.03);
+      border-color: rgba(0, 228, 196, 0.3) !important;
+      box-shadow: 0 10px 28px rgba(0, 228, 196, 0.1);
+    }
+    .section-title span {
+      color: rgba(0, 228, 196, 0.08) !important;
+    }
+    .section-title h2 {
+      color: #ffffff !important;
+    }
+    .section-title p {
+      color: #94a3b8 !important;
+    }
+    .footer {
+      background: #020617 !important;
+      border-top: 1px solid rgba(255, 255, 255, 0.04);
+    }
+    .cta-btn {
+      background: linear-gradient(135deg, #00e4c4, #0891b2) !important;
+      color: #030712 !important;
+      border: none !important;
+      font-weight: 700 !important;
+      padding: 14px 44px !important;
+      box-shadow: 0 4px 20px rgba(0, 228, 196, 0.3);
+      transition: all 0.3s ease !important;
+    }
+    .cta-btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 30px rgba(0, 228, 196, 0.5);
+    }
+    .call-to-action h3 {
+      color: #ffffff !important;
+    }
+    .call-to-action p {
+      color: #94a3b8 !important;
+    }
+  </style>
 
   <!-- Main CSS File -->
-  <link href="../static/assets/css/main.css" rel="stylesheet">
+  <link href="/static/assets/css/main.css?v=5.0" rel="stylesheet">
 
 </head>
 
@@ -39,18 +148,28 @@
   <header id="header" class="header d-flex align-items-center sticky-top">
     <div class="container-fluid container-xl position-relative d-flex align-items-center">
 
-      <a href="/" class="logo d-flex align-items-center me-auto">
-        <h1 class="sitename">Detexis</h1>
+      <a href="/" class="logo d-flex align-items-center me-auto text-decoration-none">
+        <h1 class="sitename" style="color:#00e4c4; font-family: var(--heading-font); letter-spacing: 1.5px;">
+          <i class="bi bi-shield-network text-info me-2"></i>Detexis
+        </h1>
       </a>
 
       <nav id="navmenu" class="navmenu">
         <ul>
           <li><a href="/" class="active">Home</a></li>
+          {% if session.logged_in %}
+          <li><a href="/home">Prediction</a></li>
+          <li><a href="/analyze">Log Analyzer</a></li>
+          {% endif %}
         </ul>
         <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
       </nav>
 
+      {% if session.logged_in %}
+      <a class="btn-getstarted" href="/logout">Log Out</a>
+      {% else %}
       <a class="btn-getstarted" href="/logon">Get Started</a>
+      {% endif %}
 
     </div>
   </header>
@@ -70,7 +189,7 @@
             </div>
           </div>
           <div class="col-lg-6 order-1 order-lg-2 hero-img" data-aos="zoom-out" data-aos-delay="100">
-            <img src="../static/assets/img/hero-img.png" class="img-fluid animated" alt="">
+            <img src="/static/assets/img/hero-img.png" class="img-fluid animated" alt="">
           </div>
         </div>
       </div>
@@ -78,29 +197,29 @@
     </section><!-- /Hero Section -->
 
     <!-- Stats Section -->
-    <section id="stats" class="stats section py-5 bg-light">
+    <section id="stats" class="stats section py-5">
       <div class="container" data-aos="fade-up">
         <div class="row gy-4 text-center">
           <div class="col-lg-3 col-md-6">
-            <div class="stats-item p-4 bg-white rounded shadow-sm border-top border-success border-4 h-100">
+            <div class="stats-item p-4" style="border-top: 4px solid #10b981 !important;">
               <span data-purecounter-start="0" data-purecounter-end="96" data-purecounter-duration="1" data-purecounter-decimals="1" data-purecounter-suffix=".8%" class="purecounter display-5 fw-bold text-success">0</span>
               <p class="text-muted mb-0 mt-2 fw-semibold">Model Accuracy</p>
             </div>
           </div>
           <div class="col-lg-3 col-md-6">
-            <div class="stats-item p-4 bg-white rounded shadow-sm border-top border-primary border-4 h-100">
-              <span data-purecounter-start="0" data-purecounter-end="10000" data-purecounter-duration="1" data-purecounter-suffix="+" class="purecounter display-5 fw-bold text-primary">0</span>
+            <div class="stats-item p-4" style="border-top: 4px solid #00e4c4 !important;">
+              <span data-purecounter-start="0" data-purecounter-end="10000" data-purecounter-duration="1" data-purecounter-suffix="+" class="purecounter display-5 fw-bold text-info">0</span>
               <p class="text-muted mb-0 mt-2 fw-semibold">Threats Analyzed</p>
             </div>
           </div>
           <div class="col-lg-3 col-md-6">
-            <div class="stats-item p-4 bg-white rounded shadow-sm border-top border-info border-4 h-100">
-              <span data-purecounter-start="0" data-purecounter-end="9" data-purecounter-duration="1" class="purecounter display-5 fw-bold text-info">0</span>
+            <div class="stats-item p-4" style="border-top: 4px solid #0891b2 !important;">
+              <span data-purecounter-start="0" data-purecounter-end="9" data-purecounter-duration="1" class="purecounter display-5 fw-bold text-info" style="color: #0891b2 !important;">0</span>
               <p class="text-muted mb-0 mt-2 fw-semibold">Feature Inputs</p>
             </div>
           </div>
           <div class="col-lg-3 col-md-6">
-            <div class="stats-item p-4 bg-white rounded shadow-sm border-top border-warning border-4 h-100">
+            <div class="stats-item p-4" style="border-top: 4px solid #f97316 !important;">
               <span data-purecounter-start="0" data-purecounter-end="6" data-purecounter-duration="1" class="purecounter display-5 fw-bold text-warning">0</span>
               <p class="text-muted mb-0 mt-2 fw-semibold">ML Models Trained</p>
             </div>
@@ -123,7 +242,7 @@
 
         <div class="row gy-4">
           <div class="col-lg-6 position-relative align-self-start" data-aos="fade-up" data-aos-delay="100">
-            <img src="../static/assets/img/about.png" class="img-fluid" alt="About Intrusion Detection">
+            <img src="/static/assets/img/about.png" class="img-fluid" alt="About Intrusion Detection">
           </div>
           <div class="col-lg-6 content" data-aos="fade-up" data-aos-delay="200">
             <h3>Enhancing Cybersecurity with AI and Machine Learning</h3>
@@ -155,24 +274,30 @@
       <div class="container">
         <div class="row gy-4">
           <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="100">
-            <div class="service-item position-relative p-5 shadow rounded bg-white h-100 border-bottom border-primary border-3">
-              <div class="icon mb-4" style="font-size: 3rem; color: #0d6efd;"><i class="bi bi-shield-lock"></i></div>
-              <h4 class="fw-bold mb-3">1. Input Network Data</h4>
-              <p class="text-muted">Enter network traffic parameters like packet size, protocol, login attempts, and session details.</p>
+            <div class="glass-card position-relative p-5 h-100 top-accent-cyan">
+              <div class="d-flex align-items-center mb-4">
+                <span class="badge bg-info bg-opacity-10 text-info rounded-circle d-flex align-items-center justify-content-center me-3" style="width:48px; height:48px; font-size:1.2rem;">01</span>
+                <h4 class="fw-bold mb-0 text-white">Input Network Data</h4>
+              </div>
+              <p class="text-muted mb-0">Enter network traffic parameters like packet size, protocol, login attempts, and session details.</p>
             </div>
           </div>
           <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="200">
-            <div class="service-item position-relative p-5 shadow rounded bg-white h-100 border-bottom border-success border-3">
-              <div class="icon mb-4" style="font-size: 3rem; color: #198754;"><i class="bi bi-cpu"></i></div>
-              <h4 class="fw-bold mb-3">2. AI Analysis</h4>
-              <p class="text-muted">Our trained ML model analyzes the data using ensemble methods to detect anomalies and intrusion patterns.</p>
+            <div class="glass-card position-relative p-5 h-100 top-accent-safe">
+              <div class="d-flex align-items-center mb-4">
+                <span class="badge bg-success bg-opacity-10 text-success rounded-circle d-flex align-items-center justify-content-center me-3" style="width:48px; height:48px; font-size:1.2rem;">02</span>
+                <h4 class="fw-bold mb-0 text-white">AI Analysis</h4>
+              </div>
+              <p class="text-muted mb-0">Our trained ML model analyzes the data using ensemble methods to detect anomalies and intrusion patterns.</p>
             </div>
           </div>
           <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="300">
-            <div class="service-item position-relative p-5 shadow rounded bg-white h-100 border-bottom border-info border-3">
-              <div class="icon mb-4" style="font-size: 3rem; color: #0dcaf0;"><i class="bi bi-graph-up"></i></div>
-              <h4 class="fw-bold mb-3">3. Get Results</h4>
-              <p class="text-muted">Receive instant threat predictions with confidence scores, detailed metrics, and actionable recommendations.</p>
+            <div class="glass-card position-relative p-5 h-100 top-accent-cyan">
+              <div class="d-flex align-items-center mb-4">
+                <span class="badge bg-info bg-opacity-10 text-info rounded-circle d-flex align-items-center justify-content-center me-3" style="width:48px; height:48px; font-size:1.2rem;">03</span>
+                <h4 class="fw-bold mb-0 text-white">Get Results</h4>
+              </div>
+              <p class="text-muted mb-0">Receive instant threat predictions with confidence scores, detailed metrics, and actionable recommendations.</p>
             </div>
           </div>
         </div>
@@ -197,7 +322,7 @@
     </section><!-- /Call To Action Section -->
 
     <!-- Technology Stack Section -->
-    <section id="tech-stack" class="tech-stack section py-5 bg-light">
+    <section id="tech-stack" class="tech-stack section py-5">
       <div class="container section-title" data-aos="fade-up">
         <span>Algorithms</span>
         <h2>Machine Learning Models</h2>
@@ -206,39 +331,39 @@
       <div class="container">
         <div class="row gy-3 justify-content-center text-center">
           <div class="col-lg-2 col-md-4 col-6" data-aos="zoom-in" data-aos-delay="100">
-            <div class="tech-item p-3 bg-white shadow-sm rounded h-100 border border-success-subtle">
-              <i class="bi bi-tree-fill text-success fs-2"></i>
-              <h6 class="fw-bold mt-2">Random Forest</h6>
+            <div class="tech-item p-4 h-100">
+              <i class="bi bi-tree-fill fs-2" style="color: #10b981;"></i>
+              <h6 class="fw-bold mt-2 text-white">Random Forest</h6>
             </div>
           </div>
           <div class="col-lg-2 col-md-4 col-6" data-aos="zoom-in" data-aos-delay="200">
-            <div class="tech-item p-3 bg-white shadow-sm rounded h-100 border border-success-subtle">
-              <i class="bi bi-lightning-charge-fill text-warning fs-2"></i>
-              <h6 class="fw-bold mt-2">XGBoost</h6>
+            <div class="tech-item p-4 h-100">
+              <i class="bi bi-lightning-charge-fill fs-2" style="color: #f59e0b;"></i>
+              <h6 class="fw-bold mt-2 text-white">XGBoost</h6>
             </div>
           </div>
           <div class="col-lg-2 col-md-4 col-6" data-aos="zoom-in" data-aos-delay="300">
-            <div class="tech-item p-3 bg-white shadow-sm rounded h-100 border border-success-subtle">
-              <i class="bi bi-grid-3x3-gap-fill text-info fs-2"></i>
-              <h6 class="fw-bold mt-2">SVM</h6>
+            <div class="tech-item p-4 h-100">
+              <i class="bi bi-grid-3x3-gap-fill fs-2" style="color: #00e4c4;"></i>
+              <h6 class="fw-bold mt-2 text-white">SVM</h6>
             </div>
           </div>
           <div class="col-lg-2 col-md-4 col-6" data-aos="zoom-in" data-aos-delay="400">
-            <div class="tech-item p-3 bg-white shadow-sm rounded h-100 border border-success-subtle">
-              <i class="bi bi-cpu-fill text-primary fs-2"></i>
-              <h6 class="fw-bold mt-2">Neural Net (ANN)</h6>
+            <div class="tech-item p-4 h-100">
+              <i class="bi bi-cpu-fill fs-2" style="color: #818cf8;"></i>
+              <h6 class="fw-bold mt-2 text-white">Neural Net</h6>
             </div>
           </div>
           <div class="col-lg-2 col-md-4 col-6" data-aos="zoom-in" data-aos-delay="500">
-            <div class="tech-item p-3 bg-white shadow-sm rounded h-100 border border-success-subtle">
-              <i class="bi bi-calculator-fill text-danger fs-2"></i>
-              <h6 class="fw-bold mt-2">Logistic Reg</h6>
+            <div class="tech-item p-4 h-100">
+              <i class="bi bi-calculator-fill fs-2" style="color: #f43f5e;"></i>
+              <h6 class="fw-bold mt-2 text-white">Logistic Reg</h6>
             </div>
           </div>
           <div class="col-lg-2 col-md-4 col-6" data-aos="zoom-in" data-aos-delay="600">
-            <div class="tech-item p-3 bg-white shadow-sm rounded h-100 border border-success-subtle">
-              <i class="bi bi-shield-fill-check text-success fs-2"></i>
-              <h6 class="fw-bold mt-2">Ensemble</h6>
+            <div class="tech-item p-4 h-100">
+              <i class="bi bi-shield-fill-check fs-2" style="color: #00e4c4;"></i>
+              <h6 class="fw-bold mt-2 text-white">Ensemble</h6>
             </div>
           </div>
         </div>
@@ -250,9 +375,9 @@
   <footer id="footer" class="footer">
 
     <div class="container copyright text-center mt-4">
-      <p>© <span>Copyright</span> <strong class="px-1 sitename">Detexis</strong> <span>All Rights Reserved</span></p>
-      <div class="credits">
-        Designed by <a href="#">& </a> Distributed by <a href="#">Detexis</a>
+      <p class="text-muted">© 2026 <strong class="px-1 sitename" style="color: #00e4c4;">Detexis</strong> — AI-Powered Network Security</p>
+      <div class="credits text-muted small">
+        Built with <i class="bi bi-shield-check" style="color: #00e4c4;"></i> for Enterprise Security
       </div>
     </div>
 
@@ -265,17 +390,17 @@
   <div id="preloader"></div>
 
   <!-- Vendor JS Files -->
-  <script src="../static/assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
-  <script src="../static/assets/vendor/php-email-form/validate.js"></script>
-  <script src="../static/assets/vendor/aos/aos.js"></script>
-  <script src="../static/assets/vendor/glightbox/js/glightbox.min.js"></script>
-  <script src="../static/assets/vendor/purecounter/purecounter_vanilla.js"></script>
-  <script src="../static/assets/vendor/imagesloaded/imagesloaded.pkgd.min.js"></script>
-  <script src="../static/assets/vendor/isotope-layout/isotope.pkgd.min.js"></script>
-  <script src="../static/assets/vendor/swiper/swiper-bundle.min.js"></script>
+  <script src="/static/assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script src="/static/assets/vendor/php-email-form/validate.js"></script>
+  <script src="/static/assets/vendor/aos/aos.js"></script>
+  <script src="/static/assets/vendor/glightbox/js/glightbox.min.js"></script>
+  <script src="/static/assets/vendor/purecounter/purecounter_vanilla.js"></script>
+  <script src="/static/assets/vendor/imagesloaded/imagesloaded.pkgd.min.js"></script>
+  <script src="/static/assets/vendor/isotope-layout/isotope.pkgd.min.js"></script>
+  <script src="/static/assets/vendor/swiper/swiper-bundle.min.js"></script>
 
   <!-- Main JS File -->
-  <script src="../static/assets/js/main.js"></script>
+  <script src="/static/assets/js/main.js"></script>
 
 </body>
 

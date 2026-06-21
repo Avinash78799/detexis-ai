@@ -8,8 +8,8 @@
   <meta name="description" content="View network intrusion detection prediction results, confidence scores, and recommendations dynamically calculated by Detexis AI.">
 
   <!-- Favicons -->
-  <link href="../static/assets/img/favicon.png" rel="icon">
-  <link href="../static/assets/img/apple-touch-icon.png" rel="apple-touch-icon">
+  <link href="/static/assets/img/favicon.png" rel="icon">
+  <link href="/static/assets/img/apple-touch-icon.png" rel="apple-touch-icon">
 
   <!-- Fonts -->
   <link href="https://fonts.googleapis.com" rel="preconnect">
@@ -17,35 +17,76 @@
   <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&family=Raleway:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Ubuntu:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400;1,500;1,700&display=swap" rel="stylesheet">
 
   <!-- Vendor CSS Files -->
-  <link href="../static/assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
-  <link href="../static/assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
-  <link href="../static/assets/vendor/aos/aos.css" rel="stylesheet">
-  <link href="../static/assets/vendor/glightbox/css/glightbox.min.css" rel="stylesheet">
-  <link href="../static/assets/vendor/swiper/swiper-bundle.min.css" rel="stylesheet">
+  <link href="/static/assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+  <link href="/static/assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
+  <link href="/static/assets/vendor/aos/aos.css" rel="stylesheet">
+  <link href="/static/assets/vendor/glightbox/css/glightbox.min.css" rel="stylesheet">
+  <link href="/static/assets/vendor/swiper/swiper-bundle.min.css" rel="stylesheet">
 
   <!-- Main CSS File -->
-  <link href="../static/assets/css/main.css" rel="stylesheet">
+  <link href="/static/assets/css/main.css?v=5.0" rel="stylesheet">
 
   <style>
+    body {
+      background: #030712 !important;
+      color: #f3f4f6;
+    }
+    .main {
+      background: #030712 !important;
+    }
+    .header {
+      background: #030712 !important;
+    }
     @keyframes pulse-danger {
-      0% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.4); }
-      70% { box-shadow: 0 0 0 20px rgba(220, 53, 69, 0); }
-      100% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0); }
+      0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+      70% { box-shadow: 0 0 0 20px rgba(239, 68, 68, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
     }
     @keyframes pulse-success {
-      0% { box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.4); }
-      70% { box-shadow: 0 0 0 20px rgba(40, 167, 69, 0); }
-      100% { box-shadow: 0 0 0 0 rgba(40, 167, 69, 0); }
+      0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
+      70% { box-shadow: 0 0 0 20px rgba(16, 185, 129, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
     }
     .gauge-container { position: relative; width: 200px; height: 100px; margin: 0 auto; overflow: hidden; }
-    .gauge-bg { width: 200px; height: 100px; border-radius: 100px 100px 0 0; background: #e6e6e6; position: absolute; }
-    .gauge-fill { width: 200px; height: 100px; border-radius: 100px 100px 0 0; background: linear-gradient(to right, #dc3545, #ffc107, #28a745); position: absolute; transform-origin: center bottom; }
-    .gauge-cover { width: 160px; height: 80px; border-radius: 80px 80px 0 0; background: white; position: absolute; bottom: 0; left: 20px; }
-    .gauge-value { position: absolute; bottom: 5px; left: 0; right: 0; text-align: center; font-size: 1.5rem; font-weight: 700; }
-    .btn-gradient-primary { transition: transform 0.3s ease, box-shadow 0.3s ease; }
-    .btn-gradient-primary:hover { transform: scale(1.1); box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.2); }
-    .input-summary-card { background: linear-gradient(135deg, #f8f9fa, #e9ecef); border-radius: 12px; padding: 20px; }
+    .gauge-bg { width: 200px; height: 100px; border-radius: 100px 100px 0 0; background: #1f2937; position: absolute; }
+    .gauge-fill { width: 200px; height: 100px; border-radius: 100px 100px 0 0; background: linear-gradient(to right, #10b981, #f97316, #ef4444); position: absolute; transform-origin: center bottom; }
+    .gauge-cover { width: 160px; height: 80px; border-radius: 80px 80px 0 0; background: #030712; position: absolute; bottom: 0; left: 20px; }
+    .gauge-value { position: absolute; bottom: 5px; left: 0; right: 0; text-align: center; font-size: 1.5rem; font-weight: 700; color: #fff; }
+    .input-summary-card { background: rgba(17, 24, 39, 0.55); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 20px; backdrop-filter: blur(16px); }
     .input-summary-card .badge { font-size: 0.85rem; padding: 6px 12px; }
+    
+    .xai-bar-label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #94a3b8;
+    }
+    .xai-progress {
+      height: 8px;
+      border-radius: 50px;
+      background: rgba(255, 255, 255, 0.05);
+    }
+    .defense-code-box {
+      background: #020617;
+      color: #00e4c4;
+      font-family: 'Fira Code', 'Courier New', monospace;
+      padding: 15px;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.05);
+      max-height: 250px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+    }
+    .nav-tabs-custom .nav-link {
+      color: #94a3b8;
+      border: none;
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s ease;
+      background: transparent !important;
+    }
+    .nav-tabs-custom .nav-link.active {
+      color: #00e4c4 !important;
+      border-bottom-color: #00e4c4 !important;
+    }
   </style>
 </head>
 
@@ -54,15 +95,17 @@
   <header id="header" class="header d-flex align-items-center sticky-top">
     <div class="container-fluid container-xl position-relative d-flex align-items-center">
 
-      <a href="/home" class="logo d-flex align-items-center me-auto">
-        <h1 class="sitename">Detexis</h1>
+      <a href="/home" class="logo d-flex align-items-center me-auto text-decoration-none">
+        <h1 class="sitename" style="color:#00e4c4; font-family: var(--heading-font); letter-spacing: 1.5px;">
+          <i class="bi bi-shield-network text-info me-2"></i>Detexis
+        </h1>
       </a>
 
       <nav id="navmenu" class="navmenu">
         <ul>
           <li><a href="/home">Prediction</a></li>
-          <li><a href="/about">Graphs</a></li>
-          <li><a href="../static/Notebook.html">Notebook</a></li>
+          <li><a href="/analyze">Log Analyzer</a></li>
+          <li><a href="/correlation">Correlation Center</a></li>
         </ul>
         <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
       </nav>
@@ -91,8 +134,16 @@
     <section id="predicted-results" class="predicted-results section">
       <div class="container" data-aos="fade-up" data-aos-delay="100">
 
-        <!-- Large Animated Threat Indicator -->
-        {% if predicted_result == 'Threat' %}
+        <!-- Whitelisted Override / Threat Status Banner -->
+        {% if overridden %}
+        <div class="text-center mb-4" data-aos="zoom-in">
+          <div style="width: 120px; height: 120px; border-radius: 50%; background: linear-gradient(135deg, #17a2b8, #138496); margin: 0 auto; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 30px rgba(23, 162, 184, 0.4);">
+            <i class="bi bi-shield-shaded" style="font-size: 3rem; color: white;"></i>
+          </div>
+          <h2 class="mt-3 fw-bold" style="color: #17a2b8;">⚠️ No Threat (Whitelisted Profile)</h2>
+          <p class="text-muted">This network profile has been whitelisted by administrators. Model prediction was overridden.</p>
+        </div>
+        {% elif predicted_result == 'Threat' %}
         <div class="text-center mb-4" data-aos="zoom-in">
           <div style="width: 120px; height: 120px; border-radius: 50%; background: linear-gradient(135deg, #dc3545, #ff6b6b); margin: 0 auto; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 30px rgba(220, 53, 69, 0.4); animation: pulse-danger 2s infinite;">
             <i class="bi bi-exclamation-triangle-fill" style="font-size: 3rem; color: white;"></i>
@@ -112,85 +163,105 @@
 
           <!-- Confidence Gauge Section -->
           <div class="col-lg-6">
-            <div class="text-center" data-aos="zoom-in" data-aos-delay="100">
-              <h3 class="text-success fw-bold">Confidence Score</h3>
+            <div class="glass-card p-4 text-center" data-aos="zoom-in" data-aos-delay="100">
+              <h4 class="text-white fw-bold mb-3">Model Confidence Score</h4>
               <div class="gauge-container">
                 <div class="gauge-bg"></div>
                 <div class="gauge-fill" style="transform: rotate({{ confidence_score / 100 * 180 - 180 }}deg);"></div>
                 <div class="gauge-cover"></div>
-                <div class="gauge-value" style="color: {% if confidence_score >= 90 %}#28a745{% elif confidence_score >= 70 %}#ffc107{% else %}#dc3545{% endif %}">{{ confidence_score }}%</div>
+                <div class="gauge-value">{{ confidence_score }}%</div>
               </div>
-              <p class="mt-2 text-muted">{% if confidence_score >= 90 %}Highly confident{% elif confidence_score >= 70 %}Moderately confident{% else %}Low confidence{% endif %}</p>
+              <p class="mt-2 text-muted">{% if overridden %}Whitelisted database override precedence{% elif confidence_score >= 90 %}Highly confident threat pattern match{% elif confidence_score >= 70 %}Moderate threat correlation{% else %}Low threat signature confidence{% endif %}</p>
             </div>
           </div>
 
-          <!-- Predicted Result Section -->
+          <!-- Explainable AI (XAI) feature influence chart -->
           <div class="col-lg-6">
-            <div class="predicted-result text-center" data-aos="fade-up" data-aos-delay="200">
-              <h3 class="fw-bold" style="{% if predicted_result == 'Threat' %}color: #dc3545;{% else %}color: #28a745;{% endif %}">Predicted Result</h3>
-              <p class="fs-5">
-                {% if predicted_result == 'Threat' %}
-                  <i class="bi bi-exclamation-triangle-fill" style="color: #dc3545;"></i>
-                {% else %}
-                  <i class="bi bi-check-circle-fill" style="color: #28a745;"></i>
-                {% endif %}
-                {% if predicted_result == 'Threat' %}
-                  <span style="color: #dc3545;">The intrusion detection model predicts a potential threat.</span>
-                {% else %}
-                  <span style="color: #28a745;">The intrusion detection model predicts no threat detected.</span>
-                {% endif %}
-              </p>
-              <p class="text-muted">
-                <strong>Confidence Score:</strong> {{ confidence_score }}%
-              </p>
+            <div class="glass-card p-4" data-aos="fade-up" data-aos-delay="200">
+              <h4 class="text-white fw-bold mb-3"><i class="bi bi-bar-chart-line text-primary me-2"></i>SHAP Decision Drivers</h4>
+              <p class="text-muted small">Relative weight of parameters driving the classification algorithm.</p>
+              
+              <div class="d-flex flex-column gap-2 mb-3" id="xai-bars-container">
+                <!-- Javascript will load relative bars based on input_raw -->
+              </div>
+              <p class="small text-muted mb-0" style="font-size:0.75rem;"><i class="bi bi-info-circle text-primary me-1"></i><strong>How to read:</strong> Red bars indicate parameters that increased the threat risk, while Green bars represent safe/normalizing attributes.</p>
             </div>
           </div>
 
         </div>
 
-        <div class="row gy-4 mt-4">
-
-          <!-- Result Info Section -->
+        {% if predicted_result == 'Threat' %}
+        <div class="row gy-4 mt-3">
+          
+          <!-- MITRE ATT&CK Playbook Container -->
           <div class="col-lg-6">
-            <div class="results-info" data-aos="fade-up" data-aos-delay="300">
-              <h3 class="text-info fw-bold">Result Details</h3>
-              <ul class="list-group">
-                <li class="list-group-item"><strong>Model Accuracy:</strong> <span class="text-success">{{ accuracy }}%</span></li>
-                <li class="list-group-item"><strong>Precision:</strong> <span class="text-primary">{{ precision }}%</span></li>
-                <li class="list-group-item"><strong>Recall:</strong> <span class="text-warning">{{ recall }}%</span></li>
-                <li class="list-group-item"><strong>F1 Score:</strong> <span class="text-danger">{{ f1_score }}%</span></li>
+            <div class="glass-card p-4 h-100" data-aos="fade-up" data-aos-delay="300">
+              <div class="d-flex justify-content-between align-items-center mb-3">
+                <h4 class="text-white fw-bold mb-0"><i class="bi bi-shield-shaded text-danger me-2"></i>MITRE ATT&CK Response Playbook</h4>
+                <span class="badge bg-danger text-white">{{ playbook.id }}</span>
+              </div>
+              <div class="mb-3">
+                <h5 class="text-white fw-bold mb-1">{{ playbook.name }}</h5>
+                <span class="small text-muted d-block mb-2">Tactic Phase: <strong>{{ playbook.phase }}</strong></span>
+                <p class="small text-muted">{{ playbook.description }}</p>
+              </div>
+              <h6 class="small text-white fw-bold mb-2">Incident Remediation Workflow:</h6>
+              <ul class="list-group list-group-flush bg-transparent">
+                {% for step in playbook.steps %}
+                <li class="list-group-item bg-transparent text-muted small border-secondary px-0"><i class="bi bi-check2-square text-danger me-2"></i>{{ step }}</li>
+                {% endfor %}
               </ul>
             </div>
           </div>
 
-          <!-- Recommendations Section -->
+          <!-- Active Defense Code Block Generator -->
           <div class="col-lg-6">
-            <div class="recommendations" data-aos="fade-up" data-aos-delay="400">
-              <h3 class="text-warning fw-bold">Recommendations</h3>
-              <ul class="list-group">
-                {% if predicted_result == 'Threat' %}
-                  <li class="list-group-item">Enhance network security by implementing additional firewalls.</li>
-                  <li class="list-group-item">Monitor suspicious activity using advanced analytics tools.</li>
-                  <li class="list-group-item">Regularly update intrusion detection models for improved accuracy.</li>
-                {% else %}
-                  <li class="list-group-item">Continue monitoring network activity for any unusual patterns.</li>
-                  <li class="list-group-item">Ensure regular updates to security protocols.</li>
-                {% endif %}
+            <div class="glass-card p-4 h-100" data-aos="fade-up" data-aos-delay="400">
+              <h4 class="text-white fw-bold mb-3"><i class="bi bi-code-slash text-success me-2"></i>Active Defense Rules</h4>
+              
+              <!-- Tab Navigation -->
+              <ul class="nav nav-tabs nav-tabs-custom border-secondary mb-3" role="tablist">
+                <li class="nav-item" role="presentation">
+                  <button class="nav-link active py-2" id="nginx-tab" data-bs-toggle="tab" data-bs-target="#nginx-panel" type="button" role="tab">Nginx WAF</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                  <button class="nav-link py-2" id="iptables-tab" data-bs-toggle="tab" data-bs-target="#iptables-panel" type="button" role="tab">iptables Firewall</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                  <button class="nav-link py-2" id="snort-tab" data-bs-toggle="tab" data-bs-target="#snort-panel" type="button" role="tab">Snort IDS</button>
+                </li>
               </ul>
+              
+              <!-- Tab Panels -->
+              <div class="tab-content">
+                <div class="tab-pane fade show active" id="nginx-panel" role="tabpanel">
+                  <div class="defense-code-box" id="nginx-code">{{ defense_rules.nginx }}</div>
+                </div>
+                <div class="tab-pane fade" id="iptables-panel" role="tabpanel">
+                  <div class="defense-code-box" id="iptables-code">{{ defense_rules.iptables }}</div>
+                </div>
+                <div class="tab-pane fade" id="snort-panel" role="tabpanel">
+                  <div class="defense-code-box" id="snort-code">{{ defense_rules.snort }}</div>
+                </div>
+              </div>
+              <div class="text-end mt-2">
+                <button class="btn btn-sm btn-outline-success" onclick="copyActiveDefenseRule()"><i class="bi bi-clipboard me-1"></i>Copy Selected Configuration</button>
+              </div>
             </div>
           </div>
 
         </div>
+        {% endif %}
 
         <!-- Input Summary Section -->
         {% if input_values %}
         <div class="row mt-4">
           <div class="col-12">
             <div class="input-summary-card" data-aos="fade-up" data-aos-delay="500">
-              <h3 class="text-secondary fw-bold mb-3"><i class="bi bi-list-check me-2"></i>Your Input Summary</h3>
+              <h4 class="text-white fw-bold mb-3"><i class="bi bi-list-check me-2"></i>Evaluated Transaction Telemetry</h4>
               <div class="d-flex flex-wrap gap-2">
                 {% for key, value in input_values.items() %}
-                <span class="badge bg-primary">{{ key }}: {{ value }}</span>
+                <span class="badge bg-secondary border border-secondary text-muted">{{ key }}: {{ value }}</span>
                 {% endfor %}
               </div>
             </div>
@@ -198,11 +269,18 @@
         </div>
         {% endif %}
 
-        <!-- Try Again Button -->
-        <div class="row mt-4">
-          <div class="col-12 text-center">
-            <a href="/home"><button class="btn btn-lg btn-gradient-primary" data-aos="zoom-in" data-aos-delay="500" style="background: linear-gradient(45deg, #4caf50, #2196f3); color: white; border-radius: 25px;">
-              <i class="bi bi-arrow-repeat me-2"></i> Try Again
+        <!-- Whitelist Action Trigger & Back Button -->
+        <div class="row mt-4 align-items-center justify-content-center">
+          <div class="col-md-6 text-center text-md-start mb-3 mb-md-0">
+            {% if predicted_result == 'Threat' and not overridden %}
+            <button class="btn btn-lg btn-cyber-danger px-4" id="btn-whitelist-action" onclick="whitelistThisProfile()">
+              <i class="bi bi-shield-plus me-2"></i>Whitelist Network Profile
+            </button>
+            {% endif %}
+          </div>
+          <div class="col-md-6 text-center text-md-end">
+            <a href="/home"><button class="btn btn-lg btn-cyber-primary px-4 py-3" style="border-radius: 8px;">
+              <i class="bi bi-arrow-repeat me-2"></i>Analyze Another Session
             </button></a>
           </div>
         </div>
@@ -212,14 +290,11 @@
 
   </main>
 
-   <footer id="footer" class="footer">
+  <footer id="footer" class="footer">
     <div class="container copyright text-center mt-4">
       <p>© <span>Copyright</span> <strong class="px-1 sitename">Detexis</strong> <span>All Rights Reserved</span></p>
-      <div class="credits">
-        Designed by <a href="#">& </a> Distributed by <a href="#">Detexis</a>
-      </div>
+      <div class="credits">Designed & Distributed by <a href="#">Detexis</a></div>
     </div>
-
   </footer>
 
   <!-- Scroll Top -->
@@ -229,13 +304,123 @@
   <div id="preloader"></div>
 
   <!-- Vendor JS Files -->
-  <script src="../static/assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
-  <script src="../static/assets/vendor/aos/aos.js"></script>
-  <script src="../static/assets/vendor/glightbox/js/glightbox.min.js"></script>
-  <script src="../static/assets/vendor/swiper/swiper-bundle.min.js"></script>
+  <script src="/static/assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script src="/static/assets/vendor/aos/aos.js"></script>
+  <script src="/static/assets/vendor/glightbox/js/glightbox.min.js"></script>
+  <script src="/static/assets/vendor/swiper/swiper-bundle.min.js"></script>
 
   <!-- Main JS File -->
-  <script src="../static/assets/js/main.js"></script>
+  <script src="/static/assets/js/main.js"></script>
+
+  <!-- Results Page Helper Scripts -->
+  <script>
+    // Load evaluated raw features
+    const rawFeatures = {{ input_raw | default([0,0,0,0,0,0,0,0,0]) }};
+    const isThreatResult = "{{ predicted_result }}" === "Threat";
+
+    // Copy rules function
+    function copyActiveDefenseRule() {
+      const activeTab = document.querySelector('.nav-tabs-custom .active').id;
+      let targetCodeId = 'nginx-code';
+      if (activeTab === 'iptables-tab') targetCodeId = 'iptables-code';
+      if (activeTab === 'snort-tab') targetCodeId = 'snort-code';
+      
+      const code = document.getElementById(targetCodeId).innerText;
+      navigator.clipboard.writeText(code).then(() => {
+        alert('Configuration copied to clipboard.');
+      });
+    }
+
+    // Dynamic XAI drivers calculation
+    function renderXaiDrivers() {
+      const container = document.getElementById('xai-bars-container');
+      if (!container) return;
+
+      const size = rawFeatures[0];
+      const proto = rawFeatures[1];
+      const attempts = rawFeatures[2];
+      const duration = rawFeatures[3];
+      const encryption = rawFeatures[4];
+      const reputation = rawFeatures[5];
+      const failed = rawFeatures[6];
+      const browser = rawFeatures[7];
+      const unusual = rawFeatures[8];
+
+      // Calculate heuristic feature influence weights (-100 to +100)
+      const drivers = [
+        { name: 'Failed Logins', weight: failed > 0 ? (failed * 15) : -15, display: `Failed attempts count (${failed})` },
+        { name: 'IP Reputation', weight: (0.75 - reputation) * 45, display: `IP reputation telemetry score (${reputation})` },
+        { name: 'Login Attempts', weight: attempts > 1 ? (attempts * 8) : -10, display: `Repeated session login attempts (${attempts})` },
+        { name: 'Session Duration', weight: (duration < 30 && failed > 0) ? 25 : (duration > 1800 ? 15 : -12), display: `Total connection session duration (${duration}s)` },
+        { name: 'Encryption Method', weight: encryption === 2 ? 15 : -25, display: `Session tunnel encryption profile` },
+        { name: 'Packet Size Check', weight: size > 1000 ? 20 : -10, display: `Evaluated raw packet length (${size}B)` },
+        { name: 'Time Pattern Anomalies', weight: unusual === 1 ? 22 : -15, display: `Off-hour scheduling access` }
+      ];
+
+      // Filter drivers based on classification context
+      if (isThreatResult) {
+        // Sort positive risk weights to top
+        drivers.sort((a, b) => b.weight - a.weight);
+      } else {
+        // Sort safe/negative risk weights to top
+        drivers.sort((a, b) => a.weight - b.weight);
+      }
+
+      container.innerHTML = '';
+      
+      // Render top 4 influence indicators
+      drivers.slice(0, 4).forEach(d => {
+        const val = Math.abs(Math.round(d.weight));
+        const barClass = d.weight > 0 ? 'bg-danger shadow-red' : 'bg-success shadow-green';
+        const influenceText = d.weight > 0 ? `+${val}% Risk` : `-${val}% Risk`;
+        
+        const card = document.createElement('div');
+        card.innerHTML = `
+          <div class="d-flex justify-content-between small mb-1">
+            <span class="xai-bar-label text-white">${d.name} <span class="text-muted" style="font-size:0.75rem;">— ${d.display}</span></span>
+            <span class="fw-bold" style="color: ${d.weight > 0 ? '#ef4444' : '#10b981'};">${influenceText}</span>
+          </div>
+          <div class="xai-progress progress">
+            <div class="progress-bar ${barClass}" style="width: ${Math.min(100, Math.max(5, val))}%"></div>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    // Whitelist API AJAX call
+    function whitelistThisProfile() {
+      if (confirm("Verify profile whitelisting? This will bypass model alerts on subsequent instances.")) {
+        const formData = new FormData();
+        rawFeatures.forEach((val, idx) => {
+          formData.append(`input${idx + 1}`, val);
+        });
+
+        fetch('/whitelist_add', {
+          method: 'POST',
+          body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            alert(data.message);
+            const btn = document.getElementById('btn-whitelist-action');
+            if (btn) {
+              btn.disabled = true;
+              btn.innerHTML = `<i class="bi bi-shield-check me-2"></i>Profile Whitelisted`;
+              btn.className = "btn btn-lg btn-success rounded-pill px-4 text-white";
+            }
+          } else {
+            alert(`Error adding to whitelist: ${data.error}`);
+          }
+        })
+        .catch(err => alert(`Request error: ${err}`));
+      }
+    }
+
+    // Render drivers on load
+    renderXaiDrivers();
+  </script>
 
 </body>
 

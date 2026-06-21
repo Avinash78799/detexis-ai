@@ -17,31 +17,31 @@
   --nav-font: "Ubuntu",  sans-serif;
 }
 
-/* Global Colors - The following color variables are used throughout the website. Updating them here will change the color scheme of the entire website */
+/* Global Colors - Updated for premium dark cyber theme */
 :root { 
-  --background-color: #ffffff; /* Background color for the entire website, including individual sections */
-  --default-color: #444444; /* Default color used for the majority of the text content across the entire website */
-  --heading-color: #5f687b; /* Color for headings, subheadings and title throughout the website */
-  --accent-color: #10bc69; /* Accent color that represents your brand on the website. It's used for buttons, links, and other elements that need to stand out */
-  --surface-color: #ffffff; /* The surface color is used as a background of boxed elements within sections, such as cards, icon boxes, or other elements that require a visual separation from the global background. */
-  --contrast-color: #ffffff; /* Contrast color for text, ensuring readability against backgrounds of accent, heading, or default colors. */
+  --background-color: #030712; 
+  --default-color: #f3f4f6; 
+  --heading-color: #f3f4f6; 
+  --accent-color: #00e4c4; 
+  --surface-color: rgba(17, 24, 39, 0.75); 
+  --contrast-color: #ffffff; 
 }
 
-/* Nav Menu Colors - The following color variables are used specifically for the navigation menu. They are separate from the global colors to allow for more customization options */
+/* Nav Menu Colors */
 :root {
-  --nav-color: #5f687b;  /* The default color of the main navmenu links */
-  --nav-hover-color: #10bc69; /* Applied to main navmenu links when they are hovered over or active */
-  --nav-mobile-background-color: #ffffff; /* Used as the background color for mobile navigation menu */
-  --nav-dropdown-background-color: #ffffff; /* Used as the background color for dropdown items that appear when hovering over primary navigation items */
-  --nav-dropdown-color: #5f687b; /* Used for navigation links of the dropdown items in the navigation menu. */
-  --nav-dropdown-hover-color: #10bc69; /* Similar to --nav-hover-color, this color is applied to dropdown navigation links when they are hovered over. */
+  --nav-color: #94a3b8;  
+  --nav-hover-color: #00e4c4; 
+  --nav-mobile-background-color: #0b0f19; 
+  --nav-dropdown-background-color: #0b0f19; 
+  --nav-dropdown-color: #94a3b8; 
+  --nav-dropdown-hover-color: #00e4c4; 
 }
 
 /* Color Presets - These classes override global colors when applied to any section or element, providing reuse of the sam color scheme. */
 
 .light-background {
-  --background-color: #f9f9f9;
-  --surface-color: #ffffff;
+  --background-color: #020617;
+  --surface-color: rgba(17, 24, 39, 0.6);
 }
 
 .dark-background {
@@ -53,11 +53,14 @@
 }
 
 .accent-background {
-  --background-color: #10bc69;
-  --default-color: #ffffff;
+  --background-color: #030712;
+  --default-color: #cbd5e1;
   --heading-color: #ffffff;
-  --surface-color: #14eb83;
+  --surface-color: rgba(17, 24, 39, 0.6);
   --contrast-color: #ffffff;
+  background: radial-gradient(circle at center, rgba(0, 228, 196, 0.1) 0%, transparent 70%), #030712 !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 /* Smooth scroll */
@@ -1751,6 +1754,357 @@ section,
 /*--------------------------------------------------------------
 # Starter Section Section
 --------------------------------------------------------------*/
+/*--------------------------------------------------------------
+# Starter Section Section
+--------------------------------------------------------------*/
 .starter-section {
   /* Add your styles here */
+}
+
+/*--------------------------------------------------------------
+# Detexis Cyber Dark Theme & Animations Overhaul
+--------------------------------------------------------------*/
+
+/* Mesh Rotating Background for sign-in/sign-up */
+.cyber-bg {
+  background: radial-gradient(circle at 10% 20%, rgba(0, 228, 196, 0.08) 0%, transparent 40%),
+              radial-gradient(circle at 90% 80%, rgba(255, 71, 87, 0.06) 0%, transparent 45%),
+              #0a0e14;
+  position: relative;
+  overflow: hidden;
+}
+
+.cyber-bg::before {
+  content: "";
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(rgba(0, 228, 196, 0.04) 1px, transparent 1px);
+  background-size: 24px 24px;
+  animation: bg-grid-shift 80s linear infinite;
+  z-index: 0;
+  pointer-events: none;
+}
+
+@keyframes bg-grid-shift {
+  0% { transform: translateY(0) rotate(0deg); }
+  100% { transform: translateY(-100px) rotate(360deg); }
+}
+
+/* Glassmorphism Card System with interactive motion */
+.glass-card {
+  background: rgba(10, 14, 20, 0.6) !important;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.06) !important;
+  border-radius: 16px !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), 
+              border-color 0.3s ease, 
+              box-shadow 0.3s ease !important;
+  position: relative;
+  overflow: hidden;
+}
+
+.glass-card:hover {
+  transform: translateY(-5px);
+  border-color: rgba(0, 228, 196, 0.3) !important;
+  box-shadow: 0 15px 35px rgba(0, 228, 196, 0.12), 0 0 15px rgba(0, 228, 196, 0.05);
+}
+
+/* Glass Inputs */
+.glass-input {
+  background: rgba(10, 14, 20, 0.9) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  color: #f3f4f6 !important;
+  border-radius: 8px !important;
+  padding: 10px 14px !important;
+  transition: border-color 0.25s ease, box-shadow 0.25s ease !important;
+}
+
+.glass-input:focus {
+  border-color: #00e4c4 !important;
+  box-shadow: 0 0 12px rgba(0, 228, 196, 0.3) !important;
+  outline: none !important;
+}
+
+/* Cyber gradient texts */
+.gradient-text-cyan {
+  background: linear-gradient(135deg, #00e4c4, #0891b2);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.gradient-text-threat {
+  background: linear-gradient(135deg, #ff4757, #ff6b6b);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Security scanner glow status and indicators */
+.scan-glow-cyan {
+  box-shadow: 0 0 20px rgba(0, 228, 196, 0.2);
+  border: 1px solid rgba(0, 228, 196, 0.4) !important;
+  animation: scan-pulse 3s infinite alternate;
+}
+
+.scan-glow-red {
+  box-shadow: 0 0 20px rgba(255, 71, 87, 0.2);
+  border: 1px solid rgba(255, 71, 87, 0.4) !important;
+  animation: alert-pulse 2s infinite alternate;
+}
+
+@keyframes scan-pulse {
+  0% { box-shadow: 0 0 10px rgba(0, 228, 196, 0.15); border-color: rgba(0, 228, 196, 0.3); }
+  100% { box-shadow: 0 0 25px rgba(0, 228, 196, 0.45); border-color: rgba(0, 228, 196, 0.7); }
+}
+
+@keyframes alert-pulse {
+  0% { box-shadow: 0 0 8px rgba(255, 71, 87, 0.2); border-color: rgba(255, 71, 87, 0.3); }
+  100% { box-shadow: 0 0 25px rgba(255, 71, 87, 0.6); border-color: rgba(255, 71, 87, 0.8); }
+}
+
+/* Dynamic Slide in for rows */
+.slide-in-card {
+  animation: slide-in 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes slide-in {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* SVG Line Animations for Network Topology */
+.svg-flow-path {
+  stroke-dasharray: 8, 8;
+  animation: dash-flow 25s linear infinite;
+}
+
+.svg-flow-path-alert {
+  stroke-dasharray: 8, 8;
+  animation: dash-flow 8s linear infinite;
+}
+
+@keyframes dash-flow {
+  to {
+    stroke-dashoffset: -1000;
+  }
+}
+
+/* Drag & Drop zone dynamic state */
+.drag-hover-ripple {
+  border-color: #00e4c4 !important;
+  background: rgba(0, 228, 196, 0.05) !important;
+  box-shadow: 0 0 25px rgba(0, 228, 196, 0.15) !important;
+  transform: scale(1.02);
+  transition: all 0.3s ease;
+}
+
+/* Glowing tabs */
+.nav-tabs-custom .nav-link {
+  color: #8899aa !important;
+  border: none !important;
+  border-bottom: 2px solid transparent !important;
+  background: transparent !important;
+  padding: 10px 16px;
+  font-weight: 600;
+}
+
+.nav-tabs-custom .nav-link.active {
+  color: #00e4c4 !important;
+  border-bottom: 2px solid #00e4c4 !important;
+}
+
+/* Custom terminal font styling */
+.soc-terminal {
+  font-family: 'Fira Code', 'Courier New', monospace;
+  background: #020617 !important;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* Custom horizontal SHAP metrics */
+.shap-progress {
+  height: 8px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.05);
+  overflow: hidden;
+}
+
+.shap-fill-positive {
+  background: linear-gradient(90deg, #ff4757, #ff6b6b);
+}
+
+.shap-fill-negative {
+  background: linear-gradient(90deg, #10b981, #34d399);
+}
+
+/* Cyber dynamic buttons */
+.btn-cyber-primary {
+  background: linear-gradient(135deg, #00e4c4, #0891b2) !important;
+  border: none !important;
+  color: #0a0e14 !important;
+  font-weight: 700 !important;
+  border-radius: 8px !important;
+  box-shadow: 0 4px 15px rgba(0, 228, 196, 0.25);
+  transition: all 0.3s ease !important;
+}
+
+.btn-cyber-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 228, 196, 0.4);
+}
+
+.btn-cyber-danger {
+  background: linear-gradient(135deg, #ff4757, #ff6b6b) !important;
+  border: none !important;
+  color: #ffffff !important;
+  font-weight: 700 !important;
+  border-radius: 8px !important;
+  box-shadow: 0 4px 15px rgba(255, 71, 87, 0.25);
+  transition: all 0.3s ease !important;
+}
+
+.btn-cyber-danger:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 71, 87, 0.4);
+}
+
+/* --- CLAUDE'S ANTI-GRAVITY ADDITIONS --- */
+
+/* Anti-gravity Floating Animation */
+.anti-gravity-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-8px); }
+}
+
+/* Card Sweeping Scanline Effect */
+.scanline-container {
+  position: relative;
+  overflow: hidden;
+}
+
+.scanline-container::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, rgba(0, 228, 196, 0.4), transparent);
+  animation: scanLine 4s linear infinite;
+  pointer-events: none;
+  z-index: 5;
+}
+
+@keyframes scanLine {
+  0%   { top: -5%; }
+  100% { top: 105%; }
+}
+
+/* Pulse Ripple threat alert indicators */
+.ripple-circle {
+  position: relative;
+}
+
+.ripple-circle::before {
+  content: "";
+  position: absolute;
+  top: -20%;
+  left: -20%;
+  width: 140%;
+  height: 140%;
+  border: 1px solid rgba(255, 71, 87, 0.4);
+  border-radius: 50%;
+  animation: ripple 2s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+  pointer-events: none;
+}
+
+@keyframes ripple {
+  0%   { transform: scale(1); opacity: 0.8; }
+  100% { transform: scale(2.2); opacity: 0; }
+}
+
+/* Top Accent Severity Card borders */
+.top-accent-threat {
+  border-top: 3px solid #ff4757 !important;
+}
+
+.top-accent-warning {
+  border-top: 3px solid #f97316 !important;
+}
+
+.top-accent-safe {
+  border-top: 3px solid #10b981 !important;
+}
+
+.top-accent-cyan {
+  border-top: 3px solid #00e4c4 !important;
+}
+
+/* Transparent Severity Badge Overlays */
+.badge-cyber-danger {
+  background: rgba(255, 71, 87, 0.15) !important;
+  color: #ff4757 !important;
+  border: 1px solid rgba(255, 71, 87, 0.3) !important;
+}
+
+.badge-cyber-success {
+  background: rgba(16, 185, 129, 0.15) !important;
+  color: #10b981 !important;
+  border: 1px solid rgba(16, 185, 129, 0.3) !important;
+}
+
+.badge-cyber-warning {
+  background: rgba(249, 115, 22, 0.15) !important;
+  color: #f97316 !important;
+  border: 1px solid rgba(249, 115, 22, 0.3) !important;
+}
+
+/* Custom unified glass input groups */
+.input-group {
+  border-radius: 8px !important;
+  overflow: hidden;
+  border: none !important;
+}
+
+.input-group .input-group-text {
+  background: rgba(10, 14, 20, 0.9) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-right: none !important;
+  color: #00e4c4 !important;
+  border-top-left-radius: 8px !important;
+  border-bottom-left-radius: 8px !important;
+  border-top-right-radius: 0 !important;
+  border-bottom-right-radius: 0 !important;
+}
+
+.input-group .glass-input {
+  background: rgba(10, 14, 20, 0.9) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-left: none !important;
+  color: #f3f4f6 !important;
+  border-top-right-radius: 8px !important;
+  border-bottom-right-radius: 8px !important;
+  border-top-left-radius: 0 !important;
+  border-bottom-left-radius: 0 !important;
+  padding: 10px 14px !important;
+}
+
+.input-group:focus-within .input-group-text {
+  border-color: #00e4c4 !important;
+}
+
+.input-group:focus-within .glass-input {
+  border-color: #00e4c4 !important;
+  box-shadow: none !important;
+}
+
+.input-group:focus-within {
+  box-shadow: 0 0 12px rgba(0, 228, 196, 0.3) !important;
 }

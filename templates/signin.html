@@ -9,8 +9,8 @@
   <meta name="keywords" content="intrusion detection, login, signin, security login, Detexis">
 
   <!-- Favicons -->
-  <link href="../static/assets/img/favicon.png" rel="icon">
-  <link href="../static/assets/img/apple-touch-icon.png" rel="apple-touch-icon">
+  <link href="/static/assets/img/favicon.png" rel="icon">
+  <link href="/static/assets/img/apple-touch-icon.png" rel="apple-touch-icon">
 
   <!-- Fonts -->
   <link href="https://fonts.googleapis.com" rel="preconnect">
@@ -18,23 +18,44 @@
   <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&family=Raleway:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Ubuntu:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400;1,500;1,700&display=swap" rel="stylesheet">
 
   <!-- Vendor CSS Files -->
-  <link href="../static/assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
-  <link href="../static/assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
-  <link href="../static/assets/vendor/aos/aos.css" rel="stylesheet">
-  <link href="../static/assets/vendor/glightbox/css/glightbox.min.css" rel="stylesheet">
-  <link href="../static/assets/vendor/swiper/swiper-bundle.min.css" rel="stylesheet">
+  <link href="/static/assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+  <link href="/static/assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
+  <link href="/static/assets/vendor/aos/aos.css" rel="stylesheet">
+  <link href="/static/assets/vendor/glightbox/css/glightbox.min.css" rel="stylesheet">
+  <link href="/static/assets/vendor/swiper/swiper-bundle.min.css" rel="stylesheet">
 
   <!-- Main CSS File -->
-  <link href="../static/assets/css/main.css" rel="stylesheet">
+  <link href="/static/assets/css/main.css?v=5.0" rel="stylesheet">
+
+  <style>
+    /* Fix: override overflow constraints so page scrolls on all viewports */
+    body.cyber-bg {
+      overflow-y: auto !important;
+      overflow-x: hidden !important;
+    }
+    /* Clip the animated grid pseudo-element to viewport so it doesn't create blank space */
+    body.cyber-bg::before {
+      top: 0 !important;
+      left: 0 !important;
+      width: 100% !important;
+      height: 100% !important;
+      position: fixed !important;
+    }
+    .signup.section {
+      overflow: visible !important;
+    }
+  </style>
 
 </head>
 
-<body class="signup-page" style="background: linear-gradient(135deg, #4caf50, #2196f3); color: white; min-height: 100vh;">
+<body class="signup-page cyber-bg" style="color: white; min-height: 100vh;">
 
   <header id="header" class="header d-flex align-items-center sticky-top bg-transparent">
     <div class="container-fluid container-xl position-relative d-flex align-items-center">
       <a href="/" class="logo d-flex align-items-center me-auto text-decoration-none">
-        <h1 class="sitename text-white m-0">Detexis</h1>
+        <h1 class="sitename text-white m-0" style="font-family: var(--heading-font); letter-spacing: 1.5px;">
+          <i class="bi bi-shield-network text-info me-2"></i>Detexis
+        </h1>
       </a>
       <nav id="navmenu" class="navmenu">
         <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
@@ -47,49 +68,56 @@
       <div class="container" data-aos="fade-up" data-aos-delay="100">
         <div class="row justify-content-center">
           <div class="col-lg-5 col-md-8">
-            <div class="card shadow-lg p-4 rounded-4 border-0" style="background: rgba(255, 255, 255, 0.95); color: #333; backdrop-filter: blur(10px);">
+            <div class="glass-card p-4 rounded-4" style="background: rgba(17, 24, 39, 0.75); color: #fff; z-index: 10; position: relative;">
               
               <div class="text-center mb-4" data-aos="zoom-in">
-                <div class="d-inline-flex align-items-center justify-content-center bg-primary bg-opacity-10 rounded-circle p-3 mb-2" style="width: 80px; height: 80px;">
-                  <i class="bi bi-shield-lock-fill text-primary" style="font-size: 2.5rem;"></i>
+                <div class="d-inline-flex align-items-center justify-content-center bg-info bg-opacity-10 rounded-circle p-3 mb-2" style="width: 80px; height: 80px; box-shadow: 0 0 15px rgba(6,182,212,0.2);">
+                  <i class="bi bi-shield-lock-fill text-info" style="font-size: 2.5rem;"></i>
                 </div>
-                <h4 class="fw-bold text-dark m-0">Detexis AI</h4>
-                <p class="text-muted small">Secure Enterprise Network Access</p>
-                <h2 class="text-primary fw-bold mt-2 mb-0">Sign In</h2>
+                <h4 class="fw-bold text-white m-0" style="letter-spacing: 0.5px;">Detexis AI</h4>
+                <p class="text-info-emphasis small opacity-75">Secure Enterprise Network Access</p>
+                <h2 class="text-info fw-bold mt-2 mb-0" style="text-shadow: 0 0 8px rgba(6,182,212,0.3);">Sign In</h2>
               </div>
 
               {% if message %}
-              <div class="alert alert-danger rounded-3" role="alert" data-aos="fade-up">
-                <i class="bi bi-exclamation-triangle-fill me-2"></i> {{ message }}
+              <div class="alert alert-danger rounded-3 bg-danger bg-opacity-10 border-danger text-light" role="alert" data-aos="fade-up">
+                <i class="bi bi-exclamation-triangle-fill me-2 text-danger"></i> {{ message }}
               </div>
               {% endif %}
 
               <form action="/signin" method="POST">
                 <div class="form-group mb-3" data-aos="fade-up" data-aos-delay="100">
-                  <label for="user" class="fw-semibold mb-1 text-secondary">Username</label>
+                  <label for="user" class="fw-semibold mb-1 text-light small">Username</label>
                   <div class="input-group">
-                    <span class="input-group-text border-end-0 bg-transparent text-secondary"><i class="bi bi-person-fill"></i></span>
-                    <input type="text" id="user" name="user" class="form-control border-start-0 ps-0" placeholder="Enter your username" required>
+                    <span class="input-group-text"><i class="bi bi-person-fill"></i></span>
+                    <input type="text" id="user" name="user" class="form-control glass-input" placeholder="Enter your username" required>
                   </div>
                 </div>
 
-                <div class="form-group mb-4" data-aos="fade-up" data-aos-delay="200">
-                  <label for="password" class="fw-semibold mb-1 text-secondary">Password</label>
+                <div class="form-group mb-3" data-aos="fade-up" data-aos-delay="200">
+                  <label for="password" class="fw-semibold mb-1 text-light small">Password</label>
                   <div class="input-group">
-                    <span class="input-group-text border-end-0 bg-transparent text-secondary"><i class="bi bi-lock-fill"></i></span>
-                    <input type="password" id="password" name="password" class="form-control border-start-0 ps-0" placeholder="Enter your password" required>
+                    <span class="input-group-text"><i class="bi bi-lock-fill"></i></span>
+                    <input type="password" id="password" name="password" class="form-control glass-input" placeholder="Enter your password" required>
                   </div>
+                </div>
+
+                <div class="form-check mb-4 text-start" data-aos="fade-up" data-aos-delay="250">
+                  <input class="form-check-input bg-transparent border-secondary" type="checkbox" id="remember-me" style="border-radius: 4px;">
+                  <label class="form-check-label text-light-emphasis small" for="remember-me">
+                    Remember my username
+                  </label>
                 </div>
 
                 <div class="text-center" data-aos="zoom-in" data-aos-delay="300">
-                  <button type="submit" class="btn btn-primary btn-lg w-100 py-2.5 rounded-3 fw-bold shadow-sm" style="background: linear-gradient(45deg, #10bc69, #0d6efd); border: 0;">
+                  <button type="submit" class="btn btn-cyber-primary btn-lg w-100 py-2.5 rounded-3 fw-bold">
                     <i class="bi bi-box-arrow-in-right me-2"></i> Sign In
                   </button>
                 </div>
               </form>
 
-              <p class="text-center mt-4 mb-0 text-muted" data-aos="fade-up" data-aos-delay="400">
-                Don't have an account? <a href="/logon" class="text-primary fw-semibold text-decoration-none">Sign Up</a>
+              <p class="text-center mt-4 mb-0 text-light-emphasis small" data-aos="fade-up" data-aos-delay="400">
+                Don't have an account? <a href="/logon" class="text-info fw-semibold text-decoration-none hover-link" style="transition: all 0.2s;">Sign Up</a>
               </p>
             </div>
           </div>
@@ -105,17 +133,41 @@
   <div id="preloader"></div>
 
   <!-- Vendor JS Files -->
-  <script src="../static/assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
-  <script src="../static/assets/vendor/php-email-form/validate.js"></script>
-  <script src="../static/assets/vendor/aos/aos.js"></script>
-  <script src="../static/assets/vendor/glightbox/js/glightbox.min.js"></script>
-  <script src="../static/assets/vendor/purecounter/purecounter_vanilla.js"></script>
-  <script src="../static/assets/vendor/imagesloaded/imagesloaded.pkgd.min.js"></script>
-  <script src="../static/assets/vendor/isotope-layout/isotope.pkgd.min.js"></script>
-  <script src="../static/assets/vendor/swiper/swiper-bundle.min.js"></script>
+  <script src="/static/assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script src="/static/assets/vendor/php-email-form/validate.js"></script>
+  <script src="/static/assets/vendor/aos/aos.js"></script>
+  <script src="/static/assets/vendor/glightbox/js/glightbox.min.js"></script>
+  <script src="/static/assets/vendor/purecounter/purecounter_vanilla.js"></script>
+  <script src="/static/assets/vendor/imagesloaded/imagesloaded.pkgd.min.js"></script>
+  <script src="/static/assets/vendor/isotope-layout/isotope.pkgd.min.js"></script>
+  <script src="/static/assets/vendor/swiper/swiper-bundle.min.js"></script>
 
   <!-- Main JS File -->
-  <script src="../static/assets/js/main.js"></script>
+  <script src="/static/assets/js/main.js"></script>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      const usernameInput = document.getElementById("user");
+      const rememberCheckbox = document.getElementById("remember-me");
+      const loginForm = document.querySelector("form");
+
+      // Load remembered username if it exists
+      const rememberedUser = localStorage.getItem("remembered_username");
+      if (rememberedUser) {
+        usernameInput.value = rememberedUser;
+        rememberCheckbox.checked = true;
+      }
+
+      // Save username on form submit if checkbox is checked
+      loginForm.addEventListener("submit", function() {
+        if (rememberCheckbox.checked) {
+          localStorage.setItem("remembered_username", usernameInput.value);
+        } else {
+          localStorage.removeItem("remembered_username");
+        }
+      });
+    });
+  </script>
 
 </body>
 

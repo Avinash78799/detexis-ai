@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+  <title>Log File Analyzer | Detexis AI</title>
+  <meta name="description" content="Perform batch network intrusion analysis by uploading CSV logs. Get real-time threat dashboards and classification reports.">
+  <meta name="keywords" content="intrusion detection, logs, telemetry, batch scanning, cybersecurity, AI">
+
+  <!-- Favicons -->
+  <link href="/static/assets/img/favicon.png" rel="icon">
+  <link href="/static/assets/img/apple-touch-icon.png" rel="apple-touch-icon">
+
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com" rel="preconnect">
+  <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&family=Raleway:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Vendor CSS Files -->
+  <link href="/static/assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+  <link href="/static/assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
+  <link href="/static/assets/vendor/aos/aos.css" rel="stylesheet">
+  <link href="/static/assets/vendor/glightbox/css/glightbox.min.css" rel="stylesheet">
+  <link href="/static/assets/vendor/swiper/swiper-bundle.min.css" rel="stylesheet">
+
+  <!-- Main CSS File -->
+  <link href="/static/assets/css/main.css?v=5.0" rel="stylesheet">
+
+  <style>
+    body {
+      font-family: 'Space Grotesk', sans-serif;
+      background: #030712 !important;
+      color: #f3f4f6;
+    }
+    
+    .glass-card {
+      background: rgba(13, 17, 28, 0.7);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 16px;
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .dropzone-container {
+      border: 2px dashed rgba(6, 182, 212, 0.4);
+      border-radius: 16px;
+      padding: 50px 20px;
+      text-align: center;
+      background: rgba(6, 182, 212, 0.02);
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      position: relative;
+    }
+
+    .dropzone-container:hover, .dropzone-container.dragover {
+      border-color: #00e4c4;
+      background: rgba(0, 228, 196, 0.08);
+      box-shadow: 0 0 20px rgba(0, 228, 196, 0.2);
+    }
+
+    .stat-box {
+      border-left: 4px solid #00e4c4;
+      padding: 15px;
+      background: rgba(255, 255, 255, 0.02);
+      border-radius: 0 8px 8px 0;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    .stat-box.threat {
+      border-left-color: #ef4444;
+      background: rgba(239, 68, 68, 0.02);
+    }
+
+    .stat-box.safe {
+      border-left-color: #10b981;
+      background: rgba(16, 185, 129, 0.02);
+    }
+
+    .stat-number {
+      font-size: 2.2rem;
+      font-weight: 700;
+      line-height: 1.2;
+    }
+
+    .custom-table-container {
+      max-height: 450px;
+      overflow-y: auto;
+    }
+
+    .table-cyber {
+      color: #cbd5e1;
+      border-color: rgba(255, 255, 255, 0.05);
+    }
+
+    .table-cyber tr {
+      background: transparent !important;
+      transition: background 0.2s ease;
+    }
+
+    .table-cyber tr.danger-row {
+      background: rgba(239, 68, 68, 0.08) !important;
+      color: #fca5a5;
+    }
+
+    .table-cyber tr:hover {
+      background: rgba(6, 182, 212, 0.06) !important;
+    }
+
+    .badge-cyber {
+      padding: 6px 12px;
+      border-radius: 50px;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+
+    .glow-alert {
+      animation: alert-pulse 2s infinite;
+    }
+
+    @keyframes alert-pulse {
+      0% { text-shadow: 0 0 5px rgba(239, 68, 68, 0.5); }
+      50% { text-shadow: 0 0 15px rgba(239, 68, 68, 0.9); }
+      100% { text-shadow: 0 0 5px rgba(239, 68, 68, 0.5); }
+    }
+
+    .spinner-cyber {
+      width: 4rem;
+      height: 4rem;
+      border-width: 0.4em;
+    }
+
+    /* SVG Chart Styles */
+    .chart-svg-bar {
+      fill: #00e4c4;
+      transition: fill 0.3s ease, height 0.5s ease;
+      cursor: pointer;
+    }
+    .chart-svg-bar:hover {
+      fill: #55f3de;
+      filter: drop-shadow(0 0 8px rgba(0, 228, 196, 0.6));
+    }
+    .chart-svg-bar-udp {
+      fill: #f97316;
+    }
+    .chart-svg-bar-udp:hover {
+      fill: #fb923c;
+      filter: drop-shadow(0 0 8px rgba(249, 115, 22, 0.6));
+    }
+    .chart-svg-bar-icmp {
+      fill: #10b981;
+    }
+    .chart-svg-bar-icmp:hover {
+      fill: #34d399;
+      filter: drop-shadow(0 0 8px rgba(16, 185, 129, 0.6));
+    }
+  </style>
+</head>
+
+<body class="index-page">
+
+  <header id="header" class="header d-flex align-items-center sticky-top">
+    <div class="container-fluid container-xl position-relative d-flex align-items-center">
+      <a href="/home" class="logo d-flex align-items-center me-auto text-decoration-none">
+        <h1 class="sitename" style="color:#00e4c4; font-family: var(--heading-font); letter-spacing: 1.5px;">
+          <i class="bi bi-shield-network text-info me-2"></i>Detexis
+        </h1>
+      </a>
+
+      <nav id="navmenu" class="navmenu">
+        <ul>
+          <li><a href="/home">Prediction</a></li>
+          <li><a href="/analyze" class="active">Log Analyzer</a></li>
+          <li><a href="/correlation">Correlation Center</a></li>
+        </ul>
+        <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
+      </nav>
+
+      <a class="btn-getstarted" href="/logout">Log Out</a>
+    </div>
+  </header>
+
+  <main class="main my-5">
+    <div class="container">
+      
+      <!-- Section Title -->
+      <div class="text-center mb-5" data-aos="fade-up">
+        <h1 class="fw-bold text-white mb-2"><i class="bi bi-folder-symlink-fill text-primary me-2"></i>Log File Batch Analyzer</h1>
+        <p class="text-muted fs-5">Upload network flow datasets to evaluate anomalies and isolate zero-day threat patterns using our ensemble ML model.</p>
+      </div>
+
+      <!-- File Upload Zone -->
+      <div class="row justify-content-center mb-5" data-aos="fade-up" data-aos-delay="100" id="upload-panel">
+        <div class="col-lg-8">
+          <div class="glass-card p-4">
+            <h4 class="fw-bold mb-3 text-white"><i class="bi bi-cloud-arrow-up text-primary me-2"></i>Select Traffic File</h4>
+            <p class="text-muted small">Upload your log dataset in CSV format. The file must match the standard firewall feature headers. Don't have a file? <a href="/download_sample" class="text-primary fw-semibold"><i class="bi bi-download me-1"></i>Download Sample CSV</a>.</p>
+            
+            <!-- CSV Format Guide Panel -->
+            <div class="p-3 mb-4 rounded border border-secondary" style="background: rgba(255,255,255,0.01);">
+              <h6 class="fw-bold text-primary mb-2 small"><i class="bi bi-table me-1"></i>Required CSV Column Format Guide:</h6>
+              <div class="table-responsive">
+                <table class="table table-sm table-borderless text-muted small mb-0" style="font-size: 0.75rem;">
+                  <thead>
+                    <tr class="text-white border-bottom border-secondary">
+                      <th>Col 1</th>
+                      <th>Col 2</th>
+                      <th>Col 3</th>
+                      <th>Col 4</th>
+                      <th>Col 5</th>
+                      <th>Col 6</th>
+                      <th>Col 7</th>
+                      <th>Col 8</th>
+                      <th>Col 9</th>
+                      <th>Col 10</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td class="font-monospace">session_id</td>
+                      <td class="font-monospace">network_packet_size</td>
+                      <td class="font-monospace">protocol_type</td>
+                      <td class="font-monospace">login_attempts</td>
+                      <td class="font-monospace">session_duration</td>
+                      <td class="font-monospace">encryption_used</td>
+                      <td class="font-monospace">ip_reputation_score</td>
+                      <td class="font-monospace">failed_logins</td>
+                      <td class="font-monospace">browser_type</td>
+                      <td class="font-monospace">unusual_time_access</td>
+                    </tr>
+                    <tr class="text-secondary">
+                      <td>e.g. SID_001</td>
+                      <td>e.g. 599</td>
+                      <td>TCP/UDP/ICMP</td>
+                      <td>e.g. 4</td>
+                      <td>e.g. 492.98</td>
+                      <td>AES/DES/None</td>
+                      <td>e.g. 0.61</td>
+                      <td>e.g. 1</td>
+                      <td>Chrome/Edge/Firefox...</td>
+                      <td>e.g. 0 or 1</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="dropzone-container" id="dropzone" onclick="document.getElementById('file-input').click()">
+              <input type="file" id="file-input" class="d-none" accept=".csv" onchange="handleFileSelect(this.files)">
+              <div class="py-4">
+                <i class="bi bi-file-earmark-bar-graph text-info" style="font-size: 3.5rem;"></i>
+                <h5 class="fw-bold text-white mt-3 mb-1">Drag & Drop Log File Here</h5>
+                <p class="text-muted small">or click to browse local directories (supports only CSV)</p>
+                <div class="badge bg-secondary-subtle text-secondary border mt-2 px-3 py-2" id="file-chosen">No file selected</div>
+              </div>
+            </div>
+
+            <div class="text-center mt-4">
+              <button class="btn btn-cyber-primary btn-lg px-5" id="btn-scan" onclick="uploadLogFile()" disabled>
+                <i class="bi bi-shield-shaded me-2"></i>Initiate Threat Scan
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Processing/Loading Panel -->
+      <div class="row justify-content-center d-none" id="loading-panel">
+        <div class="col-lg-6 text-center my-5">
+          <div class="spinner-border text-primary spinner-cyber mb-4" role="status"></div>
+          <h3 class="fw-bold text-white mb-2">Analyzing Network Logs...</h3>
+          <p class="text-muted">Scaling feature matrices and executing model probability calculations.</p>
+          <div class="progress bg-dark border border-secondary mt-4" style="height: 10px; border-radius: 50px;">
+            <div class="progress-bar progress-bar-striped progress-bar-animated bg-primary" role="progressbar" style="width: 0%" id="scan-progress"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Results Dashboard Panel -->
+      <div id="results-panel" class="d-none">
+        
+        <!-- Metrics Grid -->
+        <div class="row g-4 mb-5">
+          <div class="col-md-3" data-aos="fade-up" data-aos-delay="100">
+            <div class="glass-card stat-box top-accent-cyan h-100 d-flex flex-column justify-content-between">
+              <div>
+                <p class="text-muted fw-semibold small mb-1">TOTAL LOGS SCANNED</p>
+                <div class="stat-number text-white" id="stat-total">0</div>
+              </div>
+              <i class="bi bi-hdd-network text-info fs-3 text-end mt-2"></i>
+            </div>
+          </div>
+
+          <div class="col-md-3" data-aos="fade-up" data-aos-delay="200">
+            <div class="glass-card stat-box threat top-accent-threat h-100 d-flex flex-column justify-content-between">
+              <div>
+                <p class="text-danger fw-semibold small mb-1">THREATS IDENTIFIED</p>
+                <div class="stat-number text-danger" id="stat-threats">0</div>
+              </div>
+              <i class="bi bi-shield-x text-danger fs-3 text-end mt-2"></i>
+            </div>
+          </div>
+
+          <div class="col-md-3" data-aos="fade-up" data-aos-delay="300">
+            <div class="glass-card stat-box safe top-accent-safe h-100 d-flex flex-column justify-content-between">
+              <div>
+                <p class="text-success fw-semibold small mb-1">CLEAN SESSIONS</p>
+                <div class="stat-number text-success" id="stat-safe">0</div>
+              </div>
+              <i class="bi bi-shield-check text-success fs-3 text-end mt-2"></i>
+            </div>
+          </div>
+
+          <div class="col-md-3" data-aos="fade-up" data-aos-delay="400">
+            <div class="glass-card stat-box top-accent-warning h-100 d-flex flex-column justify-content-between" style="border-left-color: #ff9f0a; background: rgba(255, 159, 10, 0.02);">
+              <div>
+                <p class="text-warning fw-semibold small mb-1">THREAT RATIO</p>
+                <div class="stat-number text-warning" id="stat-ratio">0%</div>
+              </div>
+              <i class="bi bi-activity text-warning fs-3 text-end mt-2"></i>
+            </div>
+          </div>
+        </div>
+
+        <!-- Telemetry Graphs and Visualizer -->
+        <div class="row g-4 mb-5">
+          <div class="col-lg-6">
+            <div class="glass-card p-4 h-100">
+              <h5 class="fw-bold text-white mb-4"><i class="bi bi-pie-chart text-primary me-2"></i>Threat Distribution</h5>
+              
+              <!-- Custom SVG Donut Chart -->
+              <div class="text-center py-3">
+                <svg width="240" height="240" viewBox="0 0 36 36" style="transform: rotate(-90deg);">
+                  <circle cx="18" cy="18" r="15.915" fill="none" stroke="#198754" stroke-width="4.2"></circle>
+                  <circle cx="18" cy="18" r="15.915" fill="none" stroke="#dc3545" stroke-width="4.2" stroke-dasharray="0 100" stroke-dashoffset="0" id="donut-threat-segment" style="transition: stroke-dasharray 0.8s ease;"></circle>
+                  <circle cx="18" cy="18" r="12" fill="#0d111c"></circle>
+                </svg>
+                <div class="mt-3 d-flex justify-content-center gap-4">
+                  <div>
+                    <span class="d-inline-block rounded-circle bg-success me-1" style="width: 12px; height: 12px;"></span>
+                    <span class="small text-muted">Safe (Clean)</span>
+                  </div>
+                  <div>
+                    <span class="d-inline-block rounded-circle bg-danger me-1" style="width: 12px; height: 12px;"></span>
+                    <span class="small text-muted">Intrusions (Threats)</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-lg-6">
+            <div class="glass-card p-4 h-100">
+              <h5 class="fw-bold text-white mb-4"><i class="bi bi-bar-chart-steps text-primary me-2"></i>Protocol Breakdowns</h5>
+              
+              <!-- Custom SVG Bar Graph -->
+              <div class="d-flex flex-column justify-content-center align-items-center h-100 py-3">
+                <svg width="320" height="180" viewBox="0 0 320 180" style="background: rgba(0,0,0,0.2); border-radius: 8px; padding: 10px;">
+                  <!-- Grid Lines -->
+                  <line x1="40" y1="20" x2="300" y2="20" stroke="rgba(255,255,255,0.05)" stroke-width="1"></line>
+                  <line x1="40" y1="70" x2="300" y2="70" stroke="rgba(255,255,255,0.05)" stroke-width="1"></line>
+                  <line x1="40" y1="120" x2="300" y2="120" stroke="rgba(255,255,255,0.05)" stroke-width="1"></line>
+                  <line x1="40" y1="150" x2="300" y2="150" stroke="rgba(255,255,255,0.2)" stroke-width="1.5"></line>
+                  
+                  <!-- Y Axis Labels -->
+                  <text x="30" y="24" fill="rgba(255,255,255,0.4)" font-size="9" text-anchor="end" id="y-lbl-high">100</text>
+                  <text x="30" y="74" fill="rgba(255,255,255,0.4)" font-size="9" text-anchor="end" id="y-lbl-mid">50</text>
+                  <text x="30" y="124" fill="rgba(255,255,255,0.4)" font-size="9" text-anchor="end">0</text>
+                  
+                  <!-- Bars -->
+                  <rect x="65" y="150" width="45" height="0" class="chart-svg-bar" id="bar-tcp"></rect>
+                  <rect x="140" y="150" width="45" height="0" class="chart-svg-bar chart-svg-bar-udp" id="bar-udp"></rect>
+                  <rect x="215" y="150" width="45" height="0" class="chart-svg-bar chart-svg-bar-icmp" id="bar-icmp"></rect>
+                  
+                  <!-- X Axis Labels -->
+                  <text x="87" y="166" fill="rgba(255,255,255,0.6)" font-size="10" text-anchor="middle">TCP</text>
+                  <text x="162" y="166" fill="rgba(255,255,255,0.6)" font-size="10" text-anchor="middle">UDP</text>
+                  <text x="237" y="166" fill="rgba(255,255,255,0.6)" font-size="10" text-anchor="middle">ICMP</text>
+                </svg>
+                <div class="small text-muted mt-3" id="bar-counts-desc">TCP: 0 | UDP: 0 | ICMP: 0</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Scanned Packets Table -->
+        <div class="row mb-5" data-aos="fade-up">
+          <div class="col-12">
+            <div class="glass-card p-4">
+              <div class="d-md-flex justify-content-between align-items-center mb-4">
+                <h5 class="fw-bold text-white mb-2 mb-md-0"><i class="bi bi-list-task text-primary me-2"></i>Scanned Session Records <span class="badge bg-secondary-subtle text-muted fs-6" id="badge-total-records">0</span></h5>
+                
+                <!-- Search and Filters -->
+                <div class="d-flex gap-2">
+                  <input type="text" class="form-control bg-dark border-secondary text-white" style="max-width: 250px; font-size: 0.9rem;" placeholder="Search session ID..." id="search-input" onkeyup="filterTable()">
+                  <select class="form-select bg-dark border-secondary text-white" style="max-width: 150px; font-size: 0.9rem;" id="filter-status" onchange="filterTable()">
+                    <option value="all">All Logs</option>
+                    <option value="threat">Threats</option>
+                    <option value="safe">Clean</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="custom-table-container">
+                <table class="table table-cyber align-middle">
+                  <thead>
+                    <tr>
+                      <th scope="col">Session ID</th>
+                      <th scope="col">Protocol</th>
+                      <th scope="col">Packet Size</th>
+                      <th scope="col">Failed Logins</th>
+                      <th scope="col">Session Duration</th>
+                      <th scope="col">IP Rep Score</th>
+                      <th scope="col">Detection Confidence</th>
+                      <th scope="col">Status</th>
+                      <th scope="col" class="text-center">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody id="table-body">
+                    <!-- Dynamic Rows Insertion -->
+                  </tbody>
+                </table>
+              </div>
+              
+              <div class="text-center mt-3">
+                <button class="btn btn-outline-primary" onclick="resetAnalyzer()"><i class="bi bi-arrow-left-short me-1"></i>Scan Another File</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </main>
+
+  <footer id="footer" class="footer mt-auto py-3 bg-dark">
+    <div class="container copyright text-center text-muted">
+      <p>© <span>Copyright</span> <strong class="px-1 sitename">Detexis</strong> <span>All Rights Reserved</span></p>
+      <div class="credits">Designed & Distributed by <a href="#" class="text-primary">Detexis Team</a></div>
+    </div>
+  </footer>
+
+  <!-- Scroll Top -->
+  <a href="#" id="scroll-top" class="scroll-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
+
+  <!-- Vendor JS Files -->
+  <script src="/static/assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script src="/static/assets/vendor/aos/aos.js"></script>
+  <script src="/static/assets/vendor/glightbox/js/glightbox.min.js"></script>
+  <script src="/static/assets/vendor/swiper/swiper-bundle.min.js"></script>
+
+  <!-- Main JS File -->
+  <script src="/static/assets/js/main.js"></script>
+
+  <script>
+    // Global log data cache
+    let selectedFile = null;
+    let tableData = [];
+
+    // Setup drag and drop
+    const dropzone = document.getElementById('dropzone');
+    const fileChosen = document.getElementById('file-chosen');
+    const btnScan = document.getElementById('btn-scan');
+
+    ['dragenter', 'dragover'].forEach(eventName => {
+      dropzone.addEventListener(eventName, (e) => {
+        e.preventDefault();
+        dropzone.classList.add('dragover');
+      }, false);
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+      dropzone.addEventListener(eventName, (e) => {
+        e.preventDefault();
+        dropzone.classList.remove('dragover');
+      }, false);
+    });
+
+    dropzone.addEventListener('drop', (e) => {
+      const dt = e.dataTransfer;
+      const files = dt.files;
+      handleFileSelect(files);
+    });
+
+    function handleFileSelect(files) {
+      if (files.length > 0) {
+        const file = files[0];
+        if (file.name.endsWith('.csv')) {
+          selectedFile = file;
+          fileChosen.innerText = `${file.name} (${(file.size / 1024).toFixed(2)} KB)`;
+          fileChosen.classList.remove('bg-secondary-subtle', 'text-secondary');
+          fileChosen.classList.add('bg-info-subtle', 'text-info', 'border-info');
+          btnScan.disabled = false;
+        } else {
+          alert('Please upload a valid CSV file.');
+          resetUploadState();
+        }
+      }
+    }
+
+    function resetUploadState() {
+      selectedFile = null;
+      fileChosen.innerText = 'No file selected';
+      fileChosen.classList.remove('bg-info-subtle', 'text-info', 'border-info');
+      fileChosen.classList.add('bg-secondary-subtle', 'text-secondary');
+      btnScan.disabled = true;
+    }
+
+    function uploadLogFile() {
+      if (!selectedFile) return;
+
+      // Show loading panel
+      document.getElementById('upload-panel').classList.add('d-none');
+      const loadingPanel = document.getElementById('loading-panel');
+      loadingPanel.classList.remove('d-none');
+
+      const progressBar = document.getElementById('scan-progress');
+      progressBar.style.width = '0%';
+
+      // Simulate step progress increments for aesthetic polish
+      let progress = 0;
+      const progressInterval = setInterval(() => {
+        progress += Math.floor(Math.random() * 15) + 5;
+        if (progress > 85) {
+          clearInterval(progressInterval);
+        } else {
+          progressBar.style.width = `${progress}%`;
+        }
+      }, 150);
+
+      // Perform upload request
+      const formData = new FormData();
+      formData.append('file', selectedFile);
+
+      fetch('/analyze_upload', {
+        method: 'POST',
+        body: formData
+      })
+      .then(response => response.json())
+      .then(data => {
+        clearInterval(progressInterval);
+        progressBar.style.width = '100%';
+
+        setTimeout(() => {
+          loadingPanel.classList.add('d-none');
+          if (data.success) {
+            renderResults(data);
+          } else {
+            alert(`Analysis failed: ${data.error}`);
+            resetAnalyzer();
+          }
+        }, 400);
+      })
+      .catch(err => {
+        clearInterval(progressInterval);
+        alert(`Request error: ${err}`);
+        resetAnalyzer();
+      });
+    }
+
+    function renderResults(data) {
+      // Show results dashboard
+      document.getElementById('results-panel').classList.remove('d-none');
+
+      // Populate metrics
+      document.getElementById('stat-total').innerText = data.total_count.toLocaleString();
+      document.getElementById('stat-threats').innerText = data.threat_count.toLocaleString();
+      document.getElementById('stat-safe').innerText = data.safe_count.toLocaleString();
+      document.getElementById('stat-ratio').innerText = `${data.threat_percentage}%`;
+      document.getElementById('badge-total-records').innerText = data.log_table.length;
+
+      // Update SVG circular donut
+      const donutThreatSegment = document.getElementById('donut-threat-segment');
+      const threatPct = data.threat_percentage;
+      donutThreatSegment.style.strokeDasharray = `${threatPct} 100`;
+
+      // Update Protocol Bar Graph
+      const maxCount = Math.max(data.protocol_counts.TCP, data.protocol_counts.UDP, data.protocol_counts.ICMP, 1);
+      
+      // Update bar heights (max height is 130px, y begins from 150 downwards)
+      const tcpHeight = (data.protocol_counts.TCP / maxCount) * 120;
+      const udpHeight = (data.protocol_counts.UDP / maxCount) * 120;
+      const icmpHeight = (data.protocol_counts.ICMP / maxCount) * 120;
+
+      const barTcp = document.getElementById('bar-tcp');
+      barTcp.setAttribute('height', tcpHeight);
+      barTcp.setAttribute('y', 150 - tcpHeight);
+
+      const barUdp = document.getElementById('bar-udp');
+      barUdp.setAttribute('height', udpHeight);
+      barUdp.setAttribute('y', 150 - udpHeight);
+
+      const barIcmp = document.getElementById('bar-icmp');
+      barIcmp.setAttribute('height', icmpHeight);
+      barIcmp.setAttribute('y', 150 - icmpHeight);
+
+      // Label scaling
+      document.getElementById('y-lbl-high').textContent = maxCount;
+      document.getElementById('y-lbl-mid').textContent = Math.round(maxCount / 2);
+
+      document.getElementById('bar-counts-desc').innerText = `TCP: ${data.protocol_counts.TCP} | UDP: ${data.protocol_counts.UDP} | ICMP: ${data.protocol_counts.ICMP}`;
+
+      // Populate log table
+      tableData = data.log_table;
+      const tableBody = document.getElementById('table-body');
+      tableBody.innerHTML = '';
+
+      tableData.forEach(row => {
+        const tr = document.createElement('tr');
+        const isThreat = row.prediction.includes('Threat');
+        if (isThreat) {
+          tr.classList.add('danger-row');
+        }
+
+        const badgeClass = isThreat ? 'badge-cyber-danger' : 'badge-cyber-success';
+        const actionBtn = isThreat 
+          ? `<button class="btn btn-sm btn-outline-warning py-1" onclick="whitelistProfile(this, ${row.packet_size}, ${row.protocol === 'TCP' ? 1 : (row.protocol === 'UDP' ? 2 : 0)}, ${row.failed_logins}, ${row.session_duration}, ${row.ip_reputation})"><i class="bi bi-shield-plus me-1"></i>Whitelist</button>`
+          : `<span class="text-muted small">No action</span>`;
+
+        tr.innerHTML = `
+          <td><strong class="text-white font-monospace" style="letter-spacing: 0.5px;">${row.session_id}</strong></td>
+          <td><span class="badge bg-secondary-subtle border text-muted">${row.protocol}</span></td>
+          <td class="font-monospace">${row.packet_size} B</td>
+          <td class="font-monospace">${row.failed_logins}</td>
+          <td class="font-monospace">${row.session_duration} s</td>
+          <td class="font-monospace">${row.ip_reputation}</td>
+          <td class="font-monospace"><span class="fw-bold">${row.confidence}%</span></td>
+          <td><span class="badge-cyber badge ${badgeClass}">${row.prediction}</span></td>
+          <td class="text-center">${actionBtn}</td>
+        `;
+        tableBody.appendChild(tr);
+      });
+
+      AOS.refresh();
+    }
+
+    function whitelistProfile(btn, packetSize, protocolCode, failedLogins, duration, ipReputation) {
+      if (confirm("Whitelist this network profile? Future matching events will bypass ML threat warnings.")) {
+        const formData = new FormData();
+        formData.append('input1', packetSize);
+        formData.append('input2', protocolCode);
+        formData.append('input3', 1); // login attempts placeholder
+        formData.append('input4', duration);
+        formData.append('input5', 2); // encryption None placeholder
+        formData.append('input6', ipReputation);
+        formData.append('input7', failedLogins);
+        formData.append('input8', 4); // browser Unknown placeholder
+        formData.append('input9', 1); // unusual hours placeholder
+
+        fetch('/whitelist_add', {
+          method: 'POST',
+          body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            btn.disabled = true;
+            btn.innerHTML = `<i class="bi bi-check-circle me-1"></i>Whitelisted`;
+            btn.className = "btn btn-sm btn-cyber-primary py-1";
+            
+            // Alter visual state row
+            const tr = btn.closest('tr');
+            tr.classList.remove('danger-row');
+            const statusBadge = tr.querySelector('.badge-cyber');
+            statusBadge.className = "badge-cyber badge badge-cyber-success";
+            statusBadge.textContent = "No Threat (Whitelisted)";
+            
+            // Adjust metrics
+            const statThreats = document.getElementById('stat-threats');
+            const statSafe = document.getElementById('stat-safe');
+            const total = parseInt(document.getElementById('stat-total').innerText.replace(/,/g, ''));
+            
+            let threatCount = parseInt(statThreats.innerText.replace(/,/g, '')) - 1;
+            let safeCount = parseInt(statSafe.innerText.replace(/,/g, '')) + 1;
+            
+            statThreats.innerText = threatCount.toLocaleString();
+            statSafe.innerText = safeCount.toLocaleString();
+            
+            const newRatio = ((threatCount / total) * 100).toFixed(2);
+            document.getElementById('stat-ratio').innerText = `${newRatio}%`;
+            document.getElementById('donut-threat-segment').style.strokeDasharray = `${newRatio} 100`;
+          } else {
+            alert(`Error: ${data.error}`);
+          }
+        });
+      }
+    }
+
+    function filterTable() {
+      const searchVal = document.getElementById('search-input').value.toUpperCase();
+      const statusFilter = document.getElementById('filter-status').value;
+      const tableBody = document.getElementById('table-body');
+      const rows = tableBody.getElementsByTagName('tr');
+
+      for (let i = 0; i < rows.length; i++) {
+        const row = rows[i];
+        const sessionCell = row.getElementsByTagName('td')[0];
+        const statusBadge = row.querySelector('.badge-cyber');
+
+        if (sessionCell && statusBadge) {
+          const sessionText = sessionCell.textContent || sessionCell.innerText;
+          const statusText = statusBadge.textContent || statusBadge.innerText;
+          
+          const matchesSearch = sessionText.toUpperCase().indexOf(searchVal) > -1;
+          
+          let matchesStatus = true;
+          if (statusFilter === 'threat') {
+            matchesStatus = statusText.includes('Threat');
+          } else if (statusFilter === 'safe') {
+            matchesStatus = !statusText.includes('Threat');
+          }
+
+          if (matchesSearch && matchesStatus) {
+            row.style.display = '';
+          } else {
+            row.style.display = 'none';
+          }
+        }
+      }
+    }
+
+    function resetAnalyzer() {
+      document.getElementById('results-panel').classList.add('d-none');
+      document.getElementById('loading-panel').classList.add('d-none');
+      document.getElementById('upload-panel').classList.remove('d-none');
+      resetUploadState();
+    }
+  </script>
+</body>
+</html>

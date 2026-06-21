@@ -9,8 +9,8 @@
   <meta name="keywords" content="intrusion detection, cybersecurity, machine learning, Detexis">
 
   <!-- Favicons -->
-  <link href="../static/assets/img/favicon.png" rel="icon">
-  <link href="../static/assets/img/apple-touch-icon.png" rel="apple-touch-icon">
+  <link href="/static/assets/img/favicon.png" rel="icon">
+  <link href="/static/assets/img/apple-touch-icon.png" rel="apple-touch-icon">
 
   <!-- Fonts -->
   <link href="https://fonts.googleapis.com" rel="preconnect">
@@ -18,14 +18,128 @@
   <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&family=Raleway:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Ubuntu:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400;1,500;1,700&display=swap" rel="stylesheet">
 
   <!-- Vendor CSS Files -->
-  <link href="../static/assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
-  <link href="../static/assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
-  <link href="../static/assets/vendor/aos/aos.css" rel="stylesheet">
-  <link href="../static/assets/vendor/glightbox/css/glightbox.min.css" rel="stylesheet">
-  <link href="../static/assets/vendor/swiper/swiper-bundle.min.css" rel="stylesheet">
+  <link href="/static/assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+  <link href="/static/assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
+  <link href="/static/assets/vendor/aos/aos.css" rel="stylesheet">
+  <link href="/static/assets/vendor/glightbox/css/glightbox.min.css" rel="stylesheet">
+  <link href="/static/assets/vendor/swiper/swiper-bundle.min.css" rel="stylesheet">
 
   <!-- Main CSS File -->
-  <link href="../static/assets/css/main.css" rel="stylesheet">
+  <link href="/static/assets/css/main.css?v=5.0" rel="stylesheet">
+
+  <style>
+    body {
+      background: #030712 !important;
+      color: #f3f4f6;
+    }
+    .hero {
+      background: radial-gradient(circle at top, rgba(6,182,212,0.12) 0%, transparent 60%), #030712 !important;
+      padding: 60px 0 30px 0 !important;
+    }
+    .services {
+      background: #030712 !important;
+      padding: 40px 0 !important;
+    }
+    .service-item {
+      background: rgba(17, 24, 39, 0.4) !important;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.05) !important;
+      color: #cbd5e1 !important;
+      transition: all 0.3s ease;
+    }
+    .service-item:hover {
+      border-color: rgba(6, 182, 212, 0.3) !important;
+      transform: translateY(-3px);
+    }
+    .form-control, .form-select {
+      background-color: rgba(10, 15, 30, 0.8) !important;
+      border: 1px solid rgba(255, 255, 255, 0.08) !important;
+      color: #f3f4f6 !important;
+      transition: all 0.25s ease !important;
+    }
+    .form-control:focus, .form-select:focus {
+      border-color: #00e4c4 !important;
+      box-shadow: 0 0 10px rgba(6, 182, 212, 0.3) !important;
+    }
+    .terminal-console {
+      background-color: #020617;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 10px;
+      padding: 15px;
+      font-family: 'Fira Code', 'Courier New', monospace;
+      color: #00e4c4;
+      height: 250px;
+      overflow-y: auto;
+      font-size: 0.82rem;
+      box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.8);
+    }
+    .terminal-line {
+      margin-bottom: 6px;
+      line-height: 1.4;
+      cursor: pointer;
+      padding: 4px 8px;
+      border-radius: 4px;
+      border-left: 2px solid transparent;
+      transition: all 0.2s ease;
+    }
+    .terminal-line:hover {
+      background: rgba(6, 182, 212, 0.08);
+      border-left-color: #00e4c4;
+      padding-left: 10px;
+    }
+    .honeypot-map-container {
+      background: #020617;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 12px;
+      padding: 15px;
+      position: relative;
+    }
+    .node-label {
+      font-size: 10px;
+      fill: #94a3b8;
+      font-weight: 600;
+    }
+    .mfa-overlay {
+      background: rgba(17, 24, 39, 0.95);
+      border: 1px solid #f97316;
+      border-radius: 12px;
+      padding: 25px;
+      text-align: center;
+      box-shadow: 0 0 30px rgba(249, 115, 22, 0.25);
+    }
+    .btn-scenario {
+      font-size: 0.78rem;
+      font-weight: 600;
+      padding: 6px 12px;
+      border-radius: 50px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: #cbd5e1;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .btn-scenario:hover {
+      transform: translateY(-2px);
+      background: rgba(6, 182, 212, 0.1);
+      border-color: #00e4c4;
+      color: #ffffff;
+    }
+    .glow-dot {
+      animation: pulse-dot 1.5s infinite;
+    }
+    @keyframes pulse-dot {
+      0% { r: 3; opacity: 1; }
+      50% { r: 6; opacity: 0.4; }
+      100% { r: 3; opacity: 1; }
+    }
+    .animate-pulse-slow {
+      animation: alert-glow-pulse 2s infinite alternate;
+    }
+    @keyframes alert-glow-pulse {
+      0% { box-shadow: 0 0 5px rgba(249, 115, 22, 0.2); }
+      100% { box-shadow: 0 0 20px rgba(249, 115, 22, 0.5); }
+    }
+  </style>
 
 </head>
 
@@ -34,15 +148,17 @@
   <header id="header" class="header d-flex align-items-center sticky-top">
     <div class="container-fluid container-xl position-relative d-flex align-items-center">
 
-      <a href="/home" class="logo d-flex align-items-center me-auto">
-        <h1 class="sitename">Detexis</h1>
+      <a href="/home" class="logo d-flex align-items-center me-auto text-decoration-none">
+        <h1 class="sitename" style="color:#00e4c4; font-family: var(--heading-font); letter-spacing: 1.5px;">
+          <i class="bi bi-shield-network text-info me-2"></i>Detexis
+        </h1>
       </a>
 
       <nav id="navmenu" class="navmenu">
         <ul>
           <li><a href="/home" class="active">Prediction</a></li>
-          <li><a href="/about">Graphs</a></li>
-          <li><a href="../static/Notebook.html">Notebook</a></li>
+          <li><a href="/analyze">Log Analyzer</a></li>
+          <li><a href="/correlation">Correlation Center</a></li>
         </ul>
         <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
       </nav>
@@ -67,7 +183,7 @@
             </div>
           </div>
           <div class="col-lg-6 order-1 order-lg-2 hero-img" data-aos="zoom-out" data-aos-delay="100">
-            <img src="../static/assets/img/hero-img.png" class="img-fluid animated" alt="">
+            <img src="/static/assets/img/hero-img.png" class="img-fluid animated" alt="">
           </div>
         </div>
       </div>
@@ -75,33 +191,33 @@
     </section><!-- /Hero Section -->
 
     <!-- Featured Services Section -->
-    <section id="featured-services" class="featured-services section">
+    <section id="featured-services" class="featured-services section py-5">
 
       <div class="container">
 
         <div class="row gy-4">
 
           <div class="col-lg-4 d-flex" data-aos="fade-up" data-aos-delay="100">
-            <div class="service-item position-relative">
-              <div class="icon"><i class="bi bi-shield-lock icon"></i></div>
-              <h4><a href="" class="stretched-link">Real-Time Detection</a></h4>
-              <p>Implementing real-time intrusion detection to safeguard enterprise networks from evolving threats.</p>
+            <div class="glass-card position-relative p-5 h-100 scanline-container w-100 top-accent-cyan">
+              <div class="icon mb-4" style="font-size: 2.5rem; color: #00e4c4;"><i class="bi bi-shield-lock"></i></div>
+              <h4 class="fw-bold mb-3 text-white">Real-Time Detection</h4>
+              <p class="text-muted mb-0">Implementing real-time intrusion detection to safeguard enterprise networks from evolving threats.</p>
             </div>
           </div><!-- End Service Item -->
 
           <div class="col-lg-4 d-flex" data-aos="fade-up" data-aos-delay="200">
-            <div class="service-item position-relative">
-              <div class="icon"><i class="bi bi-bar-chart-line icon"></i></div>
-              <h4><a href="" class="stretched-link">AI-Driven Analytics</a></h4>
-              <p>Leveraging AI and Machine Learning to analyze network traffic and identify potential vulnerabilities.</p>
+            <div class="glass-card position-relative p-5 h-100 scanline-container w-100 top-accent-cyan">
+              <div class="icon mb-4" style="font-size: 2.5rem; color: #00e4c4;"><i class="bi bi-bar-chart-line"></i></div>
+              <h4 class="fw-bold mb-3 text-white">AI-Driven Analytics</h4>
+              <p class="text-muted mb-0">Leveraging AI and Machine Learning to analyze network traffic and identify potential vulnerabilities.</p>
             </div>
           </div><!-- End Service Item -->
 
           <div class="col-lg-4 d-flex" data-aos="fade-up" data-aos-delay="300">
-            <div class="service-item position-relative">
-              <div class="icon"><i class="bi bi-cloud-check icon"></i></div>
-              <h4><a href="" class="stretched-link">Scalable Solutions</a></h4>
-              <p>Providing scalable and adaptive security solutions tailored for enterprise environments.</p>
+            <div class="glass-card position-relative p-5 h-100 scanline-container w-100 top-accent-cyan">
+              <div class="icon mb-4" style="font-size: 2.5rem; color: #00e4c4;"><i class="bi bi-cloud-check"></i></div>
+              <h4 class="fw-bold mb-3 text-white">Scalable Solutions</h4>
+              <p class="text-muted mb-0">Providing scalable and adaptive security solutions tailored for enterprise environments.</p>
             </div>
           </div><!-- End Service Item -->
 
@@ -114,173 +230,668 @@
 
 
     <!-- Services Section -->
-    <section id="services" class="services section light-background">
+    <section id="services" class="services section">
 
       <!-- Section Title -->
       <div class="container section-title" data-aos="fade-up">
-        <span>Prediction</span>
-        <h2>Prediction</h2>
-        <p>Provide your inputs below:</p>
+        <span>Security Operations Center</span>
+        <h2>Security Operations Center</h2>
+        <p>Analyze network sessions in real-time, test exploits, and inspect automated playbooks.</p>
       </div><!-- End Section Title -->
 
-      <form action="/predict" method="post">
-        <div class="container">
-
-          <div class="row gy-3">
-
-            <div class="col-md-4" data-aos="fade-up" data-aos-delay="100">
-              <div class="service-item position-relative shadow-lg p-4 rounded bg-light">
-                <label for="input1" class="fw-bold text-primary">Network Packet Size <i class="bi bi-info-circle" title="Size of the network packet in bytes (0-2000)" style="cursor: help; font-size: 0.85rem;"></i></label>
-                <input type="number" id="input1" name="input1" class="form-control border-primary" min="0" max="2000" step="1" placeholder="e.g. 599" required>
+      <div class="container">
+        
+        <!-- SOC Onboarding Step Panel -->
+        <div class="glass-card p-4 mb-4" data-aos="fade-up">
+          <h5 class="fw-bold text-white mb-3"><i class="bi bi-info-circle text-primary me-2"></i>How to Use the Prediction Engine</h5>
+          <div class="row g-3">
+            <div class="col-md-4">
+              <div class="p-3 rounded h-100" style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.03);">
+                <div class="d-flex align-items-center mb-2">
+                  <span class="badge bg-primary rounded-circle me-2 d-flex align-items-center justify-content-center" style="width:24px; height:24px;">1</span>
+                  <h6 class="fw-bold text-white mb-0">Load Session Data</h6>
+                </div>
+                <p class="small text-muted mb-0">Select a scenario from <strong>Quick Scenarios</strong>, click a live packet in the <strong>Live Capture Feed</strong>, or type parameters manually.</p>
               </div>
-            </div><!-- End Input Item -->
-
-            <div class="col-md-4" data-aos="fade-up" data-aos-delay="200">
-              <div class="service-item position-relative shadow-lg p-4 rounded bg-light">
-                <label for="input2" class="fw-bold text-primary">Protocol Type <i class="bi bi-info-circle" title="Network protocol: ICMP, TCP, or UDP" style="cursor: help; font-size: 0.85rem;"></i></label>
-                <select id="input2" name="input2" class="form-control border-primary" required>
-                  <option value="">Select Option</option>
-                  <option value="0">ICMP</option>
-                  <option value="1">TCP</option>
-                  <option value="2">UDP</option>
-                </select>
+            </div>
+            <div class="col-md-4">
+              <div class="p-3 rounded h-100" style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.03);">
+                <div class="d-flex align-items-center mb-2">
+                  <span class="badge bg-primary rounded-circle me-2 d-flex align-items-center justify-content-center" style="width:24px; height:24px;">2</span>
+                  <h6 class="fw-bold text-white mb-0">Dynamic Verification</h6>
+                </div>
+                <p class="small text-muted mb-0">If inputs trigger anomalous thresholds, verify identity using the <strong>Zero-Trust MFA widget</strong> to lower the session risk score.</p>
               </div>
-            </div><!-- End Input Item -->
-
-            <div class="col-md-4" data-aos="fade-up" data-aos-delay="300">
-              <div class="service-item position-relative shadow-lg p-4 rounded bg-light">
-                <label for="input3" class="fw-bold text-primary">Login Attempts <i class="bi bi-info-circle" title="Number of login attempts in this session" style="cursor: help; font-size: 0.85rem;"></i></label>
-                <input type="number" id="input3" name="input3" class="form-control border-primary" min="0" max="20" step="1" placeholder="e.g. 4" required>
+            </div>
+            <div class="col-md-4">
+              <div class="p-3 rounded h-100" style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.03);">
+                <div class="d-flex align-items-center mb-2">
+                  <span class="badge bg-primary rounded-circle me-2 d-flex align-items-center justify-content-center" style="width:24px; height:24px;">3</span>
+                  <h6 class="fw-bold text-white mb-0">Run AI Analysis</h6>
+                </div>
+                <p class="small text-muted mb-0">Submit the session. Evaluate prediction metrics, inspect **MITRE playbooks**, and view whitelisting options on the results dashboard.</p>
               </div>
-            </div><!-- End Input Item -->
+            </div>
+          </div>
+        </div>
 
-            <div class="col-md-4" data-aos="fade-up" data-aos-delay="400">
-              <div class="service-item position-relative shadow-lg p-4 rounded bg-light">
-                <label for="input4" class="fw-bold text-primary">Session Duration <i class="bi bi-info-circle" title="Duration of the session in seconds" style="cursor: help; font-size: 0.85rem;"></i></label>
-                <input type="number" id="input4" name="input4" class="form-control border-primary" min="0" max="10000" step="0.01" placeholder="e.g. 492.98" required>
+        <div class="row g-4">
+          
+          <!-- LEFT COLUMN: Prediction Form, Preset Scenarios, Zero-Trust MFA -->
+          <div class="col-lg-6" data-aos="fade-right">
+            <div class="glass-card p-4">
+              <h4 class="fw-bold text-white mb-3"><i class="bi bi-shield-check text-primary me-2"></i>Network Session Predictor</h4>
+              
+              <!-- Preset Scenarios -->
+              <div class="mb-4">
+                <label class="small text-muted fw-bold mb-2 d-block">QUICK SCENARIOS</label>
+                <div class="d-flex flex-wrap gap-2">
+                  <button type="button" class="btn btn-sm btn-outline-success btn-scenario" onclick="loadScenario('normal')"><i class="bi bi-check-circle me-1"></i>Normal Traffic</button>
+                  <button type="button" class="btn btn-sm btn-outline-danger btn-scenario" onclick="loadScenario('sqli')"><i class="bi bi-bug me-1"></i>SQLi Scan</button>
+                  <button type="button" class="btn btn-sm btn-outline-danger btn-scenario" onclick="loadScenario('xss')"><i class="bi bi-braces me-1"></i>XSS Exploit</button>
+                  <button type="button" class="btn btn-sm btn-outline-danger btn-scenario" onclick="loadScenario('brute')"><i class="bi bi-key me-1"></i>Brute Force</button>
+                  <button type="button" class="btn btn-sm btn-outline-danger btn-scenario" onclick="loadScenario('ddos')"><i class="bi bi-lightning me-1"></i>DDoS Spike</button>
+                </div>
               </div>
-            </div><!-- End Input Item -->
 
-            <div class="col-md-4" data-aos="fade-up" data-aos-delay="500">
-              <div class="service-item position-relative shadow-lg p-4 rounded bg-light">
-                <label for="input5" class="fw-bold text-primary">Encryption Used <i class="bi bi-info-circle" title="Encryption algorithm used: AES, DES, or None" style="cursor: help; font-size: 0.85rem;"></i></label>
-                <select id="input5" name="input5" class="form-control border-primary" required>
-                  <option value="">Select Option</option>
-                  <option value="0">AES</option>
-                  <option value="1">DES</option>
-                  <option value="2">None</option>
-                </select>
-              </div>
-            </div><!-- End Input Item -->
+              <!-- Main Form -->
+              <form action="/predict" method="post" id="prediction-form">
+                
+                <!-- Group 1: Traffic Profile -->
+                <div class="p-3 rounded mb-3 border border-secondary" style="background: rgba(255,255,255,0.01);">
+                  <h6 class="fw-bold text-primary mb-3"><i class="bi bi-speedometer2 me-1"></i>1. Traffic Profile</h6>
+                  <div class="row g-3">
+                    <div class="col-md-6">
+                      <label for="input1" class="small text-muted fw-bold">Packet Size (bytes) <i class="bi bi-info-circle" title="Size of network package (0-2000B). Attack packets often have distinct size spikes."></i></label>
+                      <input type="number" id="input1" name="input1" class="form-control form-control-sm" min="0" max="2000" placeholder="e.g. 599" required>
+                    </div>
+                    <div class="col-md-6">
+                      <label for="input2" class="small text-muted fw-bold">Protocol Type <i class="bi bi-info-circle" title="Network transport protocol. TCP is typical for web, UDP for streams, ICMP for pings."></i></label>
+                      <select id="input2" name="input2" class="form-select form-select-sm" required>
+                        <option value="">Select Protocol</option>
+                        <option value="0">ICMP</option>
+                        <option value="1">TCP</option>
+                        <option value="2">UDP</option>
+                      </select>
+                    </div>
+                    <div class="col-md-12">
+                      <label for="input5" class="small text-muted fw-bold">Encryption Used <i class="bi bi-info-circle" title="Encryption tunnel in use. Unencrypted traffic (None) poses higher risk profiles."></i></label>
+                      <select id="input5" name="input5" class="form-select form-select-sm" required>
+                        <option value="">Select Encryption</option>
+                        <option value="0">AES</option>
+                        <option value="1">DES</option>
+                        <option value="2">None</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
 
-            <div class="col-md-4" data-aos="fade-up" data-aos-delay="600">
-              <div class="service-item position-relative shadow-lg p-4 rounded bg-light">
-                <label for="input6" class="fw-bold text-primary">IP Reputation Score <i class="bi bi-info-circle" title="IP reputation score from 0 (bad) to 1 (good)" style="cursor: help; font-size: 0.85rem;"></i></label>
-                <input type="number" id="input6" name="input6" class="form-control border-primary" min="0" max="1" step="0.01" placeholder="e.g. 0.61" required>
-              </div>
-            </div><!-- End Input Item -->
+                <!-- Group 2: Session Metadata -->
+                <div class="p-3 rounded mb-3 border border-secondary" style="background: rgba(255,255,255,0.01);">
+                  <h6 class="fw-bold text-primary mb-3"><i class="bi bi-stopwatch me-1"></i>2. Session Metadata</h6>
+                  <div class="row g-3">
+                    <div class="col-md-6">
+                      <label for="input4" class="small text-muted fw-bold">Session Duration (s) <i class="bi bi-info-circle" title="Duration of server connection. Automated scans are typically very short (<10s)."></i></label>
+                      <input type="number" id="input4" name="input4" class="form-control form-control-sm" min="0" max="10000" step="0.01" placeholder="e.g. 492.98" required>
+                    </div>
+                    <div class="col-md-6">
+                      <label for="input8" class="small text-muted fw-bold">Browser Type <i class="bi bi-info-circle" title="Client web browser. Unknown user agents often flag automated script activity."></i></label>
+                      <select id="input8" name="input8" class="form-select form-select-sm" required>
+                        <option value="">Select Browser</option>
+                        <option value="0">Chrome</option>
+                        <option value="1">Edge</option>
+                        <option value="2">Firefox</option>
+                        <option value="3">Safari</option>
+                        <option value="4">Unknown</option>
+                      </select>
+                    </div>
+                    <div class="col-md-12">
+                      <label for="input9" class="small text-muted fw-bold">Access Timing <i class="bi bi-info-circle" title="Identifies if connection occurs during off-hours (1) or typical working hours (0)."></i></label>
+                      <select id="input9" name="input9" class="form-select form-select-sm" required>
+                        <option value="0">Normal Working Hours (0)</option>
+                        <option value="1">Unusual System Access Hours (1)</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
 
-            <div class="col-md-4" data-aos="fade-up" data-aos-delay="700">
-              <div class="service-item position-relative shadow-lg p-4 rounded bg-light">
-                <label for="input7" class="fw-bold text-primary">Failed Logins <i class="bi bi-info-circle" title="Number of failed login attempts" style="cursor: help; font-size: 0.85rem;"></i></label>
-                <input type="number" id="input7" name="input7" class="form-control border-primary" min="0" max="10" step="1" placeholder="e.g. 1" required>
-              </div>
-            </div><!-- End Input Item -->
+                <!-- Group 3: User Access & Reputation -->
+                <div class="p-3 rounded mb-3 border border-secondary" style="background: rgba(255,255,255,0.01);">
+                  <h6 class="fw-bold text-primary mb-3"><i class="bi bi-person-badge me-1"></i>3. User Access Risk</h6>
+                  <div class="row g-3">
+                    <div class="col-md-4">
+                      <label for="input3" class="small text-muted fw-bold">Total Logins <i class="bi bi-info-circle" title="Total attempts to sign in. High counts correlate with brute-forcing."></i></label>
+                      <input type="number" id="input3" name="input3" class="form-control form-control-sm" min="0" max="20" placeholder="e.g. 4" required>
+                    </div>
+                    <div class="col-md-4">
+                      <label for="input7" class="small text-muted fw-bold">Failed Logins <i class="bi bi-info-circle" title="Failed login count. High failed attempts trigger immediate alarms."></i></label>
+                      <input type="number" id="input7" name="input7" class="form-control form-control-sm" min="0" max="10" placeholder="e.g. 1" required>
+                    </div>
+                    <div class="col-md-4">
+                      <label for="input6" class="small text-muted fw-bold">Reputation (0-1) <i class="bi bi-info-circle" title="IP reputation telemetry. 1.0 is safe/trusted, 0.0 is blacklisted attacker."></i></label>
+                      <input type="number" id="input6" name="input6" class="form-control form-control-sm" min="0" max="1" step="0.01" placeholder="e.g. 0.61" required>
+                    </div>
+                  </div>
+                </div>
 
-            <div class="col-md-4" data-aos="fade-up" data-aos-delay="800">
-              <div class="service-item position-relative shadow-lg p-4 rounded bg-light">
-                <label for="input8" class="fw-bold text-primary">Browser Type <i class="bi bi-info-circle" title="Browser used for this session" style="cursor: help; font-size: 0.85rem;"></i></label>
-                <select id="input8" name="input8" class="form-control border-primary" required>
-                  <option value="">Select Option</option>
-                  <option value="0">Chrome</option>
-                  <option value="1">Edge</option>
-                  <option value="2">Firefox</option>
-                  <option value="3">Safari</option>
-                  <option value="4">Unknown</option>
-                </select>
-              </div>
-            </div><!-- End Input Item -->
+                <!-- Zero-Trust MFA Warning Card -->
+                <div class="card mt-3 border-warning bg-dark bg-opacity-50 animate-pulse-slow d-none" id="mfa-lock-card" style="border-radius: 8px;">
+                  <div class="card-body p-3">
+                    <h6 class="fw-bold text-warning mb-1"><i class="bi bi-shield-fill-exclamation me-1"></i>Zero-Trust MFA Step-Up Triggered</h6>
+                    <p class="small text-muted mb-2" style="font-size:0.75rem;">Suspicious behavior markers detected. Verification required before model evaluation.</p>
+                    <div id="mfa-code-prompt" class="d-none mt-2">
+                      <p class="small mb-1 fw-bold text-white">Enter code: <span class="badge bg-warning text-dark font-monospace" id="mfa-auth-value">000000</span></p>
+                      <div class="d-flex gap-2">
+                        <input type="text" class="form-control form-control-sm text-center font-monospace glass-input" style="max-width: 120px;" placeholder="000 000" id="mfa-input">
+                        <button type="button" class="btn btn-sm btn-warning py-1 fw-bold text-dark" onclick="verifyMFACode()">Verify</button>
+                      </div>
+                    </div>
+                    <button type="button" class="btn btn-sm btn-outline-warning w-100 py-1 fw-bold" id="mfa-btn-trigger" onclick="triggerMFAPrompt()">Initiate Verification</button>
+                  </div>
+                </div>
 
-            <div class="col-md-4" data-aos="fade-up" data-aos-delay="900">
-              <div class="service-item position-relative shadow-lg p-4 rounded bg-light">
-                <label for="input9" class="fw-bold text-primary">Unusual Time Access <i class="bi bi-info-circle" title="1 if accessed during unusual hours, 0 otherwise" style="cursor: help; font-size: 0.85rem;"></i></label>
-                <input type="number" id="input9" name="input9" class="form-control border-primary" min="0" max="1" step="1" placeholder="0 or 1" required>
-              </div>
-            </div><!-- End Input Item -->
+                <div class="text-center mt-3">
+                  <button type="submit" class="btn btn-cyber-primary btn-lg w-100 py-3" id="prediction-submit-btn">
+                    <i class="bi bi-cpu me-2"></i>Evaluate Session Threat Status
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
 
-      <div class="row mt-4">
-  <div class="col-12 text-center">
-    <button type="submit" class="btn btn-success btn-lg px-5 py-3" data-aos="zoom-in" data-aos-delay="100">
-      <i class="bi bi-send-fill me-2"></i> Submit
-    </button>
-    <button type="button" class="btn btn-outline-primary btn-lg px-5 py-3 ms-3" onclick="loadSampleData()" data-aos="zoom-in" data-aos-delay="200">
-      <i class="bi bi-database-fill me-2"></i> Load Sample
-    </button>
-  </div>
-</div>
+          <!-- RIGHT COLUMN: Sandbox payload crafter, capture feed, honeypot mapping -->
+          <div class="col-lg-6" data-aos="fade-left">
+            
+            <!-- Honeypot Map Visualizer -->
+            <div class="glass-card p-4 mb-4 anti-gravity-float">
+              <h5 class="fw-bold text-white mb-3"><i class="bi bi-bezier2 text-primary me-2"></i>Honeypot "Ghost Node" Redirector</h5>
+              <div class="honeypot-map-container text-center">
+                <svg width="100%" height="180" viewBox="0 0 320 180" id="honeypot-svg">
+                  <!-- Connection Paths -->
+                  <path d="M 35 90 L 150 90" stroke="#1e293b" stroke-width="2.5" fill="none" id="path-client"></path>
+                  <path d="M 150 90 L 270 40" stroke="#1e293b" stroke-width="2.5" fill="none" id="path-server"></path>
+                  <path d="M 150 90 L 270 140" stroke="#1e293b" stroke-width="2.5" fill="none" id="path-honeypot"></path>
+                  
+                  <!-- Flowing Packet Dots (Green/Red) -->
+                  <circle cx="35" cy="90" r="4" fill="#10b981" id="flow-dot-1" class="glow-dot"></circle>
+                  <circle cx="150" cy="90" r="4" fill="#10b981" id="flow-dot-2" class="glow-dot" style="display:none;"></circle>
 
+                  <!-- Client Node -->
+                  <circle cx="35" cy="90" r="16" fill="#0284c7" stroke="#38bdf8" stroke-width="2"></circle>
+                  <text x="35" y="94" fill="#fff" font-size="10" font-weight="bold" text-anchor="middle">CLT</text>
+                  <text x="35" y="120" class="node-label" text-anchor="middle">Clients</text>
+
+                  <!-- Gateway Firewall -->
+                  <circle cx="150" cy="90" r="20" fill="#475569" stroke="#94a3b8" stroke-width="2" id="fw-node-circle"></circle>
+                  <text x="150" y="94" fill="#fff" font-size="10" font-weight="bold" text-anchor="middle" id="fw-node-txt">FW</text>
+                  <text x="150" y="125" class="node-label" text-anchor="middle" id="fw-node-lbl">Firewall</text>
+
+                  <!-- Main Server -->
+                  <circle cx="270" cy="40" r="16" fill="#059669" stroke="#34d399" stroke-width="2" id="db-node-circle"></circle>
+                  <text x="270" y="44" fill="#fff" font-size="10" font-weight="bold" text-anchor="middle">DB</text>
+                  <text x="270" y="70" class="node-label" text-anchor="middle">Main Server</text>
+
+                  <!-- Decoy Honeypot Server -->
+                  <circle cx="270" cy="140" r="16" fill="#b45309" stroke="#fbbf24" stroke-width="2" id="honey-node-circle"></circle>
+                  <text x="270" y="144" fill="#fff" font-size="10" font-weight="bold" text-anchor="middle">DEC</text>
+                  <text x="270" y="170" class="node-label" text-anchor="middle" id="honey-node-lbl">Honeypot</text>
+                </svg>
+                <div class="small text-muted mt-2" id="redirector-status-text">Network status: Safe. Traffic routed to Main Server.</div>
+              </div>
+            </div>
+
+            <!-- Exploit Sandbox Payload Crafter -->
+            <div class="glass-card p-4 mb-4">
+              <h5 class="fw-bold text-white mb-2"><i class="bi bi-braces text-primary me-2"></i>Security Sandbox & Exploit Crafter</h5>
+              <p class="text-muted small">Input raw HTTP query string/parameters, compile them to ML features, and evaluate adversarial machine learning evasion vulnerability.</p>
+              
+              <div class="mb-3">
+                <textarea class="form-control text-white font-monospace small" rows="2" placeholder="e.g. GET /login?id=' OR '1'='1" id="sandbox-payload"></textarea>
+              </div>
+
+              <div class="row g-2 align-items-center mb-3">
+                <div class="col-md-7">
+                  <select class="form-select form-select-sm" id="evasion-select">
+                    <option value="none">Adversarial Evasion: Off</option>
+                    <option value="padding">Packet Padding (Skew boundaries)</option>
+                    <option value="jitter">Jitter Timing (Timing anomaly mask)</option>
+                    <option value="masquerade">Header Masquerade (Spoof headers)</option>
+                  </select>
+                </div>
+                <div class="col-md-5">
+                  <button type="button" class="btn btn-sm btn-primary w-100 py-2" onclick="parseSandboxPayload()"><i class="bi bi-cpu me-1"></i>Compile & Scan</button>
+                </div>
+              </div>
+
+              <!-- Sandbox Results Console -->
+              <div class="d-none mt-3 p-3 bg-dark border rounded border-secondary" id="sandbox-results-panel">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                  <h6 class="fw-bold text-white mb-0"><i class="bi bi-terminal me-1"></i>Compilation Output</h6>
+                  <span class="badge" id="sandbox-evasion-status"></span>
+                </div>
+                <div class="row text-muted small g-2 mb-2">
+                  <div class="col-6"><strong>Baseline Result:</strong> <span class="badge" id="orig-res-badge"></span> (<span id="orig-conf-txt">0%</span>)</div>
+                  <div class="col-6" id="evaded-result-container"><strong>Evasion Result:</strong> <span class="badge" id="mut-res-badge"></span> (<span id="mut-conf-txt">0%</span>)</div>
+                </div>
+                
+                <!-- WAF Rules code box -->
+                <div class="mt-2 pt-2 border-top border-secondary d-none" id="sandbox-defense-container">
+                  <div class="d-flex justify-content-between align-items-center small text-white mb-1">
+                    <span>Active Defense Rules</span>
+                    <button class="btn btn-sm btn-link p-0 text-primary" onclick="copySandboxCode()">Copy Code</button>
+                  </div>
+                  <pre class="small text-warning bg-black p-2 border rounded font-monospace" style="max-height: 80px; overflow-y:auto;" id="sandbox-defense-code"></pre>
+                </div>
+              </div>
+            </div>
+
+            <!-- Live Packet Capture Simulator Console -->
+            <div class="glass-card p-4 scanline-container">
+              <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="fw-bold text-white mb-0"><i class="bi bi-hdd-network text-primary me-2"></i>Live Packet Capture (eth0)</h5>
+                <button type="button" class="btn btn-sm btn-outline-info py-0 px-2" id="btn-toggle-capture" onclick="toggleCaptureFeed()"><i class="bi bi-pause-fill"></i> Pause</button>
+              </div>
+              <div class="terminal-console" id="capture-console">
+                <!-- Live scrolling lines -->
+              </div>
+              <p class="small text-muted mt-2 mb-0"><i class="bi bi-info-circle me-1"></i>Click on any packet row in the terminal console to capture and extract its features to the prediction form.</p>
+            </div>
+
+          </div>
         </div>
-      </form>
+      </div>
 
     </section><!-- /Services Section -->
 
-
   </main>
 
-  <footer id="footer" class="footer">
-
+  <footer id="footer" class="footer" style="background: #020617 !important; border-top: 1px solid rgba(255,255,255,0.04);">
     <div class="container copyright text-center mt-4">
-      <p>© <span>Copyright</span> <strong class="px-1 sitename">Detexis</strong> <span>All Rights Reserved</span></p>
-      <div class="credits">
-        Designed by <a href="#">& </a> Distributed by <a href="#">Detexis</a>
+      <p class="text-muted">© 2026 <strong class="px-1 sitename" style="color: #00e4c4;">Detexis</strong> — AI-Powered Network Security</p>
+      <div class="credits text-muted small">
+        Built with <i class="bi bi-shield-check" style="color: #00e4c4;"></i> for Enterprise Security
       </div>
     </div>
-
   </footer>
 
   <!-- Scroll Top -->
-  <a href="#" id="scroll-top" class="scroll-top d-flex align-items-center justify-content-center"><i
-      class="bi bi-arrow-up-short"></i></a>
+  <a href="#" id="scroll-top" class="scroll-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
 
   <!-- Preloader -->
   <div id="preloader"></div>
 
   <!-- Vendor JS Files -->
-  <script src="../static/assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
-  <script src="../static/assets/vendor/php-email-form/validate.js"></script>
-  <script src="../static/assets/vendor/aos/aos.js"></script>
-  <script src="../static/assets/vendor/glightbox/js/glightbox.min.js"></script>
-  <script src="../static/assets/vendor/purecounter/purecounter_vanilla.js"></script>
-  <script src="../static/assets/vendor/imagesloaded/imagesloaded.pkgd.min.js"></script>
-  <script src="../static/assets/vendor/isotope-layout/isotope.pkgd.min.js"></script>
-  <script src="../static/assets/vendor/swiper/swiper-bundle.min.js"></script>
+  <script src="/static/assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script src="/static/assets/vendor/aos/aos.js"></script>
+  <script src="/static/assets/vendor/glightbox/js/glightbox.min.js"></script>
+  <script src="/static/assets/vendor/swiper/swiper-bundle.min.js"></script>
 
   <!-- Main JS File -->
-  <script src="../static/assets/js/main.js"></script>
+  <script src="/static/assets/js/main.js"></script>
 
-  <!-- Load Sample Data -->
+  <!-- Advanced Interactive Scripts -->
   <script>
-  function loadSampleData() {
-    document.getElementById('input1').value = '599';
-    document.getElementById('input2').value = '1';
-    document.getElementById('input3').value = '4';
-    document.getElementById('input4').value = '492.98';
-    document.getElementById('input5').value = '1';
-    document.getElementById('input6').value = '0.61';
-    document.getElementById('input7').value = '1';
-    document.getElementById('input8').value = '1';
-    document.getElementById('input9').value = '0';
-  }
+    // Global state
+    let isCapturing = true;
+    let mfaAuthCode = "";
+    
+    // Scenarios data
+    const scenarios = {
+      normal: { size: 180, proto: 1, attempts: 1, duration: 620.4, enc: 0, rep: 0.95, failed: 0, browser: 0, unusual: 0 },
+      sqli: { size: 680, proto: 1, attempts: 2, duration: 18.2, enc: 2, rep: 0.22, failed: 1, browser: 0, unusual: 1 },
+      xss: { size: 920, proto: 1, attempts: 1, duration: 8.5, enc: 2, rep: 0.38, failed: 0, browser: 1, unusual: 1 },
+      brute: { size: 95, proto: 1, attempts: 8, duration: 12.4, enc: 2, rep: 0.08, failed: 7, browser: 2, unusual: 0 },
+      ddos: { size: 1450, proto: 2, attempts: 1, duration: 2500.2, enc: 2, rep: 0.15, failed: 0, browser: 4, unusual: 1 }
+    };
+
+    function loadScenario(type) {
+      const s = scenarios[type];
+      if (!s) return;
+      
+      document.getElementById('input1').value = s.size;
+      document.getElementById('input2').value = s.proto;
+      document.getElementById('input3').value = s.attempts;
+      document.getElementById('input4').value = s.duration;
+      document.getElementById('input5').value = s.enc;
+      document.getElementById('input6').value = s.rep;
+      document.getElementById('input7').value = s.failed;
+      document.getElementById('input8').value = s.browser;
+      document.getElementById('input9').value = s.unusual;
+      
+      evaluateZeroTrustTrigger();
+      updateHoneypotVisualization(type !== 'normal');
+    }
+
+    // Zero-Trust validation logic
+    const formInputs = ['input3', 'input7', 'input9'];
+    formInputs.forEach(id => {
+      document.getElementById(id).addEventListener('change', evaluateZeroTrustTrigger);
+    });
+
+    function evaluateZeroTrustTrigger() {
+      const attempts = parseInt(document.getElementById('input3').value || 0);
+      const failed = parseInt(document.getElementById('input7').value || 0);
+      const unusual = parseInt(document.getElementById('input9').value || 0);
+      
+      const mfaLockCard = document.getElementById('mfa-lock-card');
+      const submitBtn = document.getElementById('prediction-submit-btn');
+      
+      if (failed >= 3 || (attempts > 5 && unusual === 1)) {
+        // High-risk triggering step-up auth lock
+        mfaLockCard.classList.remove('d-none');
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = `<i class="bi bi-shield-lock-fill me-2"></i>Session Locked: MFA Required`;
+      } else {
+        // Safe context
+        mfaLockCard.classList.add('d-none');
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = `<i class="bi bi-cpu me-2"></i>Evaluate Session Threat Status`;
+        document.getElementById('mfa-code-prompt').classList.add('d-none');
+        document.getElementById('mfa-btn-trigger').classList.remove('d-none');
+      }
+    }
+
+    function triggerMFAPrompt() {
+      mfaAuthCode = Math.floor(100000 + Math.random() * 900000).toString();
+      document.getElementById('mfa-auth-value').innerText = `${mfaAuthCode.substring(0,3)} ${mfaAuthCode.substring(3,6)}`;
+      document.getElementById('mfa-btn-trigger').classList.add('d-none');
+      document.getElementById('mfa-code-prompt').classList.remove('d-none');
+      document.getElementById('mfa-input').focus();
+    }
+
+    function verifyMFACode() {
+      const typed = document.getElementById('mfa-input').value.replace(/\s+/g, '');
+      if (typed === mfaAuthCode) {
+        alert('Zero-Trust Identity Verified successfully. Modifying session reputation baseline.');
+        
+        // Reset threat values and increase IP reputation
+        document.getElementById('input6').value = 0.98;
+        document.getElementById('input7').value = 0;
+        
+        evaluateZeroTrustTrigger();
+        updateHoneypotVisualization(false);
+      } else {
+        alert('Invalid authentication OTP. Access denied.');
+        document.getElementById('mfa-input').value = '';
+      }
+    }
+
+    // Scrolling console simulator
+    const consoleConsole = document.getElementById('capture-console');
+    const ips = ['192.168.1.45', '10.0.0.12', '185.220.101.4', '192.168.1.109', '8.8.8.8', '172.16.0.4', '192.168.1.201'];
+    const protocols = ['TCP', 'UDP', 'ICMP'];
+    const browsers = ['Chrome', 'Firefox', 'Edge', 'Safari', 'Unknown'];
+    const encryptions = ['AES', 'DES', 'None'];
+
+    function generateMockPacketLine() {
+      const time = new Date().toLocaleTimeString();
+      const proto = protocols[Math.floor(Math.random() * protocols.length)];
+      const src = ips[Math.floor(Math.random() * ips.length)];
+      const dest = '10.0.0.4';
+      const size = Math.floor(Math.random() * 1400) + 60;
+      
+      const isMalicious = Math.random() < 0.2;
+      const failedLogins = isMalicious ? Math.floor(Math.random() * 5) + 1 : 0;
+      const sessionDuration = (Math.random() * 1500 + 10).toFixed(2);
+      const rep = (isMalicious ? Math.random() * 0.3 : Math.random() * 0.5 + 0.5).toFixed(2);
+      const enc = encryptions[Math.floor(Math.random() * encryptions.length)];
+      const browser = browsers[Math.floor(Math.random() * browsers.length)];
+      const unusual = Math.random() < 0.15 ? 1 : 0;
+      const attempts = isMalicious ? failedLogins + 1 : 1;
+      
+      const statusText = isMalicious ? 'SUSPICIOUS' : 'OK';
+      const statusColor = isMalicious ? '#ef4444' : '#10b981';
+
+      // Store features in JSON attributes on the DOM element for ease of extraction
+      const div = document.createElement('div');
+      div.className = 'terminal-line';
+      div.setAttribute('data-features', JSON.stringify({
+        size, proto: proto === 'TCP' ? 1 : (proto === 'UDP' ? 2 : 0),
+        attempts, duration: sessionDuration,
+        enc: enc === 'AES' ? 0 : (enc === 'DES' ? 1 : 2),
+        rep, failed: failedLogins,
+        browser: browsers.indexOf(browser), unusual
+      }));
+      div.innerHTML = `${time} [${proto}] <span style="color: ${statusColor}; font-weight: bold;">[${statusText}]</span> Size:${size}B | Src:${src} -> Dst:${dest} | Duration:${sessionDuration}s`;
+      div.onclick = function() {
+        capturePacketData(this);
+      };
+      
+      consoleConsole.appendChild(div);
+      consoleConsole.scrollTop = consoleConsole.scrollHeight;
+      
+      // Cap scrolling logs count at 50 to maintain performance
+      if (consoleConsole.children.length > 50) {
+        consoleConsole.removeChild(consoleConsole.firstChild);
+      }
+    }
+
+    function capturePacketData(el) {
+      const data = JSON.parse(el.getAttribute('data-features'));
+      
+      document.getElementById('input1').value = data.size;
+      document.getElementById('input2').value = data.proto;
+      document.getElementById('input3').value = data.attempts;
+      document.getElementById('input4').value = data.duration;
+      document.getElementById('input5').value = data.enc;
+      document.getElementById('input6').value = data.rep;
+      document.getElementById('input7').value = data.failed;
+      document.getElementById('input8').value = data.browser;
+      document.getElementById('input9').value = data.unusual;
+
+      evaluateZeroTrustTrigger();
+      updateHoneypotVisualization(data.failed >= 3 || data.rep < 0.3);
+      
+      // Pause captures automatically to allow analysis
+      isCapturing = false;
+      document.getElementById('btn-toggle-capture').innerHTML = '<i class="bi bi-play-fill"></i> Resume';
+      document.getElementById('btn-toggle-capture').className = 'btn btn-sm btn-outline-success py-0 px-2';
+    }
+
+    function toggleCaptureFeed() {
+      isCapturing = !isCapturing;
+      const btn = document.getElementById('btn-toggle-capture');
+      if (isCapturing) {
+        btn.innerHTML = '<i class="bi bi-pause-fill"></i> Pause';
+        btn.className = 'btn btn-sm btn-outline-info py-0 px-2';
+      } else {
+        btn.innerHTML = '<i class="bi bi-play-fill"></i> Resume';
+        btn.className = 'btn btn-sm btn-outline-success py-0 px-2';
+      }
+    }
+
+    // Scroll interval trigger
+    setInterval(() => {
+      if (isCapturing) {
+        generateMockPacketLine();
+      }
+    }, 1200);
+
+    // SVG Network visualizer loop
+    const dot1 = document.getElementById('flow-dot-1');
+    const dot2 = document.getElementById('flow-dot-2');
+    let dotState = 0; // 0: client to firewall, 1: firewall to server/decoy
+    let isThreatTraffic = false;
+
+    function animateDotPath() {
+      if (dotState === 0) {
+        // Animate Client -> Firewall
+        dot1.style.display = 'block';
+        dot2.style.display = 'none';
+        
+        let pct = 0;
+        const interval = setInterval(() => {
+          pct += 0.05;
+          if (pct >= 1) {
+            clearInterval(interval);
+            dotState = 1;
+            animateDotPath();
+          } else {
+            // Lerp coordinates
+            dot1.setAttribute('cx', 35 + (150 - 35) * pct);
+          }
+        }, 30);
+      } else {
+        // Animate Firewall -> Main Server OR Honeypot Decoy
+        dot1.style.display = 'none';
+        dot2.style.display = 'block';
+        
+        const destY = isThreatTraffic ? 140 : 40;
+        const dotColor = isThreatTraffic ? '#ef4444' : '#10b981';
+        dot2.setAttribute('fill', dotColor);
+
+        let pct = 0;
+        const interval = setInterval(() => {
+          pct += 0.05;
+          if (pct >= 1) {
+            clearInterval(interval);
+            dotState = 0;
+            animateDotPath();
+          } else {
+            dot2.setAttribute('cx', 150 + (270 - 150) * pct);
+            dot2.setAttribute('cy', 90 + (destY - 90) * pct);
+          }
+        }, 30);
+      }
+    }
+
+    function updateHoneypotVisualization(threatActive) {
+      isThreatTraffic = threatActive;
+      
+      const fwNode = document.getElementById('fw-node-circle');
+      const fwNodeTxt = document.getElementById('fw-node-txt');
+      const statusTxt = document.getElementById('redirector-status-text');
+      const honeyNode = document.getElementById('honey-node-circle');
+      
+      const pathClient = document.getElementById('path-client');
+      const pathServer = document.getElementById('path-server');
+      const pathHoneypot = document.getElementById('path-honeypot');
+
+      if (threatActive) {
+        fwNode.setAttribute('fill', '#ef4444');
+        fwNode.setAttribute('stroke', '#f87171');
+        fwNodeTxt.textContent = "SHLD";
+        statusTxt.innerHTML = `<span style="color: #ef4444; font-weight: bold;"><i class="bi bi-shield-slash me-1"></i>Threat Intercepted: Outbound packets redirected to Honeypot!</span>`;
+        honeyNode.setAttribute('fill', '#ea580c');
+        honeyNode.setAttribute('stroke', '#f97316');
+        honeyNode.classList.add('glow-dot');
+        
+        // Dynamic path coloring and animation speeds
+        pathClient.setAttribute('stroke', '#ef4444');
+        pathClient.className.baseVal = 'svg-flow-path-alert';
+        
+        pathServer.setAttribute('stroke', 'rgba(255,255,255,0.05)');
+        pathServer.className.baseVal = '';
+        
+        pathHoneypot.setAttribute('stroke', '#ef4444');
+        pathHoneypot.className.baseVal = 'svg-flow-path-alert';
+      } else {
+        fwNode.setAttribute('fill', '#475569');
+        fwNode.setAttribute('stroke', '#94a3b8');
+        fwNodeTxt.textContent = "FW";
+        statusTxt.innerHTML = `<span class="text-success"><i class="bi bi-shield-check me-1"></i>Network status: Safe. Traffic routed to Main Server.</span>`;
+        honeyNode.setAttribute('fill', '#78350f');
+        honeyNode.setAttribute('stroke', '#d97706');
+        honeyNode.classList.remove('glow-dot');
+        
+        pathClient.setAttribute('stroke', '#10b981');
+        pathClient.className.baseVal = 'svg-flow-path';
+        
+        pathServer.setAttribute('stroke', '#10b981');
+        pathServer.className.baseVal = 'svg-flow-path';
+        
+        pathHoneypot.setAttribute('stroke', 'rgba(255,255,255,0.05)');
+        pathHoneypot.className.baseVal = '';
+      }
+    }
+
+    // Launch dot animation loop
+    animateDotPath();
+    updateHoneypotVisualization(false);
+
+    // Sandbox Payload Analyzer AJAX
+    function parseSandboxPayload() {
+      const payload = document.getElementById('sandbox-payload').value;
+      const evasion = document.getElementById('evasion-select').value;
+      
+      if (!payload.trim()) {
+        alert('Please enter a raw payload string to compile.');
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append('payload', payload);
+      formData.append('evasion_type', evasion);
+
+      fetch('/sandbox_parse', {
+        method: 'POST',
+        body: formData
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          const panel = document.getElementById('sandbox-results-panel');
+          panel.classList.remove('d-none');
+
+          const origBadge = document.getElementById('orig-res-badge');
+          origBadge.textContent = data.orig_result;
+          origBadge.className = `badge ${data.orig_result === 'Threat' ? 'bg-danger' : 'bg-success'}`;
+          document.getElementById('orig-conf-txt').innerText = `${data.orig_confidence}%`;
+
+          const mutBadge = document.getElementById('mut-res-badge');
+          const evadedResultContainer = document.getElementById('evaded-result-container');
+          
+          if (data.evasion_applied) {
+            evadedResultContainer.style.display = 'block';
+            mutBadge.textContent = data.mut_result;
+            mutBadge.className = `badge ${data.mut_result === 'Threat' ? 'bg-danger' : 'bg-success'}`;
+            document.getElementById('mut-conf-txt').innerText = `${data.mut_confidence}%`;
+
+            const evasionStatus = document.getElementById('sandbox-evasion-status');
+            if (data.orig_result === 'Threat' && data.mut_result === 'No Threat') {
+              evasionStatus.className = 'badge bg-warning text-dark font-monospace animate-pulse';
+              evasionStatus.innerHTML = '<i class="bi bi-shield-slash-fill me-1"></i>EVASION SUCCESSFUL (AI bypassed)';
+            } else {
+              evasionStatus.className = 'badge bg-info text-white font-monospace';
+              evasionStatus.innerHTML = '<i class="bi bi-shield-fill-check me-1"></i>EVASION BLOCKED';
+            }
+          } else {
+            evadedResultContainer.style.display = 'none';
+            document.getElementById('sandbox-evasion-status').className = 'd-none';
+          }
+
+          // Render active WAF rules
+          const defenseContainer = document.getElementById('sandbox-defense-container');
+          if (data.orig_result === 'Threat') {
+            defenseContainer.classList.remove('d-none');
+            document.getElementById('sandbox-defense-code').textContent = data.defense_rules.nginx;
+            updateHoneypotVisualization(true);
+          } else {
+            defenseContainer.classList.add('d-none');
+            updateHoneypotVisualization(false);
+          }
+        } else {
+          alert(`Parser Error: ${data.error}`);
+        }
+      })
+      .catch(err => alert(`Request failed: ${err}`));
+    }
+
+    function copySandboxCode() {
+      const code = document.getElementById('sandbox-defense-code').innerText;
+      navigator.clipboard.writeText(code).then(() => {
+        alert('WAF rule copied to clipboard.');
+      });
+    }
   </script>
 
-  <!-- Loading Animation on Submit -->
+  <!-- Submit animation -->
   <script>
-  document.querySelector('form').addEventListener('submit', function() {
-    const btn = this.querySelector('button[type="submit"]');
-    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status"></span> Analyzing...';
-    btn.disabled = true;
-  });
+    document.getElementById('prediction-form').addEventListener('submit', function() {
+      const btn = document.getElementById('prediction-submit-btn');
+      btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status"></span> Executing Neural Engine Inference...';
+      btn.disabled = true;
+    });
   </script>
 
 </body>
