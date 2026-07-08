@@ -110,8 +110,13 @@ def load_data_from_csv():
 def train_models_in_memory():
     from sklearn.preprocessing import StandardScaler
     from sklearn.ensemble import AdaBoostClassifier, VotingClassifier, BaggingClassifier
-    from xgboost import XGBClassifier
     from sklearn.tree import DecisionTreeClassifier
+    
+    try:
+        from xgboost import XGBClassifier
+        has_xgboost = True
+    except ImportError:
+        has_xgboost = False
     
     global model, scaler_model
     
@@ -138,19 +143,27 @@ def train_models_in_memory():
         n_jobs=-1,
         random_state=42
     )
-    xgb = XGBClassifier(
-        n_estimators=300,
-        learning_rate=0.05,
-        max_depth=5,
-        subsample=0.8,
-        colsample_bytree=0.8,
-        random_state=42,
-        use_label_encoder=False,
-        eval_metric="mlogloss"
-    )
+    
+    estimators = [('BoostDT', bdt), ('BagDT', brf)]
+    
+    if has_xgboost:
+        xgb = XGBClassifier(
+            n_estimators=300,
+            learning_rate=0.05,
+            max_depth=5,
+            subsample=0.8,
+            colsample_bytree=0.8,
+            random_state=42,
+            use_label_encoder=False,
+            eval_metric="mlogloss"
+        )
+        estimators.append(('XGBoost', xgb))
+        print("XGBoost loaded successfully. Training with XGBoost.")
+    else:
+        print("XGBoost is not installed/loaded. Training VotingClassifier with AdaBoost and Bagging only.")
     
     model = VotingClassifier(
-        estimators=[('BoostDT', bdt), ('BagDT', brf), ('XGBoost', xgb)],
+        estimators=estimators,
         voting='soft'
     )
     model.fit(X_scaled, y)
