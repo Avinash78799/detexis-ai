@@ -85,9 +85,99 @@ def execute_db_query(query, params=(), fetchone=False, commit=False):
     con.close()
     return data
 
-# Load models
-model = joblib.load(os.path.join(BASE_DIR, "Models", "model.sav"))
-scaler_model = joblib.load(os.path.join(BASE_DIR, "Models", "scaler.sav"))
+def load_data_from_csv():
+    X = []
+    y = []
+    csv_path = os.path.join(BASE_DIR, 'cybersecurity_intrusion_data.csv')
+    with open(csv_path, 'r') as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            X.append([
+                float(row['network_packet_size']),
+                float(row['protocol_type']),
+                float(row['login_attempts']),
+                float(row['session_duration']),
+                float(row['encryption_used']),
+                float(row['ip_reputation_score']),
+                float(row['failed_logins']),
+                float(row['browser_type']),
+                float(row['unusual_time_access'])
+            ])
+            y.append(int(row['attack_detected']))
+    return np.array(X), np.array(y)
+
+
+def train_models_in_memory():
+    from sklearn.preprocessing import StandardScaler
+    from sklearn.ensemble import AdaBoostClassifier, VotingClassifier, BaggingClassifier
+    from xgboost import XGBClassifier
+    from sklearn.tree import DecisionTreeClassifier
+    
+    global model, scaler_model
+    
+    print("Training models in memory...")
+    X, y = load_data_from_csv()
+    
+    # Scale features
+    scaler_model = StandardScaler()
+    X_scaled = scaler_model.fit_transform(X)
+    
+    # Define models
+    dt = DecisionTreeClassifier(max_depth=3, min_samples_split=5, random_state=42)
+    bdt = AdaBoostClassifier(
+        base_estimator=dt,
+        n_estimators=200,
+        learning_rate=0.5,
+        algorithm="SAMME.R"
+    )
+    brf = BaggingClassifier(
+        base_estimator=dt,
+        n_estimators=100,
+        max_samples=0.8,
+        max_features=0.8,
+        n_jobs=-1,
+        random_state=42
+    )
+    xgb = XGBClassifier(
+        n_estimators=300,
+        learning_rate=0.05,
+        max_depth=5,
+        subsample=0.8,
+        colsample_bytree=0.8,
+        random_state=42,
+        use_label_encoder=False,
+        eval_metric="mlogloss"
+    )
+    
+    model = VotingClassifier(
+        estimators=[('BoostDT', bdt), ('BagDT', brf), ('XGBoost', xgb)],
+        voting='soft'
+    )
+    model.fit(X_scaled, y)
+    print("Model training complete.")
+
+
+# Load or train models
+model = None
+scaler_model = None
+is_vercel = bool(os.environ.get('VERCEL') or os.environ.get('DATABASE_URL'))
+
+if is_vercel:
+    try:
+        train_models_in_memory()
+    except Exception as e:
+        print(f"Error training models in memory on Vercel: {e}")
+else:
+    try:
+        model = joblib.load(os.path.join(BASE_DIR, "Models", "model.sav"))
+        scaler_model = joblib.load(os.path.join(BASE_DIR, "Models", "scaler.sav"))
+        print("Models loaded from disk locally.")
+    except Exception as e:
+        print(f"Failed to load models locally: {e}. Training dynamically in memory...")
+        try:
+            train_models_in_memory()
+        except Exception as te:
+            print(f"Error during dynamic training: {te}")
 
 # Real model performance metrics
 MODEL_METRICS = {
