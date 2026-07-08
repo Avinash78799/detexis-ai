@@ -6,6 +6,11 @@ import hashlib
 import random
 from functools import wraps
 
+try:
+    import psycopg2
+except ImportError:
+    psycopg2 = None
+
 import numpy as np
 import joblib
 from flask import Flask, render_template, request, session, redirect, url_for, jsonify
@@ -22,6 +27,38 @@ if not app.debug:
     )
 
 DB_PATH = os.environ.get('DATABASE_PATH', 'signup.db')
+
+def get_db_connection():
+    db_url = os.environ.get('DATABASE_URL')
+    if db_url and psycopg2:
+        return psycopg2.connect(db_url)
+    return sqlite3.connect(DB_PATH)
+
+
+def execute_db_query(query, params=(), fetchone=False, commit=False):
+    db_url = os.environ.get('DATABASE_URL')
+    is_postgres = bool(db_url and psycopg2)
+    
+    con = get_db_connection()
+    cur = con.cursor()
+    
+    # PostgreSQL uses %s placeholders instead of ?
+    if is_postgres:
+        adapted_query = query.replace('?', '%s')
+    else:
+        adapted_query = query
+        
+    cur.execute(adapted_query, params)
+    
+    data = None
+    if fetchone:
+        data = cur.fetchone()
+        
+    if commit:
+        con.commit()
+        
+    con.close()
+    return data
 
 # Load models
 model = joblib.load("Models/model.sav")
@@ -51,11 +88,11 @@ def get_feature_hash(features):
 
 def init_db():
     """Initialize the database and create tables if they don't exist."""
-    con = sqlite3.connect(DB_PATH)
+    con = get_db_connection()
     cur = con.cursor()
     cur.execute("""
         CREATE TABLE IF NOT EXISTS info (
-            user TEXT PRIMARY KEY,
+            "user" TEXT PRIMARY KEY,
             name TEXT,
             email TEXT,
             mobile TEXT,
@@ -158,19 +195,15 @@ def signup():
 
         hashed_password = generate_password_hash(password)
 
-        con = sqlite3.connect(DB_PATH)
-        cur = con.cursor()
-        cur.execute("SELECT 1 FROM info WHERE user = ?", (username,))
-        if cur.fetchone():
-            con.close()
+        data = execute_db_query('SELECT 1 FROM info WHERE "user" = ?', (username,), fetchone=True)
+        if data:
             return render_template("signup.html", message="Username already exists. Please choose another.")
 
-        cur.execute(
-            "INSERT INTO info (user, name, email, mobile, password) VALUES (?, ?, ?, ?, ?)",
-            (username, name, email, number, hashed_password)
+        execute_db_query(
+            'INSERT INTO info ("user", name, email, mobile, password) VALUES (?, ?, ?, ?, ?)',
+            (username, name, email, number, hashed_password),
+            commit=True
         )
-        con.commit()
-        con.close()
         return render_template("signin.html")
 
 
@@ -182,11 +215,7 @@ def signin():
         username = request.form.get('user', '')
         password = request.form.get('password', '')
 
-        con = sqlite3.connect(DB_PATH)
-        cur = con.cursor()
-        cur.execute("SELECT user, password FROM info WHERE user = ?", (username,))
-        data = cur.fetchone()
-        con.close()
+        data = execute_db_query('SELECT "user", password FROM info WHERE "user" = ?', (username,), fetchone=True)
 
         if data is None:
             return render_template("signin.html", message="Invalid username or password.")

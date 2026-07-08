@@ -4,3 +4,4 @@ joblib
 scikit-learn
 gunicorn
 werkzeug
+psycopg2-binary
