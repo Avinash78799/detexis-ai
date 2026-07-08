@@ -8,6 +8,7 @@ from functools import wraps
 
 try:
     import psycopg2
+    import psycopg2.extras
 except ImportError:
     psycopg2 = None
 
@@ -26,7 +27,8 @@ if not app.debug:
         SESSION_COOKIE_SAMESITE='Lax'
     )
 
-DB_PATH = os.environ.get('DATABASE_PATH', 'signup.db')
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DB_PATH = os.environ.get('DATABASE_PATH', os.path.join(BASE_DIR, 'signup.db'))
 
 def get_db_connection():
     db_url = os.environ.get('DATABASE_URL')
@@ -35,20 +37,43 @@ def get_db_connection():
     return sqlite3.connect(DB_PATH)
 
 
-def execute_db_query(query, params=(), fetchone=False, commit=False):
+def get_db_cursor(con):
     db_url = os.environ.get('DATABASE_URL')
     is_postgres = bool(db_url and psycopg2)
-    
-    con = get_db_connection()
-    cur = con.cursor()
-    
-    # PostgreSQL uses %s placeholders instead of ?
     if is_postgres:
-        adapted_query = query.replace('?', '%s')
+        class PostgresCursorWrapper:
+            def __init__(self, real_cursor):
+                self.real_cursor = real_cursor
+            def execute(self, query, params=()):
+                adapted_query = query.replace('?', '%s')
+                adapted_query = adapted_query.replace("datetime('now', '-10 minutes')", "CURRENT_TIMESTAMP - INTERVAL '10 minutes'")
+                if 'INSERT OR IGNORE INTO whitelist' in adapted_query:
+                    adapted_query = adapted_query.replace(
+                        'INSERT OR IGNORE INTO whitelist',
+                        'INSERT INTO whitelist'
+                    )
+                    if 'ON CONFLICT' not in adapted_query:
+                        adapted_query += ' ON CONFLICT (feature_hash) DO NOTHING'
+                self.real_cursor.execute(adapted_query, params)
+            def executemany(self, query, params_list):
+                adapted_query = query.replace('?', '%s')
+                self.real_cursor.executemany(adapted_query, params_list)
+            def fetchone(self):
+                return self.real_cursor.fetchone()
+            def fetchall(self):
+                return self.real_cursor.fetchall()
+            def close(self):
+                self.real_cursor.close()
+        return PostgresCursorWrapper(con.cursor(cursor_factory=psycopg2.extras.DictCursor))
     else:
-        adapted_query = query
-        
-    cur.execute(adapted_query, params)
+        return con.cursor()
+
+
+def execute_db_query(query, params=(), fetchone=False, commit=False):
+    con = get_db_connection()
+    cur = get_db_cursor(con)
+    
+    cur.execute(query, params)
     
     data = None
     if fetchone:
@@ -61,8 +86,8 @@ def execute_db_query(query, params=(), fetchone=False, commit=False):
     return data
 
 # Load models
-model = joblib.load("Models/model.sav")
-scaler_model = joblib.load("Models/scaler.sav")
+model = joblib.load(os.path.join(BASE_DIR, "Models", "model.sav"))
+scaler_model = joblib.load(os.path.join(BASE_DIR, "Models", "scaler.sav"))
 
 # Real model performance metrics
 MODEL_METRICS = {
@@ -88,9 +113,13 @@ def get_feature_hash(features):
 
 def init_db():
     """Initialize the database and create tables if they don't exist."""
+    db_url = os.environ.get('DATABASE_URL')
+    is_postgres = bool(db_url and psycopg2)
+    
     con = get_db_connection()
-    cur = con.cursor()
-    cur.execute("""
+    cur = get_db_cursor(con)
+    
+    info_schema = """
         CREATE TABLE IF NOT EXISTS info (
             "user" TEXT PRIMARY KEY,
             name TEXT,
@@ -98,30 +127,60 @@ def init_db():
             mobile TEXT,
             password TEXT
         )
-    """)
-    cur.execute("""
-        CREATE TABLE IF NOT EXISTS whitelist (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            feature_hash TEXT UNIQUE,
-            ip_address TEXT,
-            label TEXT
-        )
-    """)
-    cur.execute("""
-        CREATE TABLE IF NOT EXISTS alerts (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
-            ip_address TEXT,
-            packet_size INTEGER,
-            protocol TEXT,
-            failed_logins INTEGER,
-            session_duration REAL,
-            ip_reputation REAL,
-            prediction TEXT,
-            confidence REAL,
-            event_type TEXT
-        )
-    """)
+    """
+    
+    if is_postgres:
+        whitelist_schema = """
+            CREATE TABLE IF NOT EXISTS whitelist (
+                id SERIAL PRIMARY KEY,
+                feature_hash TEXT UNIQUE,
+                ip_address TEXT,
+                label TEXT
+            )
+        """
+        alerts_schema = """
+            CREATE TABLE IF NOT EXISTS alerts (
+                id SERIAL PRIMARY KEY,
+                timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                ip_address TEXT,
+                packet_size INTEGER,
+                protocol TEXT,
+                failed_logins INTEGER,
+                session_duration REAL,
+                ip_reputation REAL,
+                prediction TEXT,
+                confidence REAL,
+                event_type TEXT
+            )
+        """
+    else:
+        whitelist_schema = """
+            CREATE TABLE IF NOT EXISTS whitelist (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                feature_hash TEXT UNIQUE,
+                ip_address TEXT,
+                label TEXT
+            )
+        """
+        alerts_schema = """
+            CREATE TABLE IF NOT EXISTS alerts (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+                ip_address TEXT,
+                packet_size INTEGER,
+                protocol TEXT,
+                failed_logins INTEGER,
+                session_duration REAL,
+                ip_reputation REAL,
+                prediction TEXT,
+                confidence REAL,
+                event_type TEXT
+            )
+        """
+        
+    cur.execute(info_schema)
+    cur.execute(whitelist_schema)
+    cur.execute(alerts_schema)
     con.commit()
     con.close()
 
@@ -378,8 +437,8 @@ def predict():
 
         # Check if whitelisted
         feat_hash = get_feature_hash(input_features)
-        con = sqlite3.connect(DB_PATH)
-        cur = con.cursor()
+        con = get_db_connection()
+        cur = get_db_cursor(con)
         cur.execute("SELECT 1 FROM whitelist WHERE feature_hash = ?", (feat_hash,))
         is_whitelisted = cur.fetchone() is not None
         con.close()
@@ -408,8 +467,8 @@ def predict():
         event_type = classify_event_type(input_features, predicted_result)
         proto_str = protocol_map.get(int(input_features[1]), "Unknown")
         
-        con = sqlite3.connect(DB_PATH)
-        cur = con.cursor()
+        con = get_db_connection()
+        cur = get_db_cursor(con)
         cur.execute("""
             INSERT INTO alerts (ip_address, packet_size, protocol, failed_logins, session_duration, ip_reputation, prediction, confidence, event_type)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -557,8 +616,8 @@ def analyze_upload():
             log_table = []
             
             # Optimization: fetch whitelist entries once
-            con = sqlite3.connect(DB_PATH)
-            cur = con.cursor()
+            con = get_db_connection()
+            cur = get_db_cursor(con)
             cur.execute("SELECT feature_hash FROM whitelist")
             whitelist_hashes = {row[0] for row in cur.fetchall()}
             con.close()
@@ -623,8 +682,8 @@ def analyze_upload():
             
             # Bulk insert into alerts database
             if alerts_to_insert:
-                con = sqlite3.connect(DB_PATH)
-                cur = con.cursor()
+                con = get_db_connection()
+                cur = get_db_cursor(con)
                 cur.executemany("""
                     INSERT INTO alerts (ip_address, packet_size, protocol, failed_logins, session_duration, ip_reputation, prediction, confidence, event_type)
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -754,8 +813,8 @@ def sandbox_parse():
         # Helper to predict
         def run_inference(feats):
             h = get_feature_hash(feats)
-            con = sqlite3.connect(DB_PATH)
-            cur = con.cursor()
+            con = get_db_connection()
+            cur = get_db_cursor(con)
             cur.execute("SELECT 1 FROM whitelist WHERE feature_hash = ?", (h,))
             whitelisted = cur.fetchone() is not None
             con.close()
@@ -811,8 +870,8 @@ def whitelist_add():
         h = get_feature_hash(features)
         ip = "192.168.1." + str(np.random.randint(2, 254))
         
-        con = sqlite3.connect(DB_PATH)
-        cur = con.cursor()
+        con = get_db_connection()
+        cur = get_db_cursor(con)
         cur.execute("INSERT OR IGNORE INTO whitelist (feature_hash, ip_address, label) VALUES (?, ?, ?)", (h, ip, "User Override"))
         con.commit()
         con.close()
@@ -826,9 +885,10 @@ def whitelist_add():
 
 def get_correlated_events():
     """Analyze recent logged events to identify complex correlation patterns."""
-    con = sqlite3.connect(DB_PATH)
-    con.row_factory = sqlite3.Row
-    cur = con.cursor()
+    con = get_db_connection()
+    if hasattr(con, 'row_factory'):
+        con.row_factory = sqlite3.Row
+    cur = get_db_cursor(con)
     
     correlated = []
     
@@ -917,9 +977,10 @@ def get_correlated_events():
 @app.route('/correlation')
 @login_required
 def correlation():
-    con = sqlite3.connect(DB_PATH)
-    con.row_factory = sqlite3.Row
-    cur = con.cursor()
+    con = get_db_connection()
+    if hasattr(con, 'row_factory'):
+        con.row_factory = sqlite3.Row
+    cur = get_db_cursor(con)
     cur.execute("""
         SELECT timestamp, ip_address, packet_size, protocol, failed_logins, session_duration, ip_reputation, prediction, confidence, event_type 
         FROM alerts 
@@ -937,8 +998,8 @@ def correlation():
 @login_required
 def clear_alerts():
     try:
-        con = sqlite3.connect(DB_PATH)
-        cur = con.cursor()
+        con = get_db_connection()
+        cur = get_db_cursor(con)
         cur.execute("DELETE FROM alerts")
         con.commit()
         con.close()
@@ -986,7 +1047,10 @@ def not_found(e):
 
 
 # Initialize database on startup/import
-init_db()
+try:
+    init_db()
+except Exception as e:
+    print(f"Database initialization error: {e}")
 
 if __name__ == '__main__':
     app.run(debug=os.environ.get('FLASK_DEBUG', 'false').lower() == 'true')
