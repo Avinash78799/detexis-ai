@@ -89,18 +89,33 @@ def load_data_from_csv():
     X = []
     y = []
     csv_path = os.path.join(BASE_DIR, 'cybersecurity_intrusion_data.csv')
-    with open(csv_path, 'r') as f:
+    
+    # Exact LabelEncoder numerical mappings used during training
+    protocol_enc = {'ICMP': 0, 'TCP': 1, 'UDP': 2}
+    encryption_enc = {'AES': 0, 'DES': 1, 'None': 2}
+    browser_enc = {'Chrome': 0, 'Edge': 1, 'Firefox': 2, 'Safari': 3, 'Unknown': 4}
+
+    with open(csv_path, 'r', encoding='utf-8') as f:
         reader = csv.DictReader(f)
         for row in reader:
+            proto_val = row.get('protocol_type', '')
+            proto = protocol_enc.get(proto_val, float(proto_val) if str(proto_val).replace('.', '', 1).isdigit() else 1)
+            
+            enc_val = row.get('encryption_used', '')
+            enc = encryption_enc.get(enc_val, float(enc_val) if str(enc_val).replace('.', '', 1).isdigit() else 0)
+            
+            browser_val = row.get('browser_type', '')
+            browser = browser_enc.get(browser_val, float(browser_val) if str(browser_val).replace('.', '', 1).isdigit() else 0)
+            
             X.append([
                 float(row['network_packet_size']),
-                float(row['protocol_type']),
+                float(proto),
                 float(row['login_attempts']),
                 float(row['session_duration']),
-                float(row['encryption_used']),
+                float(enc),
                 float(row['ip_reputation_score']),
                 float(row['failed_logins']),
-                float(row['browser_type']),
+                float(browser),
                 float(row['unusual_time_access'])
             ])
             y.append(int(row['attack_detected']))
@@ -120,77 +135,118 @@ def train_models_in_memory():
     
     global model, scaler_model
     
-    print("Training models in memory...")
+    print("Training models dynamically in memory...")
     X, y = load_data_from_csv()
     
     # Scale features
     scaler_model = StandardScaler()
     X_scaled = scaler_model.fit_transform(X)
     
-    # Define models
+    # Define models with multi-version scikit-learn compatibility (supports both estimator & base_estimator)
     dt = DecisionTreeClassifier(max_depth=3, min_samples_split=5, random_state=42)
-    bdt = AdaBoostClassifier(
-        base_estimator=dt,
-        n_estimators=200,
-        learning_rate=0.5,
-        algorithm="SAMME.R"
-    )
-    brf = BaggingClassifier(
-        base_estimator=dt,
-        n_estimators=100,
-        max_samples=0.8,
-        max_features=0.8,
-        n_jobs=-1,
-        random_state=42
-    )
+    
+    try:
+        bdt = AdaBoostClassifier(
+            estimator=dt,
+            n_estimators=100,
+            learning_rate=0.5,
+            random_state=42
+        )
+    except (TypeError, ValueError):
+        bdt = AdaBoostClassifier(
+            base_estimator=dt,
+            n_estimators=100,
+            learning_rate=0.5,
+            algorithm="SAMME.R",
+            random_state=42
+        )
+        
+    try:
+        brf = BaggingClassifier(
+            estimator=dt,
+            n_estimators=50,
+            max_samples=0.8,
+            max_features=0.8,
+            n_jobs=1,
+            random_state=42
+        )
+    except (TypeError, ValueError):
+        brf = BaggingClassifier(
+            base_estimator=dt,
+            n_estimators=50,
+            max_samples=0.8,
+            max_features=0.8,
+            n_jobs=1,
+            random_state=42
+        )
     
     estimators = [('BoostDT', bdt), ('BagDT', brf)]
     
     if has_xgboost:
-        xgb = XGBClassifier(
-            n_estimators=300,
-            learning_rate=0.05,
-            max_depth=5,
-            subsample=0.8,
-            colsample_bytree=0.8,
-            random_state=42,
-            use_label_encoder=False,
-            eval_metric="mlogloss"
-        )
-        estimators.append(('XGBoost', xgb))
-        print("XGBoost loaded successfully. Training with XGBoost.")
+        try:
+            xgb = XGBClassifier(
+                n_estimators=100,
+                learning_rate=0.05,
+                max_depth=5,
+                subsample=0.8,
+                colsample_bytree=0.8,
+                random_state=42,
+                use_label_encoder=False,
+                eval_metric="mlogloss"
+            )
+            estimators.append(('XGBoost', xgb))
+            print("XGBoost detected. Training VotingClassifier with AdaBoost, Bagging, and XGBoost.")
+        except Exception as xe:
+            print(f"XGBoost setup skipped ({xe}). Training with standard ensemble.")
     else:
-        print("XGBoost is not installed/loaded. Training VotingClassifier with AdaBoost and Bagging only.")
+        print("XGBoost not installed. Training lightweight VotingClassifier with AdaBoost and Bagging.")
     
     model = VotingClassifier(
         estimators=estimators,
         voting='soft'
     )
     model.fit(X_scaled, y)
-    print("Model training complete.")
+    print("In-memory model training complete.")
+    
+    # Cache locally to disk if Models directory is writable
+    try:
+        models_dir = os.path.join(BASE_DIR, "Models")
+        os.makedirs(models_dir, exist_ok=True)
+        joblib.dump(scaler_model, os.path.join(models_dir, "scaler.sav"))
+        joblib.dump(model, os.path.join(models_dir, "model.sav"))
+        print("Models cached to disk successfully.")
+    except Exception as se:
+        print(f"Notice: Disk caching skipped ({se}). Models ready in memory.")
 
 
-# Load or train models
+def ensure_models_loaded():
+    """Guarantee that model and scaler_model are never None before inference."""
+    global model, scaler_model
+    if model is not None and scaler_model is not None:
+        return
+    
+    try:
+        model_path = os.path.join(BASE_DIR, "Models", "model.sav")
+        scaler_path = os.path.join(BASE_DIR, "Models", "scaler.sav")
+        if os.path.exists(model_path) and os.path.exists(scaler_path):
+            model = joblib.load(model_path)
+            scaler_model = joblib.load(scaler_path)
+            print("Models loaded from disk.")
+            return
+    except Exception as e:
+        print(f"Disk load notice ({e}). Retraining in memory...")
+    
+    train_models_in_memory()
+
+
+# Global model pointers & startup initialization
 model = None
 scaler_model = None
-is_vercel = bool(os.environ.get('VERCEL') or os.environ.get('DATABASE_URL'))
 
-if is_vercel:
-    try:
-        train_models_in_memory()
-    except Exception as e:
-        print(f"Error training models in memory on Vercel: {e}")
-else:
-    try:
-        model = joblib.load(os.path.join(BASE_DIR, "Models", "model.sav"))
-        scaler_model = joblib.load(os.path.join(BASE_DIR, "Models", "scaler.sav"))
-        print("Models loaded from disk locally.")
-    except Exception as e:
-        print(f"Failed to load models locally: {e}. Training dynamically in memory...")
-        try:
-            train_models_in_memory()
-        except Exception as te:
-            print(f"Error during dynamic training: {te}")
+try:
+    ensure_models_loaded()
+except Exception as e:
+    print(f"Deferred model loading error on startup: {e}")
 
 # Real model performance metrics
 MODEL_METRICS = {
@@ -525,6 +581,8 @@ def get_mitre_playbook(features, result):
 @login_required
 def predict():
     try:
+        ensure_models_loaded()
+
         # Get input features from the form explicitly to ensure order and robust parsing
         input_features = [
             float(request.form.get('input1', 0)),
@@ -635,7 +693,9 @@ def predict():
             overridden=overridden
         )
     except Exception as e:
-        return str(e)
+        import traceback
+        traceback.print_exc()
+        return render_template('home.html', error_message=f"Detection engine notice: {str(e)}")
 
 
 # --- Log Batch Analyzer & Advanced Sandbox Routes ---
@@ -650,6 +710,7 @@ def analyze_view():
 @login_required
 def analyze_upload():
     try:
+        ensure_models_loaded()
         if 'file' not in request.files:
             return jsonify({'success': False, 'error': 'No file part in request'})
         file = request.files['file']
@@ -845,6 +906,7 @@ SID_00920,430,TCP,2,310.40,DES,0.75,0,Chrome,0"""
 @login_required
 def sandbox_parse():
     try:
+        ensure_models_loaded()
         raw_payload = request.form.get('payload', '')
         evasion_type = request.form.get('evasion_type', 'none') # 'none', 'padding', 'jitter', 'masquerade'
         

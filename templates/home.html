@@ -282,6 +282,14 @@
             <div class="glass-card p-4">
               <h4 class="fw-bold text-white mb-3"><i class="bi bi-shield-check text-primary me-2"></i>Network Session Predictor</h4>
               
+              {% if error_message %}
+              <div class="alert alert-danger alert-dismissible fade show d-flex align-items-center" role="alert">
+                <i class="bi bi-exclamation-triangle-fill me-2 fs-5"></i>
+                <div class="small">{{ error_message }}</div>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+              </div>
+              {% endif %}
+
               <!-- Preset Scenarios -->
               <div class="mb-4">
                 <label class="small text-muted fw-bold mb-2 d-block">QUICK SCENARIOS</label>
@@ -889,8 +897,10 @@
   <script>
     document.getElementById('prediction-form').addEventListener('submit', function() {
       const btn = document.getElementById('prediction-submit-btn');
-      btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status"></span> Executing Neural Engine Inference...';
-      btn.disabled = true;
+      setTimeout(function() {
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status"></span> Executing Neural Engine Inference...';
+        btn.disabled = true;
+      }, 50);
     });
   </script>
 
