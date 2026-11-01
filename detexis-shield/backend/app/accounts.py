@@ -50,13 +50,13 @@ def same_origin(request):
         raise HTTPException(403, "Use this website over HTTPS to submit changes")
 
 
-def throttle(request, redis):
-    ip = request.client.host if request.client else "unknown"
+def throttle(request, redis, *, identity=None, limit=10, namespace="account"):
+    ip = identity or (request.client.host if request.client else "unknown")
     try:
-        count = redis.eval("local n=redis.call('INCR',KEYS[1]); if n==1 then redis.call('EXPIRE',KEYS[1],60) end; return n", 1, "dxs:account:" + digest(ip))
+        count = redis.eval("local n=redis.call('INCR',KEYS[1]); if n==1 then redis.call('EXPIRE',KEYS[1],60) end; return n", 1, "dxs:" + namespace + ":" + digest(ip))
     except RedisError:
         raise HTTPException(503, "Account access temporarily unavailable")
-    if count > 10:
+    if count > limit:
         raise HTTPException(429, "Please wait before trying again", headers={"Retry-After": "60"})
 
 
@@ -257,4 +257,4 @@ def site_feed(site_id: str, request: Request, user=Depends(owner), db=Depends(ge
     site = db.scalar(select(Site).where(Site.id == site_id, Site.owner_id == user.id))
     if site is None:
         raise HTTPException(404, "Website not found")
-    return templates.TemplateResponse(request=request, name="feed.html", context=context(db, site))
+    return templates.TemplateResponse(request=request, name="feed.html", context={**context(db, site), "workspace_url": "/app"})

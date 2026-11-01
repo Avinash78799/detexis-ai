@@ -14,11 +14,16 @@ This document records current implementation, not a production certification.
 - Expired session cleanup in maintenance; additive migration `0004` leaves
   pre-existing CLI-created sites unclaimed rather than assigning ownership.
 - Configuration scan check details are visible in the dashboard.
+- In-app incident inbox across owned websites, bounded evidence, stable cursor
+  pagination, acknowledge/resolve/false-positive decisions and action history.
+  Another matching event reopens a resolved incident; false-positive review
+  remains scoped to that incident and does not automatically train the model.
+  Triage changes are rate-limited and all reads/writes enforce owner isolation.
 
 ## Validation checkpoint
 
-225 local tests passed with one real-service CI test skipped locally before the
-last UI wiring changes. Subsequent focused owner/key/scan/dashboard/retention
+227 local tests passed with one real-service CI test skipped locally after the
+incident inbox implementation. Focused owner/key/scan/dashboard/retention
 checks passed. JavaScript syntax checks passed. CI at `a7a7240` passed both jobs,
 including PostgreSQL migration and Redis processing. The updated Docker stack
 started successfully after the demo database backup. A real browser verified
@@ -29,8 +34,10 @@ the saved website still present. The mobile workspace was inspected at a
 ## Required before inviting real users
 
 - Measure new dashboard and account routes. Finish accessibility and error-state review.
-- Email verification and account recovery, self-service notification destinations,
-  incident investigation/status actions and clear sensor installation diagnostics.
+- Account recovery and clear sensor installation diagnostics. The owner chose
+  in-app alerts first; email verification, delivery and email-based resets need a
+  configured sender and will be documented rather than silently simulated.
+- Complete real-service and browser acceptance for the new incident inbox.
 - Deployment configuration validation, backup restore rehearsal, session/key
   abuse review, operational monitoring and public privacy/retention guidance.
 - Persistent hosting within the user's zero-paid-services budget. A temporary

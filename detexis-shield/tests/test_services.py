@@ -39,6 +39,26 @@ SimpleWorker([Queue("shield",connection=redis)],connection=redis).work(burst=Tru
 with SessionLocal() as db:
     assert db.get(Event,(item["event_id"],site_id)).processed_at is not None
     assert db.scalar(select(Incident).where(Incident.site_id==site_id)) is not None
+with TestClient(app,base_url="https://testserver") as owner:
+    origin={"Origin":"https://testserver"}
+    registered=owner.post("/app/api/register",headers=origin,json={"email":str(uuid.uuid4())+"@integration.example","password":"Synthetic-integration-passphrase"})
+    assert registered.status_code==201,registered.text
+    csrf={**origin,"X-CSRF-Token":registered.json()["csrf_token"]}
+    created=owner.post("/app/api/sites",headers=csrf,json={"domain":"owner-integration.example"})
+    assert created.status_code==201,created.text
+    owner_site=created.json()["id"]
+    owner_item={**item,"event_id":str(uuid.uuid4())}
+    assert owner.post("/v1/events",json={"events":[owner_item]},headers={"X-API-Key":created.json()["api_key"]}).status_code==202
+    SimpleWorker([Queue("shield",connection=redis)],connection=redis).work(burst=True)
+    listed=owner.get("/app/api/inbox").json()["incidents"]
+    assert len(listed)==1 and listed[0]["site_id"]==owner_site
+    detail_path="/app/api/incidents/"+listed[0]["id"]
+    evidence=owner.get(detail_path)
+    assert evidence.status_code==200,evidence.text
+    assert evidence.json()["evidence"],evidence.text
+    reviewed=owner.post(detail_path+"/status",headers=csrf,json={"status":"acknowledged","note":"Reviewed in real PostgreSQL/Redis integration"})
+    assert reviewed.status_code==200,reviewed.text
+    assert owner.get(detail_path).json()["actions"][0]["status"]=="acknowledged"
 '''
     result = subprocess.run([sys.executable, "-c", script], env=env, capture_output=True, text=True)
     assert result.returncode == 0, result.stdout + result.stderr

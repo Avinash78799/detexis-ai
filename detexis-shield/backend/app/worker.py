@@ -7,7 +7,7 @@ from sqlalchemy import select
 
 from detexis_shield.features import extract_features
 from .db import SessionLocal
-from .models import Alert, Event, HourBucket, Incident, Site
+from .models import Alert, Event, HourBucket, Incident, Site, IncidentAction
 from .redis_store import get_redis
 from .rules import LOGIN_PATHS, evaluate
 
@@ -115,6 +115,10 @@ def process_batch(site_id, event_ids, redis=None):
                     db.flush()
                     incidents[group_key] = incident
                 incident.severity = max(incident.severity, severity, key=SEVERITY.get)
+                if incident.status == "resolved":
+                    incident.status = "open"
+                    db.add(IncidentAction(incident_id=incident.id, previous_status="resolved", status="open",
+                                          note="Reopened automatically when another matching event was processed"))
                 existing = set(incident.rules)
                 current = {h["rule_id"] for h in hits}
                 correlations = set(incident.correlations)

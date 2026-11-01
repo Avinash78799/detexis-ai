@@ -12,6 +12,11 @@ async function showWorkspace(data) {
   node('auth').hidden = true; node('workspace').hidden = false;
   node('owner-email').textContent = data.email;
   await refreshSites();
+  const next = new URLSearchParams(location.search).get('next');
+  if (next) {
+    const target = new URL(next, location.origin);
+    if (target.origin === location.origin && (target.pathname === '/app/inbox' || /^\/app\/sites\/[0-9a-f-]+$/.test(target.pathname))) location.assign(target.pathname + target.search);
+  }
 }
 async function refreshSites() {
   const sites = await api('sites');

@@ -65,6 +65,7 @@ class Incident(Base):
     ip_hash: Mapped[str] = mapped_column(String(64))
     bucket: Mapped[int] = mapped_column(Integer)
     severity: Mapped[str] = mapped_column(String(16))
+    status: Mapped[str] = mapped_column(String(20), default="open", server_default="open")
     rules: Mapped[list] = mapped_column(JSON, default=list)
     correlations: Mapped[list] = mapped_column(JSON, default=list)
     event_count: Mapped[int] = mapped_column(Integer, default=0)
@@ -115,3 +116,14 @@ class BrowserSession(Base):
     user_id: Mapped[str] = mapped_column(ForeignKey("users.id"), index=True)
     csrf_hash: Mapped[str] = mapped_column(String(64))
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
+
+
+class IncidentAction(Base):
+    __tablename__ = "incident_actions"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    incident_id: Mapped[str] = mapped_column(ForeignKey("incidents.id"), index=True)
+    actor_id: Mapped[str | None] = mapped_column(ForeignKey("users.id"), nullable=True)
+    previous_status: Mapped[str] = mapped_column(String(20))
+    status: Mapped[str] = mapped_column(String(20))
+    note: Mapped[str] = mapped_column(String(1000), default="")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)

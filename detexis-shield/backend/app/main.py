@@ -12,8 +12,13 @@ from .body_limit import IngestBodyLimit
 from .dashboard import router as dashboard_router
 from .scan_api import router as scan_router
 from .accounts import router as account_router, pages as account_pages
+from .incident_inbox import router as inbox_router
 from pathlib import Path
 from fastapi.staticfiles import StaticFiles
+from fastapi.exception_handlers import http_exception_handler
+from starlette.exceptions import HTTPException as StarletteHTTPException
+from starlette.responses import RedirectResponse
+from urllib.parse import urlencode
 
 app = FastAPI(title="Detexis Shield API")
 app.add_middleware(IngestBodyLimit)
@@ -21,7 +26,18 @@ app.include_router(dashboard_router)
 app.include_router(scan_router)
 app.include_router(account_router)
 app.include_router(account_pages)
+app.include_router(inbox_router)
 app.mount("/static", StaticFiles(directory=str(Path(__file__).parent / "static")), name="static")
+
+
+@app.exception_handler(StarletteHTTPException)
+async def account_navigation_errors(request, exc):
+    if (exc.status_code == 401 and request.method == "GET" and "text/html" in request.headers.get("accept", "")
+            and (request.url.path == "/app/inbox" or request.url.path.startswith("/app/sites/"))):
+        target = request.url.path + ("?" + request.url.query if request.url.query else "")
+        return RedirectResponse("/app?" + urlencode({"next": target}), status_code=303,
+                                headers={"Cache-Control": "no-store"})
+    return await http_exception_handler(request, exc)
 
 
 @app.middleware("http")
