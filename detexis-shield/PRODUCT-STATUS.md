@@ -19,14 +19,16 @@ This document records current implementation, not a production certification.
 
 225 local tests passed with one real-service CI test skipped locally before the
 last UI wiring changes. Subsequent focused owner/key/scan/dashboard/retention
-checks passed. JavaScript syntax checks passed. Real PostgreSQL migration,
-updated container execution and browser workflow verification are still required
-for this owner-workflow release. The demo database was backed up before upgrade.
+checks passed. JavaScript syntax checks passed. CI at `a7a7240` passed both jobs,
+including PostgreSQL migration and Redis processing. The updated Docker stack
+started successfully after the demo database backup. A real browser verified
+signup, adding a website, opening its owner dashboard, sign-out and sign-in with
+the saved website still present. The mobile workspace was inspected at a
+390-pixel viewport. Test accounts and `.example` sites are synthetic.
 
 ## Required before inviting real users
 
-- Verify owner workflow in a real browser and PostgreSQL; measure new dashboard
-  and account routes. Finish mobile/accessibility and error-state review.
+- Measure new dashboard and account routes. Finish accessibility and error-state review.
 - Email verification and account recovery, self-service notification destinations,
   incident investigation/status actions and clear sensor installation diagnostics.
 - Deployment configuration validation, backup restore rehearsal, session/key
