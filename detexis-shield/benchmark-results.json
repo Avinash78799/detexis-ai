@@ -1,0 +1,22 @@
+{
+  "python": "3.12.9",
+  "platform": "Windows-11-10.0.26300-SP0",
+  "requests_per_variant": 10000,
+  "backend": "simulated connection failure",
+  "baseline": {
+    "median_ms": 0.0006,
+    "p95_ms": 0.0008
+  },
+  "sensor": {
+    "median_ms": 0.0247,
+    "p95_ms": 0.0282
+  },
+  "paired_overhead": {
+    "median_ms": 0.0241,
+    "p95_ms": 0.0275
+  },
+  "passes_target": true,
+  "dropped_snapshot": 10500,
+  "queued_snapshot": 0,
+  "limits": "In-process ASGI microbenchmark; no socket/server/load or Flask measurement."
+}
