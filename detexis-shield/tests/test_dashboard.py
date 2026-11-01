@@ -19,3 +19,19 @@ def test_dashboard_requires_auth_and_escapes_attacker_fields():
         assert "tenant-secret-marker" in client.get("/dashboard/feed", auth=("site", other_key)).text
         assert response.headers["Cache-Control"] == "no-store"
         assert "unsafe-inline" not in response.headers["Content-Security-Policy"]
+
+
+def test_dashboard_reports_stale_heartbeat_and_expired_verification():
+    from datetime import datetime, timedelta, timezone
+    from app.db import SessionLocal
+    from app.models import Site
+    site_id, key = make_site("stale-sensor.test")
+    with SessionLocal() as db:
+        site = db.get(Site, site_id)
+        site.last_heartbeat = datetime.now(timezone.utc) - timedelta(minutes=4)
+        site.verified_at = datetime.now(timezone.utc) - timedelta(days=8)
+        db.commit()
+    with TestClient(app) as client:
+        page = client.get("/dashboard", auth=("site", key))
+        assert "Heartbeat overdue" in page.text
+        assert "Verification expired" in page.text

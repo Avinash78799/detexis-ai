@@ -3,8 +3,8 @@
 <title>Detexis Shield · {{ site.domain }}</title>
 <meta name="htmx-config" content='{"allowEval":false,"allowScriptTags":false,"selfRequestsOnly":true}'>
 <link rel="stylesheet" href="/static/dashboard.css"><script src="/static/htmx.min.js" defer></script></head>
-<body><header><a href="/dashboard" class="brand">◈ DETEXIS <strong>SHIELD</strong></a><span class="mode">MONITOR ONLY</span></header>
-<main><p class="eyebrow">SECURITY TELEMETRY</p><h1>{{ site.domain }}</h1><p class="subtitle">Request activity and security signals. Findings need review; requests are never blocked.</p>
+<body><a class="skip" href="#overview">Skip to overview</a><aside class="sidebar"><a href="/dashboard" class="brand">◈ DETEXIS <strong>SHIELD</strong></a><p class="nav-label">WORKSPACE</p><nav aria-label="Dashboard"><a href="#overview">◫ &nbsp; Overview</a><a href="#incidents">◎ &nbsp; Incidents</a><a href="#requests">≋ &nbsp; Request activity</a><a href="#scans">◇ &nbsp; Domain scans</a></nav><div class="sidebar-note"><span class="mode">MONITOR ONLY</span><p>Observe. Understand.<br>Respond with confidence.</p></div></aside><div class="workspace"><header><span>Workspace <span aria-hidden="true">/</span> <strong>Security overview</strong></span><span class="mode">DETECTION ACTIVE · NO BLOCKING</span></header>
+<main id="overview"><p class="eyebrow">YOUR SECURITY WORKSPACE</p><h1>{{ site.domain }}</h1><p class="subtitle">A clear view of your website’s activity, signals and security posture.</p><div class="notice"><span class="pulse" aria-hidden="true"></span> Feed refreshes every 5 seconds <span>· UTC timestamps · Findings need review</span></div>
 <div id="feed" hx-get="/dashboard/feed" hx-trigger="every 5s" hx-swap="innerHTML">{% include "feed.html" %}</div>
 <noscript><p>Automatic updates require JavaScript. Refresh this page to see the latest events.</p></noscript>
-</main><footer>Detexis Shield · UTC timestamps · Daily salted IP hashes · Read-only dashboard</footer></body></html>
+</main><footer>Detexis Shield · Daily salted IP hashes · Read-only dashboard</footer></div></body></html>
