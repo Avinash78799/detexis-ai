@@ -34,11 +34,10 @@ These are detection inputs, not attack verdicts. Punctuation-heavy search terms,
 international paths and repeated parameters can all be legitimate. Evaluate false
 positives on real benign traffic before choosing model thresholds.
 
-The backend currently stores sensor-provided features. Future workers must
-recompute from stored fields and validate the version, rather than trusting a
-client-provided feature dictionary. Training artifacts must record version `1`
-and the ordered four model input names. Version mismatch handling belongs with
-the future worker/model loader; no classifier is included in this change.
+The ingest backend stores sensor-provided features, then the worker recomputes
+them from stored fields before detection. Training artifacts record version `1`
+and the ordered four model input names. The optional model loader rejects schema
+mismatches and falls back to rules; see ml/README.md for evaluation requirements.
 
 Use these checks from this directory:
 

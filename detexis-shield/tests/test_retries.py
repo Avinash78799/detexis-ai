@@ -142,6 +142,8 @@ def test_close_interrupts_worker_and_accounts_for_queued_events(monkeypatch):
     attempts = []
 
     def handle(request):
+        if request.method == "GET":
+            return httpx.Response(200, json={"honeytokens": []})
         attempts.append(request.content)
         return httpx.Response(503)
 

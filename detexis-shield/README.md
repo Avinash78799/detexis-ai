@@ -1,51 +1,67 @@
-# Detexis Shield: Phase 0 + 1 starter
+# Detexis Shield
 
-Sensor validation and Flask/WSGI support have been added. See
-[PHASE1-NOTES.md](PHASE1-NOTES.md) for usage, checks, and remaining limits.
+A monitor-only website security sensor, detection backend and authenticated HTMX
+dashboard. The Python SDK supports FastAPI/Starlette and Flask, redacts named
+sensitive query parameters, hashes IPs per site/day, and sends bounded batches in
+the background. It never blocks a website request on a detection decision.
 
-Working scaffold (about 30% boilerplate). The detection logic, features, ML and dashboard are yours to build.
-
-## Run it
-```bash
-# Quick local run (SQLite, no Docker)
-python -m pip install -r requirements-dev.txt -e sensor-sdk
-python -m pytest -q -p no:cacheprovider       # 77 tests should pass
-
-cd backend && python create_site.py demo.local   # prints API key ONCE
-uvicorn app.main:app --port 8000
-
-# second terminal
-cd demo && pip install -r requirements.txt
-SHIELD_API_KEY=<key> uvicorn app:app --port 9000
-curl "localhost:9000/search?q=' OR '1'='1&password=x"; curl localhost:9000/.env
-# events show up in backend/detexis.db (table: events)
-
-# Postgres + Redis version
-docker compose up --build
+```mermaid
+flowchart LR
+    Website --> SDK[ASGI / WSGI sensor]
+    SDK --> API[Authenticated ingest + site budgets]
+    API --> DB[(PostgreSQL: pending events)]
+    API --> RQ[Redis / RQ]
+    RQ --> Worker[Rules + optional ML + correlation]
+    Worker --> DB
+    DB --> UI[Authenticated HTMX feed]
+    DB --> Outbox[Notification outbox]
+    Verified[Verified domain] --> Scanner[Isolated, pinned-IP scanner]
 ```
 
-## What already works
-- API-key auth (hashed keys, constant-time compare), tenant id taken from the key only
-- Idempotent batch ingest (duplicate event_id ignored), batch cap 100, field limits
-- SDK: ASGI and WSGI middleware, background batching, bounded buffer, fail-open, query redaction, salted daily IP hash
-- Honeytoken flag on `/.env` and `/admin-backup`
-- Tests for auth, idempotency, tenant isolation, batch cap, redaction
+## Run and test
 
-## Your TODOs (search the code for `TODO(you)`)
-1. **Phase 1:** pull honeytokens from `/v1/config`; rate limit on ingest; Alembic migrations
-2. **Phase 1:** a measured overhead test (median under 5 ms, p95 under 10 ms)
-3. **Phase 2:** Redis/RQ queue, rule engine (each rule mapped to OWASP/CWE with positive and negative tests), incidents table, live feed page, alerts
-4. Write the threat model (one page) before Phase 2
+Use Python 3.12. From this directory:
 
-Bounded delivery retries are implemented; see [RETRIES.md](RETRIES.md) for behavior,
-shutdown semantics, and limits.
+```sh
+python -m pip install -r requirements-dev.txt -e sensor-sdk
+python -m pytest -q -p no:cacheprovider
+docker compose up --build -d
+docker compose exec api python create_site.py demo.local
+```
 
-Shared URL features are implemented; see [FEATURES.md](FEATURES.md) for exact
-definitions, versioning and limits. Traffic rates belong in the future backend
-baseline/correlation work rather than this stateless request extractor.
+Save the printed API key and site salt. See [DEPLOYMENT.md](DEPLOYMENT.md) for
+local setup, workers, TLS, alerts, ownership verification and deployment.
+The existing app at https://detexis.vercel.app/ remains the separate legacy app.
 
-## Known limits of this scaffold
-- Request bodies are not captured yet (decide what to capture and how to redact it)
-- No per-site salt management or key rotation endpoint
-- No ingest rate limiting yet
-- Dashboard and user accounts do not exist yet
+## Implemented
+
+- Site-key authentication, hashed secrets, tenant-scoped event idempotency,
+  bounded ingest bodies, atomic Redis request/event budgets and Alembic migrations.
+- ASGI/WSGI sensors with bounded buffers, retries/backoff, validated configuration
+  refresh, heartbeat, redaction and [shared URL features](FEATURES.md).
+- RQ processing with durable pending-row recovery, 12 heuristic rules, CWE/OWASP
+  tags, and three positive/three negative cases per rule.
+- Incident grouping, recon-to-exploit/repeated-failure/flood correlations,
+  seven-day same-hour baselines, notification outbox and retention maintenance.
+- Authenticated, escaped HTMX event/incident feed and site-isolation tests.
+- Verified-domain scanner with pinned public IPs, redirect checks, time/size caps,
+  TLS/header/session-cookie/file/DNS-policy checks and isolated-container setup.
+- ML training/evaluation tooling for logistic regression or XGBoost, chronological
+  session separation, independent-dataset evaluation, FPR confidence bounds,
+  artifact schema/version checks, optional SHAP reasons and rule fallback.
+  **No real-data model or production FPR result is bundled.**
+
+## Evidence and limits
+
+[STATUS.md](STATUS.md) separates implemented code from live acceptance evidence.
+Unit tests do not establish production throughput, scanner isolation on a host,
+notification delivery, real classifier performance or a real-site monitoring count.
+
+The SDK targets persistent Python workers; it is not a validated Vercel-function
+sensor. It records URL-derived features, not request bodies. Keys currently grant
+both telemetry and dashboard access for their site; user accounts and finer scopes
+are future work. A canary/scanner hit is a signal needing review, not proof of an
+attacker. Daily IP hashes do not establish account identity or credential stuffing.
+
+Read the [threat model](THREAT-MODEL.md), [retry contract](RETRIES.md),
+[ML data/evaluation requirements](ml/README.md) and [demo runbook](DEMO.md).

@@ -35,7 +35,7 @@ class ShieldClient:
 
     def __init__(self, api_url: str, api_key: str, batch_size: int = 50,
                  flush_interval: float = 3.0, max_buffer: int = 5000,
-                 max_retries: int = 2):
+                 max_retries: int = 2, config_interval: float = 60):
         if not isinstance(batch_size, int) or not 1 <= batch_size <= 100:
             raise ValueError("batch_size must be between 1 and 100")
         if not isinstance(max_buffer, int) or max_buffer < 1:
@@ -44,11 +44,15 @@ class ShieldClient:
             raise ValueError("flush_interval must be finite and positive")
         if type(max_retries) is not int or not 0 <= max_retries <= 5:
             raise ValueError("max_retries must be an integer between 0 and 5")
+        if not math.isfinite(config_interval) or config_interval < 10:
+            raise ValueError("config_interval must be finite and at least 10 seconds")
         self.api_url = api_url.rstrip("/")
         self.headers = {"X-API-Key": api_key, "Content-Type": "application/json"}
         self.batch_size = batch_size
         self.flush_interval = flush_interval
         self.max_retries = max_retries
+        self.config_interval = config_interval
+        self.honeytoken_paths = frozenset({"/.env", "/admin-backup"})
         self.q: queue.Queue = queue.Queue(maxsize=max_buffer)
         self._dropped = 0
         self._state_lock = threading.Lock()
@@ -80,13 +84,28 @@ class ShieldClient:
         try:
             with httpx.Client(timeout=3.0) as http:
                 last = time.monotonic()
+                configured = last - self.config_interval
+                heartbeat = last
                 while not self._stop.is_set():
+                    now = time.monotonic()
+                    if now - configured >= self.config_interval:
+                        self._sync_config(http)
+                        configured = time.monotonic()
+                    if self._stop.is_set():
+                        break
+                    if now - heartbeat >= 60:
+                        try:
+                            http.post(f"{self.api_url}/v1/heartbeat", headers=self.headers)
+                        except Exception:
+                            pass
+                        heartbeat = time.monotonic()
                     try:
                         batch.append(self.q.get(timeout=0.5))
                     except queue.Empty:
                         pass
                     if self._stop.is_set():
                         break
+
                     due = time.monotonic() - last >= self.flush_interval
                     if batch and (len(batch) >= self.batch_size or due):
                         self._send(http, batch)
@@ -103,6 +122,23 @@ class ShieldClient:
                         self._dropped += 1
                     except queue.Empty:
                         break
+
+    def _sync_config(self, http):
+        if self._stop.is_set():
+            return
+        try:
+            response = http.get(f"{self.api_url}/v1/config", headers=self.headers)
+            response.raise_for_status()
+            paths = response.json()["honeytokens"]
+            if not isinstance(paths, list) or len(paths) > 20:
+                return
+            if not all(isinstance(p, str) and p.startswith("/") and len(p) <= 2048
+                       and not any(c in p for c in "\r\n?#") for p in paths):
+                return
+            self.honeytoken_paths = frozenset(paths)
+            # Server mode is deliberately ignored: v1 never blocks requests.
+        except Exception:
+            pass  # Retain the last valid configuration during outages.
 
     def _send(self, http: httpx.Client, batch: list[dict]) -> None:
         try:

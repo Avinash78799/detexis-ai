@@ -1,5 +1,8 @@
 # Sensor validation and Flask adapter
 
+These notes describe the first sensor increments. See [STATUS.md](STATUS.md) and
+[DEPLOYMENT.md](DEPLOYMENT.md) for the expanded backend and current validation.
+
 Run from the project root:
 
 ```sh
@@ -74,9 +77,8 @@ for the measured microbenchmark. It uses the real buffer and sender thread with
 simulated network failure. This establishes local overhead only; server-level
 median/p95 and production behavior still need measurement on the deployment host.
 
-Shared request features are implemented; see [FEATURES.md](FEATURES.md). Phase 1
-is still incomplete: Redis rate
-limiting and Alembic remain. Startup configuration errors are intentionally raised;
+Shared request features, Redis rate limits and Alembic are now implemented.
+See [FEATURES.md](FEATURES.md). Startup configuration errors are intentionally raised;
 runtime fail-open tests do not promise the sensor can never fail under any condition.
 Docker Compose now waits for PostgreSQL readiness before starting the API. A full
 Docker/PostgreSQL run has not been performed locally; the API tests use SQLite.

@@ -6,10 +6,13 @@ This repository contains two stages of the project:
 - **Detexis Shield**, the sensor and monitoring backend under development, lives in
   [detexis-shield/](detexis-shield/README.md).
 
-Shield currently includes authenticated batch ingestion, ASGI and WSGI sensors,
-redaction, daily salted IP hashes, a demo application and sensor validation tests.
-Attack detection workers, ML evaluation, incidents, alerts, scanning and the
-dashboard are planned work; the current sensor does not block requests.
+Shield includes authenticated ingestion, ASGI/WSGI sensors, 12 detection heuristics,
+RQ workers, incident correlation, baselines, alerts, an isolated verified-domain
+scanner and an authenticated HTMX dashboard. ML evaluation tooling is implemented;
+real-data model validation and production deployment remain acceptance work.
+The sensor never blocks requests. See the [evidence/status matrix](detexis-shield/STATUS.md).
 
 Start with the [Shield setup and validation notes](detexis-shield/PHASE1-NOTES.md).
 The existing app's deployment configuration still targets the root Flask app.
+An optional, disabled-by-default well-known route supports ownership proof when
+`SHIELD_VERIFICATION_TOKEN` is configured; it does not attach a sensor to Vercel.

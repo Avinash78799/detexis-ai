@@ -4,7 +4,6 @@ import sys
 import uuid
 from datetime import datetime, timezone
 
-os.environ["DATABASE_URL"] = "sqlite:///./test.db"
 sys.path.insert(0, "backend")
 sys.path.insert(0, "sensor-sdk")
 

@@ -6,7 +6,7 @@ from .client import ShieldClient
 from .features import MAX_PATH_STORED, extract_features
 from .redact import MAX_QUERY_INPUT, hash_ip, redact_query
 
-HONEYTOKEN_PATHS = {"/.env", "/admin-backup"}  # TODO(you): pull from GET /v1/config
+HONEYTOKEN_PATHS = {"/.env", "/admin-backup"}  # Fallback until a valid config is received.
 
 
 class ShieldMiddleware:
@@ -42,7 +42,9 @@ class ShieldMiddleware:
         client = scope.get("client") or ("0.0.0.0", 0)
         path = scope.get("path", "")[:MAX_PATH_STORED]
         query = redact_query(scope.get("query_string", b"")[:MAX_QUERY_INPUT].decode("latin-1"))
-        flags = ["honeytoken_hit"] if path in HONEYTOKEN_PATHS else []
+        configured = getattr(self.client, "honeytoken_paths", None)
+        paths = configured if isinstance(configured, frozenset) else HONEYTOKEN_PATHS
+        flags = ["honeytoken_hit"] if path in paths else []
         self.client.submit({
             "event_id": str(uuid.uuid4()),
             "ts": datetime.now(timezone.utc).isoformat(),

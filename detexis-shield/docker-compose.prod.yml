@@ -1,0 +1,16 @@
+services:
+  proxy:
+    image: caddy:2
+    environment:
+      SHIELD_DOMAIN: ${SHIELD_DOMAIN:?Set the Shield backend DNS domain}
+    ports: ['80:80', '443:443']
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks: [app_egress]
+    depends_on:
+      api: {condition: service_healthy}
+volumes:
+  caddy_data:
+  caddy_config:

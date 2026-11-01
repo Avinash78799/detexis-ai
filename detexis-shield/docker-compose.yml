@@ -3,9 +3,10 @@ services:
     image: postgres:16
     environment:
       POSTGRES_USER: detexis
-      POSTGRES_PASSWORD: change-me-locally
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-local-dev-only}
       POSTGRES_DB: detexis
-    ports: ["5432:5432"]
+    ports: ["127.0.0.1:5432:5432"]
+    networks: [control]
     volumes: [pgdata:/var/lib/postgresql/data]
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U detexis -d detexis"]
@@ -14,17 +15,83 @@ services:
       retries: 10
   redis:
     image: redis:7
-    ports: ["6379:6379"]
+    ports: ["127.0.0.1:6379:6379"]
+    networks: [control]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
   api:
-    build: ./backend
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
     environment:
-      DATABASE_URL: postgresql+psycopg2://detexis:change-me-locally@db:5432/detexis
+      DATABASE_URL: postgresql+psycopg2://detexis:${POSTGRES_PASSWORD:-local-dev-only}@db:5432/detexis
       REDIS_URL: redis://redis:6379/0
-    ports: ["8000:8000"]
+    ports: ["127.0.0.1:8000:8000"]
+    networks: [control, scan_link, app_egress]
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/ready')"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
     depends_on:
       db:
         condition: service_healthy
       redis:
-        condition: service_started
+        condition: service_healthy
+  worker:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    command: ["rq", "worker", "--url", "redis://redis:6379/0", "shield"]
+    environment:
+      DATABASE_URL: postgresql+psycopg2://detexis:${POSTGRES_PASSWORD:-local-dev-only}@db:5432/detexis
+      REDIS_URL: redis://redis:6379/0
+      SCANNER_SERVICE_URL: http://scanner:8001
+    networks: [control, scan_link, app_egress]
+    depends_on:
+      api: {condition: service_healthy}
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+  maintenance:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    command: ["python", "-m", "app.maintenance"]
+    environment:
+      DATABASE_URL: postgresql+psycopg2://detexis:${POSTGRES_PASSWORD:-local-dev-only}@db:5432/detexis
+      REDIS_URL: redis://redis:6379/0
+      SHIELD_ALERT_TARGETS: ${SHIELD_ALERT_TARGETS:-}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_FROM: ${SMTP_FROM:-}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+    networks: [control, app_egress]
+    depends_on:
+      api: {condition: service_healthy}
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+  scanner:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile.scanner
+    networks: [scan_link, scan_egress]
+    read_only: true
+    tmpfs: [/tmp:size=16m]
+    mem_limit: 256m
+    cpus: 0.5
+    pids_limit: 64
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
 volumes:
   pgdata:
+networks:
+  control: {internal: true}
+  scan_link: {internal: true}
+  app_egress: {}
+  scan_egress: {}

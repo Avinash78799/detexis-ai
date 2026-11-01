@@ -1,0 +1,101 @@
+# Running Shield
+
+The existing app at https://detexis.vercel.app/ is Detexis AI. Shield is a separate
+long-running service with PostgreSQL, Redis, workers and an isolated scanner. Root
+`vercel.json` and `render.yaml` continue to describe the legacy app. No production
+service or cloud resource is created by this pull request.
+
+## Local development
+
+Use Python 3.12. From `detexis-shield/`:
+
+```sh
+python -m pip install -r requirements-dev.txt -e sensor-sdk
+python -m alembic -c backend/alembic.ini upgrade head
+cd backend
+python create_site.py demo.local
+uvicorn app.main:app --port 8000
+```
+
+Run Redis separately, or use Docker Compose below. The raw API key is printed once.
+Set `DATABASE_URL` and `REDIS_URL` in every backend process consistently. SQLite is
+for local tests; PostgreSQL is required for concurrent production worker locking.
+
+## Full local stack
+
+```sh
+docker compose up --build -d
+docker compose exec api python create_site.py demo.local
+docker compose logs -f api worker maintenance scanner
+```
+
+Compose binds API/Postgres/Redis only to loopback. The API applies Alembic migrations
+before startup; workers wait for readiness. Scanner ports are not published and its
+container does not join the datastore network. `GET /ready` checks DB and Redis;
+`GET /health` checks the API process. No scanner probe runs without verification.
+
+Set `SHIELD_API_KEY` and the printed salt as `SHIELD_SALT` in a second terminal, install `demo/requirements.txt`, and run
+`uvicorn app:app --app-dir demo --port 9000`. Visit the demo and its `/.env` canary.
+Open `http://localhost:8000/dashboard`; enter any username and your site key as the
+Basic-auth password. Requests are collected, rules run in RQ and the feed refreshes.
+
+## Production preparation
+
+Use a Docker host with a domain for the Shield backend. Copy `.env.example` to
+`.env`, choose a long random hexadecimal `POSTGRES_PASSWORD`, set `SHIELD_DOMAIN`,
+point its DNS to the host, and then run:
+
+```sh
+docker compose -f docker-compose.yml -f docker-compose.prod.yml up --build -d
+```
+
+Caddy terminates TLS on 80/443. Confirm backups, firewall rules and restore tests.
+Retain PostgreSQL data and Caddy state volumes between releases. Do not expose
+datastores or the scanner port publicly. The local default database password is
+not a production credential. On one host, scanner isolation is a network and
+container boundary, not protection against a host-kernel compromise.
+
+The sensor's background thread requires a persistent Python worker. Do not claim
+reliable delivery from Vercel functions with this SDK. A serverless adapter is
+future work; use the provided persistent demo for initial end-to-end monitoring.
+[Vercel documents bounded function lifecycles](https://vercel.com/docs/functions/runtimes).
+
+## Ownership verification, including vercel.app
+
+Create a Shield site for the exact hostname (no scheme/path), then call
+`POST /v1/domain/verification` with its `X-API-Key`. The response provides a token,
+TXT record and fixed HTTPS URL. Publish either proof and call `POST /v1/domain/verify`.
+Verification lasts seven days and attempts have a one-minute cooldown.
+
+For `detexis.vercel.app`, the legacy app includes an optional well-known route.
+After that change is deployed, set Vercel's `SHIELD_VERIFICATION_TOKEN` to the
+challenge's complete `value` and redeploy. The route returns 404 when unset. This
+enables scanning ownership proof; it does not install a serverless sensor.
+
+Request `POST /v1/scans`, then read `GET /v1/scans/{scan_id}`. Scans are limited to
+once per hour manually and are scheduled daily while verification remains valid.
+DKIM checks need operator-configured selectors in `Site.settings.dkim_selectors`;
+unknown selectors are reported as unassessed rather than guessed.
+
+## Alerts, recovery and retention
+
+Set `SHIELD_ALERT_TARGETS` to a JSON map keyed by site ID. Values can contain
+`email`, `slack` (official HTTPS webhook) and `telegram` (numeric chat ID). Configure
+SMTP or the Telegram bot token through environment variables. No messages are sent
+without destinations. Never commit credentials. Delivery is best effort with at
+most five maintenance attempts and per-channel progress; an acknowledged-but-lost
+delivery may duplicate externally. One outbox record is created per incident.
+
+Maintenance runs each minute, recovers unprocessed events and pending scans,
+delivers notifications and purges records after 30 days by default. Change
+`RETENTION_DAYS` on that process; minimum seven days preserves baseline history.
+Observe failed RQ jobs and alert outbox status. Data retention also requires a
+backup-retention policy outside this code.
+
+## Migration from the original ZIP
+
+The Alembic initial migration expects an empty Shield database. It is not a blind
+stamp of the old scaffold schema: event identity is now tenant-scoped and tables
+have changed. Preserve an existing starter database and import its events into a
+fresh migrated database after review. Do not stamp or delete production data.
+The legacy app's root database is separate and is not migrated by Shield.
