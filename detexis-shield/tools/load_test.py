@@ -17,6 +17,7 @@ async def run(url, key, rate, seconds):
     batch_size = min(100, rate)
     interval = batch_size / rate
     attempts, accepted, failed, latency = 0, 0, 0, []
+    responses, transport_errors = {}, {}
     semaphore = asyncio.Semaphore(20)
     async with httpx.AsyncClient(timeout=10, trust_env=False) as http:
         async def send(count):
@@ -27,12 +28,16 @@ async def run(url, key, rate, seconds):
             started = time.perf_counter()
             try:
                 response = await http.post(url + "/v1/events", headers={"X-API-Key": key}, json={"events": body})
+                code = str(response.status_code)
+                responses[code] = responses.get(code, 0) + 1
                 attempts += count
                 if response.status_code == 202:
                     accepted += response.json()["accepted"]
                 else:
                     failed += count
-            except httpx.HTTPError:
+            except httpx.HTTPError as exc:
+                name = type(exc).__name__
+                transport_errors[name] = transport_errors.get(name, 0) + 1
                 attempts += count
                 failed += count
             finally:
@@ -55,6 +60,7 @@ async def run(url, key, rate, seconds):
             "failed": failed, "elapsed_seconds": elapsed, "accepted_per_second": accepted / elapsed,
             "batch_latency_median_ms": statistics.median(latency),
             "batch_latency_p95_ms": sorted(latency)[max(0, int(len(latency)*.95)-1)],
+            "http_responses": responses, "transport_errors": transport_errors,
             "note": "Ingest acceptance only. Check pending events, RQ failures and processing lag separately."}
 
 

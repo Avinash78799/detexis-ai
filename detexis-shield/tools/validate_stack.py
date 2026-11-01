@@ -78,6 +78,11 @@ def main():
     if args.rate <= 0 or args.seconds <= 0:
         parser.error("rate and seconds must be positive")
     ready()
+    # Pending rows can be zero while duplicate recovery jobs remain in RQ.
+    # A new measurement must not include work left over from an earlier run.
+    queue_source = "from rq import Queue; from app.redis_store import get_redis; print(Queue('shield',connection=get_redis()).count)"
+    if int(docker("exec", "-T", "api", "python", "-c", queue_source).strip()):
+        raise RuntimeError("Wait for the previous validation queue to drain before starting another run")
     created = docker("exec", "-T", "api", "python", "create_site.py", "validation.example")
     key = re.search(r"dxs_[A-Za-z0-9_-]+", created).group()
     site_id = re.search(r"site_id=([a-f0-9-]+)", created).group(1)

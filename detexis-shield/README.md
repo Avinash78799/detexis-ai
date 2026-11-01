@@ -31,6 +31,8 @@ docker compose exec api python create_site.py demo.local
 
 Save the printed API key and site salt. See [DEPLOYMENT.md](DEPLOYMENT.md) for
 local setup, workers, TLS, alerts, ownership verification and deployment.
+See [SENSOR.md](SENSOR.md) for exact sensor coverage, installation examples,
+privacy limits, measurements and features that remain on the roadmap.
 The existing app at https://detexis.vercel.app/ remains the separate legacy app.
 
 ## Implemented
