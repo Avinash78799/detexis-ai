@@ -31,7 +31,7 @@ def make_site(domain):
 
 def event(path="/"):
     return {"event_id": str(uuid.uuid4()), "ts": datetime.now(timezone.utc).isoformat(),
-            "ip_hash": "x" * 64, "method": "GET", "path": path, "status": 200, "latency_ms": 1.2}
+            "ip_hash": "a" * 64, "method": "GET", "path": path, "status": 200, "latency_ms": 1.2}
 
 
 def test_ingest_requires_valid_key():

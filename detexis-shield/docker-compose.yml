@@ -1,6 +1,6 @@
 services:
   db:
-    image: postgres:16
+    image: postgres:16-alpine
     environment:
       POSTGRES_USER: detexis
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-local-dev-only}
@@ -14,7 +14,7 @@ services:
       timeout: 3s
       retries: 10
   redis:
-    image: redis:7
+    image: redis:7-alpine
     ports: ["127.0.0.1:6379:6379"]
     networks: [control]
     healthcheck:
@@ -47,7 +47,7 @@ services:
     build:
       context: .
       dockerfile: backend/Dockerfile
-    command: ["rq", "worker", "--url", "redis://redis:6379/0", "shield"]
+    command: ["python", "-m", "app.run_worker"]
     environment:
       DATABASE_URL: postgresql+psycopg2://detexis:${POSTGRES_PASSWORD:-local-dev-only}@db:5432/detexis
       REDIS_URL: redis://redis:6379/0

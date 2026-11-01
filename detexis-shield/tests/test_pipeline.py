@@ -81,3 +81,51 @@ def test_ml_failure_keeps_rule_detection(isolated_redis, monkeypatch):
     process_batch(site, [item], isolated_redis)
     with SessionLocal() as db:
         assert "honeytoken" in [f["rule_id"] for f in db.get(Event, (item, site)).findings]
+
+
+def test_full_batch_groups_once_without_per_event_database_reads(isolated_redis):
+    from sqlalchemy import event as sql_event
+    from app.db import engine
+    site, _ = make_site("batch.test")
+    stamp = datetime.now(timezone.utc).replace(second=0, microsecond=0)
+    ids = [seed(site, "/.env", received_at=stamp) for _ in range(100)]
+    reads = []
+    def record(connection, cursor, statement, parameters, context, many):
+        if statement.lstrip().upper().startswith("SELECT"):
+            reads.append(statement)
+    sql_event.listen(engine, "before_cursor_execute", record)
+    try:
+        assert process_batch(site, ids, isolated_redis) == 100
+    finally:
+        sql_event.remove(engine, "before_cursor_execute", record)
+    assert len(reads) < 10
+    with SessionLocal() as db:
+        incident = db.scalar(select(Incident).where(Incident.site_id == site))
+        assert incident.event_count == 100
+        assert len(db.scalars(select(Alert).where(Alert.site_id == site)).all()) == 1
+        assert db.get(HourBucket, (site, stamp.replace(minute=0))).count == 100
+    assert process_batch(site, ids, isolated_redis) == 0
+
+
+def test_failed_batch_rolls_back_and_retry_preserves_counts(isolated_redis, monkeypatch):
+    import app.worker as worker
+    site, _ = make_site("retry-batch.test")
+    ids = [seed(site, "/.env") for _ in range(3)]
+    original = worker.evaluate
+    calls = 0
+    def fail_mid_batch(*args, **kwargs):
+        nonlocal calls
+        calls += 1
+        if calls == 2:
+            raise RuntimeError("injected job failure")
+        return original(*args, **kwargs)
+    monkeypatch.setattr(worker, "evaluate", fail_mid_batch)
+    with pytest.raises(RuntimeError, match="injected job failure"):
+        process_batch(site, ids, isolated_redis)
+    with SessionLocal() as db:
+        assert all(db.get(Event, (item, site)).processed_at is None for item in ids)
+        assert db.scalar(select(Incident).where(Incident.site_id == site)) is None
+    monkeypatch.setattr(worker, "evaluate", original)
+    assert process_batch(site, ids, isolated_redis) == 3
+    with SessionLocal() as db:
+        assert db.scalar(select(Incident).where(Incident.site_id == site)).event_count == 3

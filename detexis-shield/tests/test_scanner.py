@@ -150,3 +150,29 @@ def test_pinned_http_connects_to_vetted_ip_and_preserves_host_and_close_semantic
     assert connect.call_args.args[0] == ("8.8.8.8", 80)
     assert b"Host: example.com\r\n" in sock.sent
     assert sock.closed
+
+
+def test_transfer_cap_applies_to_headers_as_well_as_body(monkeypatch):
+    from app.safe_fetch import _Socket
+    raw = Mock()
+    def receive(buffer):
+        buffer[:8] = b"12345678"
+        return 8
+    raw.recv_into.side_effect = receive
+    monkeypatch.setattr("app.safe_fetch.MAX_RESPONSE", 4)
+    wrapper = _Socket(raw, time.monotonic() + 5)
+    with wrapper.makefile() as stream:
+        with pytest.raises(UnsafeTarget, match="transfer cap"):
+            stream.read(1)
+    wrapper.close()
+    raw.close.assert_called_once()
+
+
+def test_pinned_transport_does_not_connect_after_deadline(monkeypatch):
+    from urllib.parse import urlsplit
+    from app.safe_fetch import pinned_request
+    connect = Mock()
+    monkeypatch.setattr("app.safe_fetch.socket.create_connection", connect)
+    with pytest.raises(TimeoutError):
+        pinned_request(urlsplit("https://example.com/"), 443, "8.8.8.8", time.monotonic() - 1)
+    connect.assert_not_called()

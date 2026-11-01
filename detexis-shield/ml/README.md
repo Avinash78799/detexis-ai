@@ -50,3 +50,9 @@ worker. Never accept uploaded joblib files. Schema/load/prediction failures fall
 back to rules. XGBoost alerts attempt SHAP reasons in raw model-output units (log
 odds for its default binary objective); contributions are not causal explanations.
 See [SHAP's TreeExplainer documentation](https://shap.readthedocs.io/en/latest/generated/shap.TreeExplainer.html).
+
+For Docker, set `SHIELD_MODEL_PATH` to the absolute directory of the reviewed
+artifact and add `-f docker-compose.ml.yml` to the Compose invocation. It builds
+the worker with the pinned ML dependencies and mounts the artifact read-only;
+the normal API and scanner images do not need ML packages. This override is
+optional and is not enabled by default.

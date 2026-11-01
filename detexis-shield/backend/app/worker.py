@@ -51,13 +51,23 @@ def process_batch(site_id, event_ids, redis=None):
             return 0
         rows = db.scalars(select(Event).where(Event.site_id == site_id, Event.event_id.in_(event_ids),
                                               Event.processed_at.is_(None)).order_by(Event.received_at)).all()
+        # Pipeline Redis round trips while retaining event order and atomic Lua windows.
+        pipeline = redis.pipeline(transaction=False)
+        login_events = []
         for event in rows:
             stamp = utc(event.received_at)
             key = f"dxs:window:{{{site_id}}}:{event.ip_hash}"
-            count = redis.eval(WINDOW, 1, key, stamp.timestamp(), event.event_id)
-            failed = 0
-            if event.path.lower().rstrip("/") in LOGIN_PATHS and event.status in {401, 403}:
-                failed = redis.eval(WINDOW, 1, key + ":login", stamp.timestamp(), event.event_id)
+            pipeline.eval(WINDOW, 1, key, stamp.timestamp(), event.event_id)
+            login = event.path.lower().rstrip("/") in LOGIN_PATHS and event.status in {401, 403}
+            login_events.append(login)
+            if login:
+                pipeline.eval(WINDOW, 1, key + ":login", stamp.timestamp(), event.event_id)
+        counts = iter(pipeline.execute())
+        buckets, thresholds, incidents, alerted = {}, {}, {}, set()
+        for event, login in zip(rows, login_events):
+            stamp = utc(event.received_at)
+            count = next(counts)
+            failed = next(counts) if login else 0
             settings = site.settings or {}
             hits = [f.json() for f in evaluate(event.path, event.query_redacted, event.ua, event.status,
                 honeytokens=site.honeytokens, request_count=count, failed_logins=failed,
@@ -65,12 +75,19 @@ def process_batch(site_id, event_ids, redis=None):
                 flood_threshold=max(20, int(settings.get("flood_threshold", 300))))]
             event.features = extract_features(event.path, event.query_redacted)  # Never trust client features.
             hour = stamp.replace(minute=0, second=0, microsecond=0)
-            bucket = db.get(HourBucket, (site_id, hour))
-            if bucket is None:
-                bucket = HourBucket(site_id=site_id, hour=hour, count=0)
-                db.add(bucket)
+            if hour not in buckets:
+                # Persist a prior hour before using it as baseline history.
+                if buckets:
+                    db.flush()
+                bucket = db.get(HourBucket, (site_id, hour))
+                if bucket is None:
+                    bucket = HourBucket(site_id=site_id, hour=hour, count=0)
+                    db.add(bucket)
+                buckets[hour] = bucket
+                thresholds[hour] = baseline_threshold(db, site, hour)
+            bucket = buckets[hour]
             bucket.count += 1
-            threshold = baseline_threshold(db, site, hour)
+            threshold = thresholds[hour]
             if threshold is not None and bucket.count > threshold:
                 hits.append({"rule_id": "volume_anomaly", "severity": "medium", "cwe": "CWE-400",
                              "owasp": "A06:2025", "reason": "Current hour exceeds the seven-day same-hour mean + 3σ"})
@@ -85,7 +102,10 @@ def process_batch(site_id, event_ids, redis=None):
             event.findings = hits
             if hits:
                 group = int(stamp.timestamp()) // 300
-                incident = db.scalar(select(Incident).where(Incident.site_id == site_id, Incident.ip_hash == event.ip_hash, Incident.bucket == group))
+                group_key = (event.ip_hash, group)
+                if group_key not in incidents:
+                    incidents[group_key] = db.scalar(select(Incident).where(Incident.site_id == site_id, Incident.ip_hash == event.ip_hash, Incident.bucket == group))
+                incident = incidents[group_key]
                 severity = max((h["severity"] for h in hits), key=SEVERITY.get)
                 if incident is None:
                     incident = Incident(site_id=site_id, ip_hash=event.ip_hash, bucket=group,
@@ -93,6 +113,7 @@ def process_batch(site_id, event_ids, redis=None):
                                         first_seen=stamp, last_seen=stamp)
                     db.add(incident)
                     db.flush()
+                    incidents[group_key] = incident
                 incident.severity = max(incident.severity, severity, key=SEVERITY.get)
                 existing = set(incident.rules)
                 current = {h["rule_id"] for h in hits}
@@ -107,10 +128,11 @@ def process_batch(site_id, event_ids, redis=None):
                 incident.correlations = sorted(correlations)
                 incident.last_seen = max(utc(incident.last_seen), stamp)
                 incident.event_count += 1
-                if SEVERITY[incident.severity] >= 2 and not db.scalar(select(Alert).where(Alert.incident_id == incident.id)):
-                    db.add(Alert(site_id=site_id, incident_id=incident.id))
+                if SEVERITY[incident.severity] >= 2 and incident.id not in alerted:
+                    if not db.scalar(select(Alert).where(Alert.incident_id == incident.id)):
+                        db.add(Alert(site_id=site_id, incident_id=incident.id))
+                    alerted.add(incident.id)
             event.processed_at = datetime.now(timezone.utc)
-            db.flush()
         db.commit()
         return len(rows)
 

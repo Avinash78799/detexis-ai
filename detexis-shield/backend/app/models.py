@@ -52,6 +52,8 @@ class Event(Base):
         Index("ix_events_site_ts", "site_id", "ts"),
         Index("ix_events_site_ip", "site_id", "ip_hash"),
         Index("ix_events_pending", "processed_at", "received_at"),
+        Index("ix_events_site_received", "site_id", "received_at"),
+        Index("ix_events_received", "received_at"),
     )
 
 
@@ -67,7 +69,8 @@ class Incident(Base):
     event_count: Mapped[int] = mapped_column(Integer, default=0)
     first_seen: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
     last_seen: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
-    __table_args__ = (UniqueConstraint("site_id", "ip_hash", "bucket", name="uq_incident_group"),)
+    __table_args__ = (UniqueConstraint("site_id", "ip_hash", "bucket", name="uq_incident_group"),
+                      Index("ix_incidents_site_seen", "site_id", "last_seen"))
 
 
 class Alert(Base):

@@ -39,6 +39,30 @@ Set `SHIELD_API_KEY` and the printed salt as `SHIELD_SALT` in a second terminal,
 Open `http://localhost:8000/dashboard`; enter any username and your site key as the
 Basic-auth password. Requests are collected, rules run in RQ and the feed refreshes.
 
+### Repeat the local acceptance test
+
+Use the dedicated validation project, with port 8000 free:
+
+```sh
+docker compose -p detexis-shield-validation up --build -d --wait
+python tools/validate_stack.py
+```
+
+This creates a test site, checks ingest/idempotency/incidents/dashboard, briefly
+stops this project's API to test fail-open, restarts it, then sends 500 events/s
+for ten minutes. It reports ingestion latency, processing latency, minute-by-minute
+backlog, failed RQ jobs and a bounded drain check in `load-test-results.json`.
+The test sends only to loopback. It leaves test data in the validation volume.
+For a short diagnostic use `--seconds 30`; this is not the full acceptance run.
+An optional absolute `SHIELD_VALIDATION_COMPOSE` path supplies a local Compose
+override. Reports mark whether an override was used. The default worker uses
+rules only; ML-enabled throughput needs a separate measurement.
+
+The Linux worker preloads job modules before RQ forks each job, preserving job
+isolation and timeouts. Its child resets the SQLAlchemy pool after a fork. Within
+a batch, database reads are reused and Redis operations are pipelined; the site
+row lock and transaction still protect grouping and duplicate processing.
+
 ## Production preparation
 
 Use a Docker host with a domain for the Shield backend. Copy `.env.example` to

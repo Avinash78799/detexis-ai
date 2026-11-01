@@ -7,7 +7,7 @@ from sqlalchemy import select
 
 from .auth import current_site
 from .db import get_db
-from .models import Event, Incident, Scan
+from .models import Alert, Event, Incident, Scan
 
 router = APIRouter()
 basic = HTTPBasic(auto_error=False)
@@ -24,7 +24,11 @@ def dashboard_site(credentials: HTTPBasicCredentials | None = Depends(basic), db
 
 
 def context(db, site):
+    states = db.scalars(select(Alert.status).where(Alert.site_id == site.id).order_by(Alert.created_at.desc()).limit(10)).all()
+    notifications = ("Delivery needs setup" if "unconfigured" in states else "Delivery failed" if "failed" in states
+                     else "Pending delivery" if "pending" in states else "Delivered" if states else "No alert records")
     return {"site": site,
+            "notifications": notifications,
             "events": db.scalars(select(Event).where(Event.site_id == site.id).order_by(Event.received_at.desc()).limit(50)).all(),
             "incidents": db.scalars(select(Incident).where(Incident.site_id == site.id).order_by(Incident.last_seen.desc()).limit(20)).all(),
             "scans": db.scalars(select(Scan).where(Scan.site_id == site.id).order_by(Scan.created_at.desc()).limit(5)).all()}

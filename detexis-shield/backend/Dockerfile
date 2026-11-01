@@ -3,6 +3,9 @@ WORKDIR /srv
 COPY backend/requirements.txt .
 COPY sensor-sdk /sensor-sdk
 RUN pip install --no-cache-dir -r requirements.txt /sensor-sdk
+ARG WITH_ML=0
+COPY ml/requirements.txt ./ml-requirements.txt
+RUN if [ "$WITH_ML" = "1" ]; then pip install --no-cache-dir -r ml-requirements.txt; fi
 COPY backend/app ./app
 COPY backend/create_site.py ./
 COPY backend/alembic.ini ./

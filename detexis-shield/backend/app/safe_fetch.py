@@ -126,7 +126,10 @@ class _Socket:
 
 def pinned_request(parsed, port, address, deadline):
     # The vetted IP is used for the connection. Host/SNI retain the verified name.
-    sock = socket.create_connection((address, port), timeout=min(2, max(.01, deadline - time.monotonic())))
+    remaining = deadline - time.monotonic()
+    if remaining <= 0:
+        raise TimeoutError("scan deadline exceeded")
+    sock = socket.create_connection((address, port), timeout=min(2, remaining))
     tls = None
     connection = http.client.HTTPConnection(parsed.hostname, port, timeout=2)
     try:

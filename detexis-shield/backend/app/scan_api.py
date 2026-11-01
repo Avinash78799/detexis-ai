@@ -70,7 +70,7 @@ def confirm_verification(site=Depends(current_site), db=Depends(get_db), redis=D
 
 @router.post("/v1/scans", status_code=202)
 def request_scan(site=Depends(current_site), db=Depends(get_db), redis=Depends(get_redis)):
-    db.scalar(select(Site).where(Site.id == site.id).with_for_update())
+    site = db.scalar(select(Site).where(Site.id == site.id).with_for_update().execution_options(populate_existing=True))
     if site.verified_at is None or utc(site.verified_at) < datetime.now(timezone.utc) - timedelta(days=7):
         raise HTTPException(403, "recent domain ownership verification required")
     pending = db.scalar(select(Scan).where(Scan.site_id == site.id, Scan.status == "pending"))

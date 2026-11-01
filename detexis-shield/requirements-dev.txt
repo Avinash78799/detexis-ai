@@ -4,3 +4,6 @@ httpx==0.28.1
 pytest==8.3.4
 fakeredis[lua]==2.26.2
 scikit-learn==1.6.1
+numpy==2.2.6
+scipy==1.15.3
+joblib==1.4.2
