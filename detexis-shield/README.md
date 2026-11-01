@@ -9,7 +9,7 @@ Working scaffold (about 30% boilerplate). The detection logic, features, ML and 
 ```bash
 # Quick local run (SQLite, no Docker)
 python -m pip install -r requirements-dev.txt -e sensor-sdk
-python -m pytest -q -p no:cacheprovider       # 23 tests should pass
+python -m pytest -q -p no:cacheprovider       # 60 tests should pass
 
 cd backend && python create_site.py demo.local   # prints API key ONCE
 uvicorn app.main:app --port 8000
@@ -32,10 +32,13 @@ docker compose up --build
 - Tests for auth, idempotency, tenant isolation, batch cap, redaction
 
 ## Your TODOs (search the code for `TODO(you)`)
-1. **Phase 1:** retry with backoff in `client.py`; pull honeytokens from `/v1/config`; real features in `middleware.py` (payload_len, special_char_ratio, req_per_min); rate limit on ingest; Alembic migrations
+1. **Phase 1:** pull honeytokens from `/v1/config`; real features in `middleware.py` (payload_len, special_char_ratio, req_per_min); rate limit on ingest; Alembic migrations
 2. **Phase 1:** a measured overhead test (median under 5 ms, p95 under 10 ms)
 3. **Phase 2:** Redis/RQ queue, rule engine (each rule mapped to OWASP/CWE with positive and negative tests), incidents table, live feed page, alerts
 4. Write the threat model (one page) before Phase 2
+
+Bounded delivery retries are implemented; see [RETRIES.md](RETRIES.md) for behavior,
+shutdown semantics, and limits.
 
 ## Known limits of this scaffold
 - Request bodies are not captured yet (decide what to capture and how to redact it)

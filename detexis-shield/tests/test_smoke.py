@@ -61,3 +61,34 @@ def test_batch_cap():
 def test_redaction():
     out = redact_query("q=hello&password=hunter2&token=abc")
     assert "hunter2" not in out and "abc" not in out and "q=hello" in out
+
+
+def test_retry_after_lost_acknowledgement_does_not_duplicate_events(monkeypatch):
+    import httpx
+    from unittest.mock import Mock
+    from detexis_shield.client import ShieldClient
+
+    site_id, key = make_site("retry.test")
+    with monkeypatch.context() as setup:
+        setup.setattr("threading.Thread.start", lambda self: None)
+        sensor = ShieldClient("http://backend.invalid", key)
+    sensor._stop.wait = Mock(return_value=False)
+    item = event("/committed-before-timeout")
+    calls = []
+
+    def send_then_lose_ack(request):
+        # Simulate a committed batch whose HTTP acknowledgement is lost.
+        response = client.post("/v1/events", content=request.content,
+                               headers={"X-API-Key": key, "Content-Type": "application/json"})
+        assert response.status_code == 202
+        calls.append(request.content)
+        if len(calls) == 1:
+            raise httpx.ReadTimeout("acknowledgement lost", request=request)
+        return httpx.Response(response.status_code)
+
+    with httpx.Client(transport=httpx.MockTransport(send_then_lose_ack)) as http:
+        sensor._send(http, [item])
+    assert len(calls) == 2
+    assert sensor.dropped == 0
+    with SessionLocal() as db:
+        assert db.query(Event).filter(Event.site_id == site_id, Event.event_id == item["event_id"]).count() == 1

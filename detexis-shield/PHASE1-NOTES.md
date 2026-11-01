@@ -33,7 +33,8 @@ def home():
 
 Create the client in each serving worker, after any process fork. Call
 `sensor.client.close()` on worker shutdown, never on Flask's per-request teardown.
-Shutdown is best effort: the existing client does not drain all queued events.
+Shutdown cancels backoff and discards/counts unsent events. It does not flush the
+whole queue; see [RETRIES.md](RETRIES.md) for the delivery and shutdown contract.
 
 ## What changed
 
@@ -66,12 +67,13 @@ host app if required; otherwise the hash represents the direct peer.
 
 ## Validation and remaining work
 
-23 tests passed locally (4 original, 16 sensor cases and 3 Flask integration cases). See benchmark-results.json
+60 tests passed locally, including real Flask integration, retry/shutdown cases,
+and an ingest regression test for a lost acknowledgement. See benchmark-results.json
 for the measured microbenchmark. It uses the real buffer and sender thread with
 simulated network failure. This establishes local overhead only; server-level
 median/p95 and production behavior still need measurement on the deployment host.
 
-Phase 1 is still incomplete: bounded retries/backoff, request features, Redis rate
+Phase 1 is still incomplete: request features, Redis rate
 limiting and Alembic remain. Startup configuration errors are intentionally raised;
 runtime fail-open tests do not promise the sensor can never fail under any condition.
 Docker Compose now waits for PostgreSQL readiness before starting the API. A full

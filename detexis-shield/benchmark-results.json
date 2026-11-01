@@ -4,19 +4,19 @@
   "requests_per_variant": 10000,
   "backend": "simulated connection failure",
   "baseline": {
-    "median_ms": 0.0006,
-    "p95_ms": 0.0008
+    "median_ms": 0.0008,
+    "p95_ms": 0.0017
   },
   "sensor": {
-    "median_ms": 0.0247,
-    "p95_ms": 0.0282
+    "median_ms": 0.0388,
+    "p95_ms": 0.0773
   },
   "paired_overhead": {
-    "median_ms": 0.0241,
-    "p95_ms": 0.0275
+    "median_ms": 0.0377,
+    "p95_ms": 0.076
   },
   "passes_target": true,
-  "dropped_snapshot": 10500,
-  "queued_snapshot": 0,
+  "dropped_snapshot": 5450,
+  "queued_snapshot": 5000,
   "limits": "In-process ASGI microbenchmark; no socket/server/load or Flask measurement."
 }

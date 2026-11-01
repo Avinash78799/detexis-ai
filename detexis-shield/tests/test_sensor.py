@@ -65,7 +65,7 @@ def test_invalid_client_limits(options):
 @pytest.mark.parametrize("status", [401, 429, 500])
 def test_rejected_batches_are_counted(monkeypatch, status):
     monkeypatch.setattr("threading.Thread.start", lambda self: None)
-    client = ShieldClient("http://backend.invalid", "key")
+    client = ShieldClient("http://backend.invalid", "key", max_retries=0)
     with httpx.Client(transport=httpx.MockTransport(lambda req: httpx.Response(status))) as http:
         client._send(http, [{"event_id": "one"}])
     assert client.dropped == 1
@@ -73,7 +73,7 @@ def test_rejected_batches_are_counted(monkeypatch, status):
 
 def test_backend_offline_is_counted(monkeypatch):
     monkeypatch.setattr("threading.Thread.start", lambda self: None)
-    client = ShieldClient("http://backend.invalid", "key")
+    client = ShieldClient("http://backend.invalid", "key", max_retries=0)
     http = Mock()
     http.post.side_effect = httpx.ConnectError("offline")
     client._send(http, [{"event_id": "one"}])
