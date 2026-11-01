@@ -1,4 +1,5 @@
 from pathlib import Path
+import hashlib
 from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Request
@@ -13,6 +14,10 @@ from .models import Alert, Event, Incident, Scan
 router = APIRouter()
 basic = HTTPBasic(auto_error=False)
 templates = Jinja2Templates(directory=str(Path(__file__).parent / "templates"))
+templates.env.globals["asset_versions"] = {
+    name: hashlib.sha256((Path(__file__).parent / "static" / name).read_bytes()).hexdigest()[:12]
+    for name in ("dashboard.css", "account.css", "account.js", "htmx.min.js")
+}
 
 
 def dashboard_site(credentials: HTTPBasicCredentials | None = Depends(basic), db=Depends(get_db)):
