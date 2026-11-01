@@ -1,19 +1,21 @@
 {
   "python": "3.12.9",
   "platform": "Windows-11-10.0.26300-SP0",
+  "profile": "normal",
+  "input_query_bytes": 23,
   "requests_per_variant": 10000,
   "backend": "simulated connection failure",
   "baseline": {
     "median_ms": 0.0008,
-    "p95_ms": 0.0017
+    "p95_ms": 0.0013
   },
   "sensor": {
-    "median_ms": 0.0388,
-    "p95_ms": 0.0773
+    "median_ms": 0.0501,
+    "p95_ms": 0.0873
   },
   "paired_overhead": {
-    "median_ms": 0.0377,
-    "p95_ms": 0.076
+    "median_ms": 0.0494,
+    "p95_ms": 0.0862
   },
   "passes_target": true,
   "dropped_snapshot": 5450,

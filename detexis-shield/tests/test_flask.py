@@ -44,6 +44,21 @@ def test_flask_post_body_status_and_redaction(monitored_app):
     assert event["status"] == 201
     assert "hidden" not in event["query_redacted"]
     assert "q=hello" in event["query_redacted"]
+    assert event["features"]["schema_version"] == 1
+    assert event["features"]["num_params"] == 2
+    assert event["features"]["path_depth"] == 1
+
+
+def test_flask_unicode_path_matches_stored_features(monitored_app):
+    app, sink = monitored_app
+    with app.test_client() as client:
+        response = client.get("/café?q=hello")
+        assert response.status_code == 404
+        response.get_data()
+        response.close()
+    event = sink.submit.call_args.args[0]
+    assert event["path"] == "/café"
+    assert event["features"]["payload_len"] == len("/café?q=hello".encode("utf-8"))
 
 
 def test_flask_stream_survives_sensor_failure(monitored_app):

@@ -1,5 +1,6 @@
 """In-process ASGI overhead benchmark; no live backend or network required."""
 import asyncio
+import argparse
 import json
 import platform
 import statistics
@@ -42,6 +43,12 @@ def stats(samples):
 
 
 async def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--profile", choices=["normal", "large-query"], default="normal")
+    args = parser.parse_args()
+    if args.profile == "large-query":
+        SCOPE["path"] = "/section" * 256
+        SCOPE["query_string"] = b"q=" + b"%27%3C%3E" * 2000
     count = 10000
     original_client = httpx.Client
 
@@ -69,6 +76,7 @@ async def main():
                 differences.append(b - a)
             overhead = stats(differences)
             report = {"python": platform.python_version(), "platform": platform.platform(),
+                      "profile": args.profile, "input_query_bytes": len(SCOPE["query_string"]),
                       "requests_per_variant": count, "backend": "simulated connection failure",
                       "baseline": stats(baseline), "sensor": stats(instrumented),
                       "paired_overhead": overhead,

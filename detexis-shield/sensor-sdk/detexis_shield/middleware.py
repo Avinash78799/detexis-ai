@@ -3,7 +3,8 @@ import uuid
 from datetime import datetime, timezone
 
 from .client import ShieldClient
-from .redact import hash_ip, redact_query
+from .features import MAX_PATH_STORED, extract_features
+from .redact import MAX_QUERY_INPUT, hash_ip, redact_query
 
 HONEYTOKEN_PATHS = {"/.env", "/admin-backup"}  # TODO(you): pull from GET /v1/config
 
@@ -39,18 +40,19 @@ class ShieldMiddleware:
     def _record(self, scope, code: int, latency_ms: float) -> None:
         headers = {k.decode().lower(): v.decode("latin-1") for k, v in scope.get("headers", [])}
         client = scope.get("client") or ("0.0.0.0", 0)
-        path = scope.get("path", "")
+        path = scope.get("path", "")[:MAX_PATH_STORED]
+        query = redact_query(scope.get("query_string", b"")[:MAX_QUERY_INPUT].decode("latin-1"))
         flags = ["honeytoken_hit"] if path in HONEYTOKEN_PATHS else []
         self.client.submit({
             "event_id": str(uuid.uuid4()),
             "ts": datetime.now(timezone.utc).isoformat(),
             "ip_hash": hash_ip(client[0], self.site_salt),
             "method": scope.get("method", "GET")[:10],
-            "path": path[:2048],
-            "query_redacted": redact_query(scope.get("query_string", b"").decode("latin-1")),
+            "path": path,
+            "query_redacted": query,
             "ua": headers.get("user-agent", "")[:512],
             "status": code,
             "latency_ms": round(latency_ms, 3),
             "flags": flags,
-            "features": {},  # TODO(you): payload_len, special_char_ratio, req_per_min ...
+            "features": extract_features(path, query),
         })

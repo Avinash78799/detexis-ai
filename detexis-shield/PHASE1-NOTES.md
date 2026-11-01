@@ -67,13 +67,15 @@ host app if required; otherwise the hash represents the direct peer.
 
 ## Validation and remaining work
 
-60 tests passed locally, including real Flask integration, retry/shutdown cases,
-and an ingest regression test for a lost acknowledgement. See benchmark-results.json
+77 tests passed locally, including feature extraction, Unicode adapter parity,
+real Flask integration, retry/shutdown cases and an ingest regression test for a
+lost acknowledgement. See benchmark-results.json and benchmark-large-query.json
 for the measured microbenchmark. It uses the real buffer and sender thread with
 simulated network failure. This establishes local overhead only; server-level
 median/p95 and production behavior still need measurement on the deployment host.
 
-Phase 1 is still incomplete: request features, Redis rate
+Shared request features are implemented; see [FEATURES.md](FEATURES.md). Phase 1
+is still incomplete: Redis rate
 limiting and Alembic remain. Startup configuration errors are intentionally raised;
 runtime fail-open tests do not promise the sensor can never fail under any condition.
 Docker Compose now waits for PostgreSQL readiness before starting the API. A full

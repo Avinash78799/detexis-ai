@@ -2,6 +2,8 @@
 import time
 
 from .middleware import ShieldMiddleware
+from .features import MAX_PATH_STORED
+from .redact import MAX_QUERY_INPUT
 
 
 class _Response:
@@ -60,8 +62,10 @@ class ShieldWSGIMiddleware(ShieldMiddleware):
                 scope = {
                     "client": (environ.get("REMOTE_ADDR") or "0.0.0.0", 0),
                     "method": environ.get("REQUEST_METHOD", "GET"),
-                    "path": environ.get("SCRIPT_NAME", "") + environ.get("PATH_INFO", ""),
-                    "query_string": environ.get("QUERY_STRING", "").encode("latin-1"),
+                    # WSGI transports URL bytes through Latin-1 strings (PEP 3333).
+                    "path": (environ.get("SCRIPT_NAME", "") + environ.get("PATH_INFO", ""))
+                            [:MAX_PATH_STORED * 4].encode("latin-1").decode("utf-8", errors="replace"),
+                    "query_string": environ.get("QUERY_STRING", "")[:MAX_QUERY_INPUT].encode("latin-1"),
                     "headers": [(b"user-agent", environ.get("HTTP_USER_AGENT", "").encode("latin-1"))],
                 }
                 self._record(scope, code, (time.perf_counter() - start) * 1000)
