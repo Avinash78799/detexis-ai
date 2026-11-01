@@ -11,6 +11,7 @@ from .rate_limit import enforce_limit
 from .body_limit import IngestBodyLimit
 from .dashboard import router as dashboard_router
 from .scan_api import router as scan_router
+from .accounts import router as account_router, pages as account_pages
 from pathlib import Path
 from fastapi.staticfiles import StaticFiles
 
@@ -18,6 +19,8 @@ app = FastAPI(title="Detexis Shield API")
 app.add_middleware(IngestBodyLimit)
 app.include_router(dashboard_router)
 app.include_router(scan_router)
+app.include_router(account_router)
+app.include_router(account_pages)
 app.mount("/static", StaticFiles(directory=str(Path(__file__).parent / "static")), name="static")
 
 
@@ -27,7 +30,7 @@ async def security_headers(request, call_next):
     response.headers["X-Content-Type-Options"] = "nosniff"
     response.headers["Referrer-Policy"] = "no-referrer"
     response.headers["Content-Security-Policy"] = "default-src 'self'; script-src 'self'; style-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'"
-    if request.url.path.startswith(("/dashboard", "/v1/")):
+    if request.url.path.startswith(("/dashboard", "/v1/", "/app")):
         response.headers["Cache-Control"] = "no-store"
     return response
 

@@ -7,7 +7,7 @@ from sqlalchemy import delete, select
 
 from .alerts import send_pending
 from .db import SessionLocal
-from .models import Alert, Event, HourBucket, Incident, Scan
+from .models import Alert, Event, HourBucket, Incident, Scan, BrowserSession
 from .worker import recover_pending
 
 
@@ -17,6 +17,7 @@ def purge(days=None):
         raise ValueError("retention must be at least seven days")
     cutoff = datetime.now(timezone.utc) - timedelta(days=days)
     with SessionLocal() as db:
+        db.execute(delete(BrowserSession).where(BrowserSession.expires_at < datetime.now(timezone.utc)))
         old = select(Incident.id).where(Incident.last_seen < cutoff)
         db.execute(delete(Alert).where(Alert.incident_id.in_(old)))
         db.execute(delete(Incident).where(Incident.last_seen < cutoff))
