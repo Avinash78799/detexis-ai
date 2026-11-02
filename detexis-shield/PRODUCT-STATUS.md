@@ -25,11 +25,14 @@ This document records current implementation, not a production certification.
 
 ## Validation checkpoint
 
-227 local tests passed with one real-service CI test skipped locally after the
-incident inbox implementation. Focused owner/key/scan/dashboard/retention
-checks passed. JavaScript syntax checks passed. CI at `a7a7240` passed both jobs,
-including PostgreSQL migration and Redis processing. The updated Docker stack
-started successfully after the demo database backup. A real browser verified
+232 local tests passed with one real-service test skipped locally after recovery
+implementation. CI at `f1ea31e` passed 233 tests with real PostgreSQL/Redis,
+including incident evidence/triage and simultaneous one-use recovery attempts;
+the separate ML software smoke job also passed. JavaScript syntax checks passed.
+The Docker stack rebuilt and started successfully through migration `0006`.
+A custom-format database restore into a separate database preserved 899,915
+synthetic events and passed the recorded integrity checks in `BACKUP-RESTORE.md`.
+A real browser previously verified
 signup, adding a website, opening its owner dashboard, sign-out and sign-in with
 the saved website still present. The mobile workspace was inspected at a
 390-pixel viewport. Test accounts and `.example` sites are synthetic.
@@ -37,11 +40,11 @@ the saved website still present. The mobile workspace was inspected at a
 ## Required before inviting real users
 
 - Measure new dashboard and account routes. Finish accessibility and error-state review.
-- Finish recovery release acceptance and clear sensor installation diagnostics. The owner chose
+- Finish recovery browser acceptance and clear sensor installation diagnostics. The owner chose
   in-app alerts first; email verification, delivery and email-based resets need a
   configured sender and will be documented rather than silently simulated.
-- Complete real-service and browser acceptance for the new incident inbox.
-- Deployment configuration validation, backup restore rehearsal, session/key
+- Complete public HTTPS and browser acceptance for the new incident inbox.
+- Deployment configuration validation, off-host backup/restore, session/key
   abuse review, operational monitoring and public privacy/retention guidance.
 - Persistent hosting within the user's zero-paid-services budget. A temporary
   computer-hosted Cloudflare tunnel is a development demonstration.

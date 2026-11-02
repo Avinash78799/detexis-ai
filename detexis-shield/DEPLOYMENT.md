@@ -74,6 +74,8 @@ docker compose -f docker-compose.yml -f docker-compose.prod.yml up --build -d
 ```
 
 Caddy terminates TLS on 80/443. Confirm backups, firewall rules and restore tests.
+See [BACKUP-RESTORE.md](BACKUP-RESTORE.md) for the isolated local rehearsal and
+the remaining off-host backup requirements.
 Retain PostgreSQL data and Caddy state volumes between releases. Do not expose
 datastores or the scanner port publicly. The local default database password is
 not a production credential. On one host, scanner isolation is a network and
