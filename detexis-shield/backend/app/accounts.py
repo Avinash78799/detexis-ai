@@ -326,6 +326,18 @@ def account_page(request: Request):
     return templates.TemplateResponse(request=request, name="account.html", context={})
 
 
+@pages.get("/app/install")
+def installation_page(request: Request):
+    from .dashboard import templates
+    return templates.TemplateResponse(request=request, name="install.html", context={})
+
+
+@pages.get("/app/data")
+def data_handling_page(request: Request):
+    from .dashboard import templates
+    return templates.TemplateResponse(request=request, name="data.html", context={})
+
+
 @pages.get("/")
 def home():
     from fastapi.responses import RedirectResponse

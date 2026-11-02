@@ -27,15 +27,18 @@ This document records current implementation, not a production certification.
   without exposing request data or claiming that a quiet site is offline.
   See `CONNECTION-DIAGNOSTICS.md` for the query-plan investigation and migration
   `0007`, which adds a covering index for older high-volume sites.
+- Public `/app/install` guidance provides a pinned-source SDK command, executable
+  FastAPI/Flask examples, secret setup, persistent-process limitations and connection
+  checks. `/app/data` describes collection, redaction limits, access, retention,
+  operator-managed removal and backup responsibilities before account creation.
 
 ## Validation checkpoint
 
-234 local tests passed with one real-service test skipped locally after connection
-diagnostics. The preceding recovery implementation passed its real-service gate:
-CI at `f1ea31e` passed 233 tests with real PostgreSQL/Redis,
+236 local tests passed with one real-service test skipped locally after the
+installation/data guides. CI at `0369c12` passed 235 tests with real PostgreSQL/Redis,
 including incident evidence/triage and simultaneous one-use recovery attempts;
 the separate ML software smoke job also passed. JavaScript syntax checks passed.
-The Docker stack rebuilt and started successfully through migration `0006`.
+The Docker stack rebuilt and started successfully through migration `0007`.
 A custom-format database restore into a separate database preserved 899,915
 synthetic events and passed the recorded integrity checks in `BACKUP-RESTORE.md`.
 A real browser previously verified
@@ -47,15 +50,18 @@ real-worker incident generation, evidence, acknowledgment and audit history.
 Browser acceptance verified connection guidance on desktop and at 390 pixels,
 mobile incident evidence/history, and saving a resolved decision with its audit
 entry. Both inspected mobile pages had no horizontal document overflow.
+The pinned-source SDK command built a wheel successfully. Tests execute both
+framework examples extracted from the actual guide page and verify redacted
+sensor events. The installation guide was inspected at a mobile breakpoint.
 
 ## Required before inviting real users
 
 - Measure new dashboard and account routes. Finish accessibility and error-state review.
-- Finish recovery browser acceptance and installation guidance for each supported framework. The owner chose
+- Finish recovery browser acceptance. The owner chose
   in-app alerts first; email verification, delivery and email-based resets need a
   configured sender and will be documented rather than silently simulated.
 - Deployment configuration validation, off-host backup/restore, session/key
-  abuse review, operational monitoring and public privacy/retention guidance.
+  abuse review, operational monitoring and deployment-specific operator/privacy details.
 - Persistent hosting within the user's zero-paid-services budget. A temporary
   computer-hosted Cloudflare tunnel is a development demonstration.
 - Permissioned site-owner onboarding and observed usage. Synthetic requests and

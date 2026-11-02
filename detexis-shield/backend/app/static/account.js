@@ -9,11 +9,15 @@ async function api(path, body) {
 }
 async function showWorkspace(data) {
   csrf = data.csrf_token;
+  document.querySelector('.account-shell').classList.add('signed-in');
+  document.querySelector('.account-shell > h1').textContent = 'Your security workspace.';
+  document.querySelector('.account-shell > .subtitle').textContent = 'Connect your websites, check your sensors and review the signals that need attention.';
   node('auth').hidden = true; node('workspace').hidden = false;
   node('owner-email').textContent = data.email;
   node('recovery-secret').hidden = !data.recovery_code;
   node('recovery-value').textContent = data.recovery_code || '';
   await refreshSites();
+  if (data.recovery_code) node('recovery-secret').scrollIntoView({block:'start'});
   const next = new URLSearchParams(location.search).get('next');
   if (next && !data.recovery_code) {
     const target = new URL(next, location.origin);
@@ -21,13 +25,27 @@ async function showWorkspace(data) {
   }
 }
 async function refreshSites() {
-  const sites = await api('sites');
+  node('sites-status').textContent = 'Loading websites…';
+  let sites;
+  try {sites = await api('sites');}
+  catch (error) {node('sites-status').textContent = 'Your websites could not be refreshed. ' + error.message; throw error;}
+  node('sites-status').textContent = sites.length ? sites.length + (sites.length === 1 ? ' website in your workspace' : ' websites in your workspace') : '';
   node('sites').replaceChildren();
-  if (!sites.length) node('sites').textContent = 'No websites yet. Add your first website above.';
+  if (!sites.length) {
+    const empty = document.createElement('div'); empty.className = 'site-empty';
+    const title = document.createElement('h3'); title.textContent = 'Start with one website.';
+    const description = document.createElement('p'); description.textContent = 'Add its hostname above to get your private sensor credentials. Requests will appear after you install the middleware.';
+    empty.append(title, description); node('sites').append(empty);
+  }
   for (const site of sites) {
     const link = document.createElement('a'); link.className = 'site-link';
-    link.href = '/app/sites/' + encodeURIComponent(site.id); link.textContent = site.domain + ' → Open dashboard';
-    const card = document.createElement('section'); card.className = 'account-card'; card.append(link);
+    link.href = '/app/sites/' + encodeURIComponent(site.id); link.textContent = 'Open dashboard →';
+    const card = document.createElement('section'); card.className = 'account-card site-card';
+    const title = document.createElement('h3'); title.textContent = site.domain;
+    const header = document.createElement('div'); header.className = 'site-card-header'; header.append(title, link);
+    const state = document.createElement('p'); state.className = 'site-state';
+    state.textContent = (site.verified ? 'Domain verified for scans' : 'Domain verification needed for scans') + ' · ' + (site.last_heartbeat ? 'Heartbeat last received ' + new Date(site.last_heartbeat).toLocaleString() : 'Awaiting first sensor heartbeat');
+    card.append(header, state);
     const connection = document.createElement('button'); connection.className = 'secondary'; connection.textContent = 'Check sensor connection';
     const connectionPanel = document.createElement('section'); connectionPanel.setAttribute('aria-live', 'polite');
     connection.addEventListener('click', async () => {
@@ -142,6 +160,7 @@ for (const id of ['auth-form','site-form','recover-form','recovery-form','passwo
       node('credentials').textContent = 'SHIELD_URL=' + location.origin + '\nSHIELD_API_KEY=' + data.api_key + '\nSHIELD_SALT=' + data.site_salt;
       node('snippet').textContent = 'import os\nfrom detexis_shield import ShieldMiddleware\n\napp.add_middleware(ShieldMiddleware,\n    api_url=os.environ["SHIELD_URL"],\n    api_key=os.environ["SHIELD_API_KEY"],\n    site_salt=os.environ["SHIELD_SALT"],\n)';
       event.target.reset(); await refreshSites();
+      node('installation').scrollIntoView({block:'start'});
     }
   } catch (error) {node('message').textContent = error.message;}
   finally {buttons.forEach(b => b.disabled = false);}
