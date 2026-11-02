@@ -76,3 +76,40 @@ and retry records each event once. The full load run must independently prove
 the latency target. New reports record actual worker source SHA-256, Python,
 package/PostgreSQL/Redis versions, migration and whether a model was enabled.
 Different tenant distributions and production hosts require fresh measurements.
+
+## Sustained write pressure
+
+The bulk-write full run, `load-test-bulk-results.json`, also failed the release
+gate: all 300,000 events were accepted, but 53,300 remained pending at load end.
+They drained in 119.594 s; median/p95 processing lag was 10.261/128.005 s. There
+were no transport errors or failed jobs. Fast direct profiles did not establish
+sustained whole-stack performance. A live read-plan check used the primary key
+both with and without the pending-state predicate, so that check did not justify
+another SELECT rewrite.
+
+The database then had approximately 1.8 million synthetic events and about 1 GB
+of event indexes, including a 205 MB duplicate receipt-time index and a 108 MB
+processed-time index retaining completed history. Its cache was 128 MB, WAL
+compression was off, and background-writer allowance was 100 pages per round.
+These observations motivated storage/write changes; they do not alone prove
+that any single setting caused the long-tail delay.
+
+Migration `0008` removes the duplicate receipt-time index and replaces the full
+processed-time index with a partial recovery index on receipt time, including
+site/event IDs, for `processed_at IS NULL` only. Completed history is excluded.
+With no pending work it occupied 8 KB locally, replacing about 313 MB of old
+indexes. The connection covering index retains the removed receipt-time prefix.
+PostgreSQL operations run concurrently; SQLite uses its supported partial index.
+An isolated restored PostgreSQL database passed upgrade/downgrade/upgrade while
+preserving all 899,915 events. SQLite's schema roundtrip also passed.
+
+Compose now defaults to a configurable 512 MB database cache
+(`POSTGRES_SHARED_BUFFERS`), WAL compression, and a background-writer allowance
+of 1,000 pages per round. The full stack must fit the actual host's RAM; the cache
+is not a total memory cap. Five-minute checkpoints, fsync and synchronous commits
+remain enabled and are recorded in reports. The next full acceptance run must
+prove this configuration; it is not accepted based on index sizes or profiling.
+
+PostgreSQL documents the tradeoffs for [partial indexes](https://www.postgresql.org/docs/16/indexes-partial.html),
+[cache/background writer settings](https://www.postgresql.org/docs/16/runtime-config-resource.html)
+and [WAL compression](https://www.postgresql.org/docs/16/runtime-config-wal.html).

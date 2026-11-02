@@ -38,8 +38,9 @@ The PostgreSQL migration builds the index concurrently. Run only one migrator.
 If an interrupted build leaves an invalid index, inspect `pg_index.indisvalid`
 and remove that specific invalid index before retrying the failed migration;
 do not stamp the migration as successful. SQLite uses a normal index for local
-functional testing. The older received-time index is retained for compatibility
-with existing queries; index consolidation requires its own measured review.
+functional testing. Migration `0008` removes the older duplicate received-time
+index after a full-workload write-pressure review. The covering connection index
+retains that prefix. Pending recovery uses a separate partial covering index.
 
 Functional tests cover tenant isolation, no-event/revoked-key/stale states,
 receipt-time ordering despite sensor clock skew, and omission of request values.

@@ -6,6 +6,13 @@ host. Free capacity and continued availability are not guaranteed. Oracle can
 reclaim idle resources; keep an independent database backup. A computer running
 Docker also consumes electricity and disk space.
 
+The default database cache is now 512 MB, with WAL compression and a larger
+background-writer allowance. The full local stack has been measured on a roughly
+4 GiB Docker VM. Reserve room for PostgreSQL's other allocations, Redis, Python
+processes, scanner and OS cache; `shared_buffers` is not a database memory limit.
+Set `POSTGRES_SHARED_BUFFERS` for the chosen host and repeat acceptance there.
+Do not assume a 1 GiB VM can run the complete measured workload.
+
 ## Choose the host
 
 Create an Oracle Free Tier account yourself and select only resources explicitly

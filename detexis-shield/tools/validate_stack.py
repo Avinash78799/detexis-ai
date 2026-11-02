@@ -50,9 +50,12 @@ from app import worker
 with SessionLocal() as db:
     database=db.execute(text("SELECT current_setting('server_version')")).scalar()
     migration=db.execute(text('SELECT version_num FROM alembic_version')).scalar()
+    settings={name:db.execute(text('SELECT current_setting(:name)'),{'name':name}).scalar()
+              for name in ['shared_buffers','wal_compression','bgwriter_lru_maxpages','checkpoint_timeout','fsync','synchronous_commit']}
 print(json.dumps({'python':platform.python_version(),'visible_cpus':os.cpu_count(),
     'packages':{name:version(name) for name in ['fastapi','sqlalchemy','rq','psycopg2-binary']},
     'postgresql':database,'redis':get_redis().info('server')['redis_version'],
+    'postgresql_settings':settings,
     'migration':migration,'model_enabled':bool(os.getenv('SHIELD_MODEL_DIR')),
     'worker_source_sha256':hashlib.sha256(Path(worker.__file__).read_bytes()).hexdigest()}))
 """

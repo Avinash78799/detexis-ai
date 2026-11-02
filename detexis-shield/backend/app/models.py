@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime, timezone
-from sqlalchemy import String, Integer, DateTime, ForeignKey, JSON, Index, UniqueConstraint
+from sqlalchemy import String, Integer, DateTime, ForeignKey, JSON, Index, UniqueConstraint, text
 from sqlalchemy.orm import Mapped, mapped_column
 from .db import Base
 
@@ -52,8 +52,8 @@ class Event(Base):
     __table_args__ = (
         Index("ix_events_site_ts", "site_id", "ts"),
         Index("ix_events_site_ip", "site_id", "ip_hash"),
-        Index("ix_events_pending", "processed_at", "received_at"),
-        Index("ix_events_site_received", "site_id", "received_at"),
+        Index("ix_events_unprocessed", "received_at", postgresql_include=["site_id", "event_id"],
+              postgresql_where=text("processed_at IS NULL"), sqlite_where=text("processed_at IS NULL")),
         Index("ix_events_site_connection", "site_id", "received_at", postgresql_include=["processed_at"]),
         Index("ix_events_received", "received_at"),
     )

@@ -1,6 +1,7 @@
 services:
   db:
     image: postgres:16-alpine
+    command: ["postgres", "-c", "shared_buffers=${POSTGRES_SHARED_BUFFERS:-512MB}", "-c", "wal_compression=on", "-c", "bgwriter_lru_maxpages=1000"]
     environment:
       POSTGRES_USER: detexis
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-local-dev-only}
