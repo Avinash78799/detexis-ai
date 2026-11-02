@@ -129,3 +129,36 @@ def test_failed_batch_rolls_back_and_retry_preserves_counts(isolated_redis, monk
     assert process_batch(site, ids, isolated_redis) == 3
     with SessionLocal() as db:
         assert db.scalar(select(Incident).where(Incident.site_id == site)).event_count == 3
+
+
+def test_failure_after_event_writes_rolls_back_events_and_incident(isolated_redis, monkeypatch):
+    import app.worker as worker
+    from sqlalchemy.sql.dml import Update
+    site, _ = make_site("write-rollback.test")
+    ids = [seed(site, "/.env") for _ in range(3)]
+    factory = worker.SessionLocal
+
+    def failing_session():
+        session = factory()
+        execute = session.execute
+
+        def fail_after_write(statement, *args, **kwargs):
+            result = execute(statement, *args, **kwargs)
+            if isinstance(statement, Update) and statement.table.name == "events":
+                raise RuntimeError("failure after event results reached the database")
+            return result
+
+        session.execute = fail_after_write
+        return session
+
+    monkeypatch.setattr(worker, "SessionLocal", failing_session)
+    with pytest.raises(RuntimeError, match="after event results"):
+        worker.process_batch(site, ids, isolated_redis)
+    with SessionLocal() as db:
+        assert all(db.get(Event, (identity, site)).processed_at is None for identity in ids)
+        assert db.scalar(select(Incident).where(Incident.site_id == site)) is None
+    monkeypatch.setattr(worker, "SessionLocal", factory)
+    assert worker.process_batch(site, ids, isolated_redis) == 3
+    with SessionLocal() as db:
+        assert all(db.get(Event, (identity, site)).findings for identity in ids)
+        assert db.scalar(select(Incident).where(Incident.site_id == site)).event_count == 3

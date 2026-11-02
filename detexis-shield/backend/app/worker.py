@@ -3,7 +3,7 @@ from datetime import datetime, timedelta, timezone
 from statistics import mean, pstdev
 
 from rq import Queue
-from sqlalchemy import select, literal
+from sqlalchemy import select, literal, bindparam
 
 from detexis_shield.features import extract_features
 from .db import SessionLocal
@@ -42,6 +42,23 @@ def baseline_threshold(db, site, hour):
     return max(100, mean(samples) + 3 * pstdev(samples))
 
 
+def save_event_results(db, updates):
+    if not updates:
+        return
+    events = Event.__table__
+    site = bindparam("batch_site_id", type_=events.c.site_id.type)
+    if db.bind.dialect.name == "postgresql":
+        site = select(site).offset(0).scalar_subquery()
+    statement = events.update().where(events.c.site_id == site,
+        events.c.event_id == bindparam("batch_event_id")).values(
+            features=bindparam("result_features"), findings=bindparam("result_findings"),
+            processed_at=bindparam("result_processed_at"))
+    # Keep event writes in the same transaction as incident and baseline changes.
+    # A core executemany avoids ORM literal-site UPDATEs picking a broad index
+    # for every event in a newly growing tenant (see PROCESSING-LATENCY.md).
+    db.execute(statement, updates)
+
+
 def process_batch(site_id, event_ids, redis=None):
     redis = redis if redis is not None else get_redis()
     with SessionLocal() as db:
@@ -69,6 +86,7 @@ def process_batch(site_id, event_ids, redis=None):
                 pipeline.eval(WINDOW, 1, key + ":login", stamp.timestamp(), event.event_id)
         counts = iter(pipeline.execute())
         buckets, thresholds, incidents, alerted = {}, {}, {}, set()
+        updates = []
         for event, login in zip(rows, login_events):
             stamp = utc(event.received_at)
             count = next(counts)
@@ -78,7 +96,7 @@ def process_batch(site_id, event_ids, redis=None):
                 honeytokens=site.honeytokens, request_count=count, failed_logins=failed,
                 login_threshold=max(3, int(settings.get("login_threshold", 10))),
                 flood_threshold=max(20, int(settings.get("flood_threshold", 300))))]
-            event.features = extract_features(event.path, event.query_redacted)  # Never trust client features.
+            features = extract_features(event.path, event.query_redacted)  # Never trust client features.
             hour = stamp.replace(minute=0, second=0, microsecond=0)
             if hour not in buckets:
                 # Persist a prior hour before using it as baseline history.
@@ -98,13 +116,12 @@ def process_batch(site_id, event_ids, redis=None):
                              "owasp": "A06:2025", "reason": "Current hour exceeds the seven-day same-hour mean + 3σ"})
             # ML failures fall back to the existing rule findings.
             from .ml_runtime import classify
-            prediction = classify(event.features)
+            prediction = classify(features)
             if prediction is not None:
-                event.features = {**event.features, "ml": prediction}
+                features = {**features, "ml": prediction}
                 if prediction["alert"]:
                     hits.append({"rule_id": "ml_request", "severity": "medium", "cwe": "CWE-20",
                                  "owasp": "A05:2025", "reason": "Classifier probability exceeded the validated threshold"})
-            event.findings = hits
             if hits:
                 group = int(stamp.timestamp()) // 300
                 group_key = (event.ip_hash, group)
@@ -141,7 +158,10 @@ def process_batch(site_id, event_ids, redis=None):
                     if not db.scalar(select(Alert).where(Alert.incident_id == incident.id)):
                         db.add(Alert(site_id=site_id, incident_id=incident.id))
                     alerted.add(incident.id)
-            event.processed_at = datetime.now(timezone.utc)
+            updates.append({"batch_site_id": site_id, "batch_event_id": event.event_id,
+                            "result_features": features, "result_findings": hits,
+                            "result_processed_at": datetime.now(timezone.utc)})
+        save_event_results(db, updates)
         db.commit()
         return len(rows)
 

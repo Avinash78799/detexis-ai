@@ -38,6 +38,27 @@ def ready():
     raise RuntimeError("API not ready")
 
 
+def runtime_details():
+    source = """
+import hashlib,json,os,platform
+from pathlib import Path
+from importlib.metadata import version
+from sqlalchemy import text
+from app.db import SessionLocal
+from app.redis_store import get_redis
+from app import worker
+with SessionLocal() as db:
+    database=db.execute(text("SELECT current_setting('server_version')")).scalar()
+    migration=db.execute(text('SELECT version_num FROM alembic_version')).scalar()
+print(json.dumps({'python':platform.python_version(),'visible_cpus':os.cpu_count(),
+    'packages':{name:version(name) for name in ['fastapi','sqlalchemy','rq','psycopg2-binary']},
+    'postgresql':database,'redis':get_redis().info('server')['redis_version'],
+    'migration':migration,'model_enabled':bool(os.getenv('SHIELD_MODEL_DIR')),
+    'worker_source_sha256':hashlib.sha256(Path(worker.__file__).read_bytes()).hexdigest()}))
+"""
+    return json.loads(docker("exec", "-T", "worker", "python", "-c", source))
+
+
 def counters(site_id):
     uuid.UUID(site_id)
     source = """
@@ -83,6 +104,7 @@ def main():
     if not math.isfinite(args.max_processing_p95_seconds) or args.max_processing_p95_seconds <= 0:
         parser.error("max processing p95 must be finite and positive")
     ready()
+    runtime = runtime_details()
     # Pending rows can be zero while duplicate recovery jobs remain in RQ.
     # A new measurement must not include work left over from an earlier run.
     queue_source = "from rq import Queue; from app.redis_store import get_redis; print(Queue('shield',connection=get_redis()).count)"
@@ -162,7 +184,8 @@ def main():
     report["processing_drain_seconds"] = time.monotonic() - start
     report["processing"] = processing_metrics(site_id)
     report["functional_checks"] = {"ingest_idempotency": True, "rq_incident": True, "dashboard_auth": True, "real_backend_outage_fail_open": True}
-    report["environment"] = "Local Docker Desktop, PostgreSQL 16, Redis 7, one RQ worker, rules only"
+    report["environment"] = "Dedicated local Docker validation stack; see runtime_details"
+    report["runtime_details"] = runtime
     report["compose_override"] = bool(os.getenv("SHIELD_VALIDATION_COMPOSE"))
     report["capacity_passed"] = report["accepted"] == args.rate * args.seconds and report["failed"] == 0 and final["pending"] == 0 and report["processing"]["failed_jobs"] == 0 and report["elapsed_seconds"] <= args.seconds * 1.05
     report["max_processing_p95_seconds"] = args.max_processing_p95_seconds

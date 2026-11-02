@@ -1,0 +1,83 @@
+{
+  "target_rate": 500,
+  "duration_seconds": 600,
+  "events": 300000,
+  "accepted": 299900,
+  "failed": 100,
+  "elapsed_seconds": 599.875,
+  "accepted_per_second": 499.93748697645344,
+  "batch_latency_median_ms": 96.41254999587545,
+  "batch_latency_p95_ms": 880.8298999938415,
+  "http_responses": {
+    "202": 2999
+  },
+  "transport_errors": {
+    "RemoteProtocolError": 1
+  },
+  "note": "Ingest acceptance only. Check pending events, RQ failures and processing lag separately.",
+  "backlog_samples_each_minute": [
+    {
+      "total": 30803,
+      "pending": 24300
+    },
+    {
+      "total": 61603,
+      "pending": 14600
+    },
+    {
+      "total": 92303,
+      "pending": 1300
+    },
+    {
+      "total": 123103,
+      "pending": 100
+    },
+    {
+      "total": 153803,
+      "pending": 100
+    },
+    {
+      "total": 184903,
+      "pending": 100
+    },
+    {
+      "total": 215803,
+      "pending": 2800
+    },
+    {
+      "total": 246503,
+      "pending": 0
+    },
+    {
+      "total": 277103,
+      "pending": 100
+    }
+  ],
+  "database_at_load_end": {
+    "total": 299903,
+    "pending": 0
+  },
+  "database_after_drain": {
+    "total": 299903,
+    "pending": 0
+  },
+  "processing_drain_seconds": 0.0,
+  "processing": {
+    "lag_median_seconds": 0.423723,
+    "lag_p95_seconds": 41.0357704,
+    "failed_jobs": 0,
+    "queued_jobs": 0
+  },
+  "functional_checks": {
+    "ingest_idempotency": true,
+    "rq_incident": true,
+    "dashboard_auth": true,
+    "real_backend_outage_fail_open": true
+  },
+  "environment": "Local Docker Desktop, PostgreSQL 16, Redis 7, one RQ worker, rules only",
+  "compose_override": true,
+  "capacity_passed": false,
+  "max_processing_p95_seconds": 10.0,
+  "latency_target_passed": false,
+  "acceptance_passed": false
+}
