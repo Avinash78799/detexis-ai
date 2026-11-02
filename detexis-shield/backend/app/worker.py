@@ -3,7 +3,7 @@ from datetime import datetime, timedelta, timezone
 from statistics import mean, pstdev
 
 from rq import Queue
-from sqlalchemy import select
+from sqlalchemy import select, literal
 
 from detexis_shield.features import extract_features
 from .db import SessionLocal
@@ -49,7 +49,12 @@ def process_batch(site_id, event_ids, redis=None):
         site = db.scalar(select(Site).where(Site.id == site_id).with_for_update())
         if site is None:
             return 0
-        rows = db.scalars(select(Event).where(Event.site_id == site_id, Event.event_id.in_(event_ids),
+        # New sites can grow faster than PostgreSQL's column statistics refresh.
+        # A scalar init-plan uses average site selectivity instead of a stale
+        # "one row" estimate that scanned the site's whole history for each job.
+        identity = (select(literal(site_id)).offset(0).scalar_subquery()
+                    if db.bind.dialect.name == "postgresql" else site_id)
+        rows = db.scalars(select(Event).where(Event.site_id == identity, Event.event_id.in_(event_ids),
                                               Event.processed_at.is_(None)).order_by(Event.received_at)).all()
         # Pipeline Redis round trips while retaining event order and atomic Lua windows.
         pipeline = redis.pipeline(transaction=False)

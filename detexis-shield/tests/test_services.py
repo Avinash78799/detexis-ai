@@ -47,7 +47,8 @@ with TestClient(app,base_url="https://testserver") as owner:
     created=owner.post("/app/api/sites",headers=csrf,json={"domain":"owner-integration.example"})
     assert created.status_code==201,created.text
     owner_site=created.json()["id"]
-    owner_item={**item,"event_id":str(uuid.uuid4())}
+    # The same event ID is valid in two tenants; processing must use both keys.
+    owner_item={**item,"path":"/admin-backup"}
     assert owner.post("/v1/events",json={"events":[owner_item]},headers={"X-API-Key":created.json()["api_key"]}).status_code==202
     SimpleWorker([Queue("shield",connection=redis)],connection=redis).work(burst=True)
     listed=owner.get("/app/api/inbox").json()["incidents"]
@@ -56,6 +57,11 @@ with TestClient(app,base_url="https://testserver") as owner:
     evidence=owner.get(detail_path)
     assert evidence.status_code==200,evidence.text
     assert evidence.json()["evidence"],evidence.text
+    assert evidence.json()["evidence"][0]["path"]=="/admin-backup"
+    from app.worker import process_batch
+    assert process_batch(owner_site,[owner_item["event_id"]],redis)==0
+    with SessionLocal() as db:
+        assert db.get(Event,(item["event_id"],site_id)).path=="/.env"
     reviewed=owner.post(detail_path+"/status",headers=csrf,json={"status":"acknowledged","note":"Reviewed in real PostgreSQL/Redis integration"})
     assert reviewed.status_code==200,reviewed.text
     assert owner.get(detail_path).json()["actions"][0]["status"]=="acknowledged"
