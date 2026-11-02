@@ -22,11 +22,15 @@ This document records current implementation, not a production certification.
 - Offline one-use recovery codes, authenticated code rotation and password changes
   with revocation of old browser sessions. See `ACCOUNT-RECOVERY.md`; email is a
   sign-in identifier until a sender and verification flow are configured.
+- Owner-scoped connection diagnostics distinguish active keys, missing/overdue
+  heartbeats, request receipt and latest-event processing. They provide next steps
+  without exposing request data or claiming that a quiet site is offline.
 
 ## Validation checkpoint
 
-232 local tests passed with one real-service test skipped locally after recovery
-implementation. CI at `f1ea31e` passed 233 tests with real PostgreSQL/Redis,
+234 local tests passed with one real-service test skipped locally after connection
+diagnostics. The preceding recovery implementation passed its real-service gate:
+CI at `f1ea31e` passed 233 tests with real PostgreSQL/Redis,
 including incident evidence/triage and simultaneous one-use recovery attempts;
 the separate ML software smoke job also passed. JavaScript syntax checks passed.
 The Docker stack rebuilt and started successfully through migration `0006`.
@@ -36,14 +40,18 @@ A real browser previously verified
 signup, adding a website, opening its owner dashboard, sign-out and sign-in with
 the saved website still present. The mobile workspace was inspected at a
 390-pixel viewport. Test accounts and `.example` sites are synthetic.
+Public HTTPS acceptance additionally verified account/site creation, event ingest,
+real-worker incident generation, evidence, acknowledgment and audit history.
+Browser acceptance verified connection guidance on desktop and at 390 pixels,
+mobile incident evidence/history, and saving a resolved decision with its audit
+entry. Both inspected mobile pages had no horizontal document overflow.
 
 ## Required before inviting real users
 
 - Measure new dashboard and account routes. Finish accessibility and error-state review.
-- Finish recovery browser acceptance and clear sensor installation diagnostics. The owner chose
+- Finish recovery browser acceptance and installation guidance for each supported framework. The owner chose
   in-app alerts first; email verification, delivery and email-based resets need a
   configured sender and will be documented rather than silently simulated.
-- Complete public HTTPS and browser acceptance for the new incident inbox.
 - Deployment configuration validation, off-host backup/restore, session/key
   abuse review, operational monitoring and public privacy/retention guidance.
 - Persistent hosting within the user's zero-paid-services budget. A temporary

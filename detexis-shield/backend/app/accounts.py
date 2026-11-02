@@ -16,7 +16,7 @@ from sqlalchemy.exc import IntegrityError
 
 from .auth import new_api_key
 from .db import get_db
-from .models import User, BrowserSession, Site, ApiKey
+from .models import User, BrowserSession, Site, ApiKey, Event
 from .redis_store import get_redis
 from .safe_fetch import domain_name, UnsafeTarget
 
@@ -243,6 +243,34 @@ def owned_site(db, user, site_id):
     if site is None:
         raise HTTPException(404, "Website not found")
     return site
+
+
+@router.get("/sites/{site_id}/connection")
+def connection_status(site_id: str, user=Depends(owner), db=Depends(get_db)):
+    # Read-only diagnostics must not lock the site against ingest/worker writes.
+    site = db.scalar(select(Site).where(Site.id == site_id, Site.owner_id == user.id))
+    if site is None:
+        raise HTTPException(404, "Website not found")
+    now = datetime.now(timezone.utc)
+
+    def age(stamp):
+        if stamp.tzinfo is None:
+            stamp = stamp.replace(tzinfo=timezone.utc)
+        return max(0, (now - stamp).total_seconds())
+
+    # The site/received index bounds this lookup; never count a tenant's history.
+    latest = db.execute(select(Event.received_at, Event.processed_at).where(
+        Event.site_id == site.id).order_by(Event.received_at.desc()).limit(1)).first()
+    active_key = db.scalar(select(ApiKey.id).where(
+        ApiKey.site_id == site.id, ApiKey.revoked.is_(False)).limit(1)) is not None
+    heartbeat = ("waiting" if site.last_heartbeat is None else
+                 "reporting" if age(site.last_heartbeat) <= 180 else "overdue")
+    processing = ("waiting" if latest is None else "processed" if latest.processed_at is not None
+                  else "pending" if age(latest.received_at) <= 60 else "delayed")
+    return {"checked_at": now, "active_key": active_key, "heartbeat": heartbeat,
+            "last_heartbeat": site.last_heartbeat,
+            "last_event_received_at": latest.received_at if latest else None,
+            "latest_event_processing": processing}
 
 
 @router.get("/sites/{site_id}/keys")
