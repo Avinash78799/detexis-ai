@@ -53,6 +53,10 @@ stops this project's API to test fail-open, restarts it, then sends 500 events/s
 for ten minutes. It reports ingestion latency, processing latency, minute-by-minute
 backlog, failed RQ jobs and a bounded drain check in `load-test-results.json`.
 The test sends only to loopback. It leaves test data in the validation volume.
+Acceptance also requires p95 receipt-to-processing lag at most ten seconds by
+default (`--max-processing-p95-seconds 10`). See `PROCESSING-LATENCY.md`: the latest
+capacity run drained successfully but missed this latency target and remains
+release work. Event acceptance alone is not prompt incident delivery.
 For a short diagnostic use `--seconds 30`; this is not the full acceptance run.
 An optional absolute `SHIELD_VALIDATION_COMPOSE` path supplies a local Compose
 override. Reports mark whether an override was used. The default worker uses

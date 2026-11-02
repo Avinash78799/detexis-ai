@@ -53,9 +53,19 @@ entry. Both inspected mobile pages had no horizontal document overflow.
 The pinned-source SDK command built a wheel successfully. Tests execute both
 framework examples extracted from the actual guide page and verify redacted
 sensor events. The installation guide was inspected at a mobile breakpoint.
+The revised signed-in workspace has separate website controls, incident/setup
+navigation and a setup checklist; desktop and 390-pixel browser review passed
+without horizontal overflow. The public data-handling link/page also worked.
+
+The latest ten-minute run accepted and processed 300,000 events at 500 events/s
+with no failed jobs or final backlog, but p95 processing delay was 102.931 seconds.
+It fails the new ten-second processing-latency release target. The original report
+and query investigation are preserved in `PROCESSING-LATENCY.md`; the historical
+faster run must not be substituted for this result.
 
 ## Required before inviting real users
 
+- Fix and remeasure processing latency for new, growing tenants under the full load test.
 - Measure new dashboard and account routes. Finish accessibility and error-state review.
 - Finish recovery browser acceptance. The owner chose
   in-app alerts first; email verification, delivery and email-based resets need a

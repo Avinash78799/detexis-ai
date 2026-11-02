@@ -4,6 +4,7 @@ import os
 import asyncio
 import importlib.util
 import json
+import math
 import re
 import subprocess
 import time
@@ -73,10 +74,14 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--rate", type=int, default=500)
     parser.add_argument("--seconds", type=int, default=600)
+    parser.add_argument("--max-processing-p95-seconds", type=float, default=10,
+                        help="Local rules-only processing-lag release target (default: 10 seconds)")
     parser.add_argument("--output", type=Path, default=Path("load-test-results.json"))
     args = parser.parse_args()
     if args.rate <= 0 or args.seconds <= 0:
         parser.error("rate and seconds must be positive")
+    if not math.isfinite(args.max_processing_p95_seconds) or args.max_processing_p95_seconds <= 0:
+        parser.error("max processing p95 must be finite and positive")
     ready()
     # Pending rows can be zero while duplicate recovery jobs remain in RQ.
     # A new measurement must not include work left over from an earlier run.
@@ -159,7 +164,11 @@ def main():
     report["functional_checks"] = {"ingest_idempotency": True, "rq_incident": True, "dashboard_auth": True, "real_backend_outage_fail_open": True}
     report["environment"] = "Local Docker Desktop, PostgreSQL 16, Redis 7, one RQ worker, rules only"
     report["compose_override"] = bool(os.getenv("SHIELD_VALIDATION_COMPOSE"))
-    report["acceptance_passed"] = report["accepted"] == args.rate * args.seconds and report["failed"] == 0 and final["pending"] == 0 and report["processing"]["failed_jobs"] == 0 and report["elapsed_seconds"] <= args.seconds * 1.05
+    report["capacity_passed"] = report["accepted"] == args.rate * args.seconds and report["failed"] == 0 and final["pending"] == 0 and report["processing"]["failed_jobs"] == 0 and report["elapsed_seconds"] <= args.seconds * 1.05
+    report["max_processing_p95_seconds"] = args.max_processing_p95_seconds
+    lag = report["processing"]["lag_p95_seconds"]
+    report["latency_target_passed"] = lag is not None and lag <= args.max_processing_p95_seconds
+    report["acceptance_passed"] = report["capacity_passed"] and report["latency_target_passed"]
     target = args.output
     target.write_text(json.dumps(report, indent=2), encoding="utf-8")
     print(json.dumps(report, indent=2), flush=True)
