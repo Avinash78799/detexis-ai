@@ -54,6 +54,7 @@ class Event(Base):
         Index("ix_events_site_ip", "site_id", "ip_hash"),
         Index("ix_events_pending", "processed_at", "received_at"),
         Index("ix_events_site_received", "site_id", "received_at"),
+        Index("ix_events_site_connection", "site_id", "received_at", postgresql_include=["processed_at"]),
         Index("ix_events_received", "received_at"),
     )
 

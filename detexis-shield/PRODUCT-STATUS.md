@@ -25,6 +25,8 @@ This document records current implementation, not a production certification.
 - Owner-scoped connection diagnostics distinguish active keys, missing/overdue
   heartbeats, request receipt and latest-event processing. They provide next steps
   without exposing request data or claiming that a quiet site is offline.
+  See `CONNECTION-DIAGNOSTICS.md` for the query-plan investigation and migration
+  `0007`, which adds a covering index for older high-volume sites.
 
 ## Validation checkpoint
 
