@@ -19,6 +19,9 @@ This document records current implementation, not a production certification.
   Another matching event reopens a resolved incident; false-positive review
   remains scoped to that incident and does not automatically train the model.
   Triage changes are rate-limited and all reads/writes enforce owner isolation.
+- Offline one-use recovery codes, authenticated code rotation and password changes
+  with revocation of old browser sessions. See `ACCOUNT-RECOVERY.md`; email is a
+  sign-in identifier until a sender and verification flow are configured.
 
 ## Validation checkpoint
 
@@ -34,7 +37,7 @@ the saved website still present. The mobile workspace was inspected at a
 ## Required before inviting real users
 
 - Measure new dashboard and account routes. Finish accessibility and error-state review.
-- Account recovery and clear sensor installation diagnostics. The owner chose
+- Finish recovery release acceptance and clear sensor installation diagnostics. The owner chose
   in-app alerts first; email verification, delivery and email-based resets need a
   configured sender and will be documented rather than silently simulated.
 - Complete real-service and browser acceptance for the new incident inbox.

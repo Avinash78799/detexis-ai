@@ -11,9 +11,11 @@ async function showWorkspace(data) {
   csrf = data.csrf_token;
   node('auth').hidden = true; node('workspace').hidden = false;
   node('owner-email').textContent = data.email;
+  node('recovery-secret').hidden = !data.recovery_code;
+  node('recovery-value').textContent = data.recovery_code || '';
   await refreshSites();
   const next = new URLSearchParams(location.search).get('next');
-  if (next) {
+  if (next && !data.recovery_code) {
     const target = new URL(next, location.origin);
     if (target.origin === location.origin && (target.pathname === '/app/inbox' || /^\/app\/sites\/[0-9a-f-]+$/.test(target.pathname))) location.assign(target.pathname + target.search);
   }
@@ -89,13 +91,22 @@ async function refreshSites() {
     card.append(manage, verify, panel, verificationPanel); node('sites').append(card);
   }
 }
-for (const id of ['auth-form','site-form']) node(id).addEventListener('submit', async event => {
+for (const id of ['auth-form','site-form','recover-form','recovery-form','password-form']) node(id).addEventListener('submit', async event => {
   event.preventDefault(); node('message').textContent = '';
   const buttons = [...event.target.querySelectorAll('button')]; buttons.forEach(b => b.disabled = true);
   try {
     const body = Object.fromEntries(new FormData(event.target));
     if (id === 'auth-form') {
       await showWorkspace(await api(event.submitter?.value || 'login', body)); event.target.reset();
+    } else if (id === 'recover-form') {
+      await showWorkspace(await api('recover', body)); event.target.reset();
+    } else if (id === 'password-form') {
+      await showWorkspace(await api('password', body)); event.target.reset();
+      node('message').textContent = 'Password changed. Other sessions were signed out. Save your replacement recovery code.';
+    } else if (id === 'recovery-form') {
+      const issued = await api('recovery-code', body);
+      node('recovery-secret').hidden = false; node('recovery-value').textContent = issued.recovery_code;
+      event.target.reset(); node('recovery-secret').scrollIntoView({block:'start'});
     } else {
       const data = await api('sites', body);
       node('installation').hidden = false;

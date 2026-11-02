@@ -59,6 +59,15 @@ with TestClient(app,base_url="https://testserver") as owner:
     reviewed=owner.post(detail_path+"/status",headers=csrf,json={"status":"acknowledged","note":"Reviewed in real PostgreSQL/Redis integration"})
     assert reviewed.status_code==200,reviewed.text
     assert owner.get(detail_path).json()["actions"][0]["status"]=="acknowledged"
+    from concurrent.futures import ThreadPoolExecutor
+    recovery_payload={"email":registered.json()["email"],"password":"Concurrent-reset-test-passphrase","recovery_code":registered.json()["recovery_code"]}
+    def recover_once():
+        with TestClient(app,base_url="https://testserver") as anonymous:
+            return anonymous.post("/app/api/recover",headers=origin,json=recovery_payload).status_code
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        outcomes=list(pool.map(lambda _:recover_once(),range(2)))
+    assert sorted(outcomes)==[200,401],outcomes
+    assert owner.get("/app/api/inbox").status_code==401
 '''
     result = subprocess.run([sys.executable, "-c", script], env=env, capture_output=True, text=True)
     assert result.returncode == 0, result.stdout + result.stderr

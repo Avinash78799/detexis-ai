@@ -11,7 +11,7 @@ from argon2.exceptions import VerificationError, InvalidHashError
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from pydantic import BaseModel, Field, field_validator
 from redis.exceptions import RedisError
-from sqlalchemy import select, func
+from sqlalchemy import select, func, delete
 from sqlalchemy.exc import IntegrityError
 
 from .auth import new_api_key
@@ -45,7 +45,10 @@ class Credentials(BaseModel):
 
 
 def same_origin(request):
-    origin = urlsplit(request.headers.get("origin", ""))
+    try:
+        origin = urlsplit(request.headers.get("origin", ""))
+    except ValueError:
+        raise HTTPException(403, "Invalid request origin")
     if origin.scheme != "https" or origin.netloc != request.url.netloc:
         raise HTTPException(403, "Use this website over HTTPS to submit changes")
 
@@ -96,21 +99,23 @@ def owner(request: Request, db=Depends(get_db)):
 def register(body: Credentials, request: Request, response: Response, db=Depends(get_db), redis=Depends(get_redis)):
     same_origin(request)
     throttle(request, redis)
-    user = User(email=body.email, password_hash=hasher.hash(body.password))
+    recovery = secrets.token_urlsafe(32)
+    user = User(email=body.email, password_hash=hasher.hash(body.password), recovery_hash=digest("recovery:" + recovery))
     db.add(user)
     try:
         db.flush()
     except IntegrityError:
         db.rollback()
         raise HTTPException(409, "Unable to create account; try signing in")
-    return issue_session(db, user, response)
+    return {**issue_session(db, user, response), "recovery_code": recovery}
 
 
 @router.post("/login")
 def login(body: Credentials, request: Request, response: Response, db=Depends(get_db), redis=Depends(get_redis)):
     same_origin(request)
     throttle(request, redis)
-    user = db.scalar(select(User).where(User.email == body.email))
+    # Serialize against recovery so an old password cannot issue a session after reset.
+    user = db.scalar(select(User).where(User.email == body.email).with_for_update())
     try:
         hasher.verify(user.password_hash if user else dummy, body.password)
     except (VerificationError, InvalidHashError):
@@ -122,6 +127,63 @@ def login(body: Credentials, request: Request, response: Response, db=Depends(ge
     if old is not None:
         db.delete(old)
     return issue_session(db, user, response)
+
+
+class Recovery(Credentials):
+    recovery_code: str = Field(min_length=20, max_length=128)
+
+
+@router.post("/recover")
+def recover(body: Recovery, request: Request, response: Response, db=Depends(get_db), redis=Depends(get_redis)):
+    same_origin(request)
+    throttle(request, redis)
+    user = db.scalar(select(User).where(User.email == body.email).with_for_update())
+    expected = user.recovery_hash if user and user.recovery_hash else "0" * 64
+    valid = hmac.compare_digest(expected, digest("recovery:" + body.recovery_code))
+    if user is None or user.recovery_hash is None or not valid:
+        raise HTTPException(401, "Unable to recover the account with these details")
+    replacement = secrets.token_urlsafe(32)
+    user.password_hash = hasher.hash(body.password)
+    user.recovery_hash = digest("recovery:" + replacement)
+    db.execute(delete(BrowserSession).where(BrowserSession.user_id == user.id))
+    return {**issue_session(db, user, response), "recovery_code": replacement}
+
+
+class CurrentPassword(BaseModel):
+    password: str = Field(min_length=12, max_length=128)
+
+
+class PasswordChange(CurrentPassword):
+    new_password: str = Field(min_length=12, max_length=128)
+
+
+@router.post("/password")
+def change_password(body: PasswordChange, request: Request, response: Response, user=Depends(owner), db=Depends(get_db), redis=Depends(get_redis)):
+    throttle(request, redis, identity=user.id, limit=5, namespace="password-change")
+    user = db.scalar(select(User).where(User.id == user.id).with_for_update().execution_options(populate_existing=True))
+    try:
+        hasher.verify(user.password_hash, body.password)
+    except (VerificationError, InvalidHashError):
+        raise HTTPException(401, "Password is incorrect")
+    recovery = secrets.token_urlsafe(32)
+    user.password_hash = hasher.hash(body.new_password)
+    user.recovery_hash = digest("recovery:" + recovery)
+    db.execute(delete(BrowserSession).where(BrowserSession.user_id == user.id))
+    return {**issue_session(db, user, response), "recovery_code": recovery}
+
+
+@router.post("/recovery-code")
+def replace_recovery_code(body: CurrentPassword, request: Request, user=Depends(owner), db=Depends(get_db), redis=Depends(get_redis)):
+    throttle(request, redis, identity=user.id, limit=5, namespace="recovery-code")
+    user = db.scalar(select(User).where(User.id == user.id).with_for_update().execution_options(populate_existing=True))
+    try:
+        hasher.verify(user.password_hash, body.password)
+    except (VerificationError, InvalidHashError):
+        raise HTTPException(401, "Password is incorrect")
+    recovery = secrets.token_urlsafe(32)
+    user.recovery_hash = digest("recovery:" + recovery)
+    db.commit()
+    return {"recovery_code": recovery}
 
 
 @router.get("/session")
