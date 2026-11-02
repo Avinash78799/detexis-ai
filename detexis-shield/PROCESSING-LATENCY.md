@@ -110,6 +110,29 @@ is not a total memory cap. Five-minute checkpoints, fsync and synchronous commit
 remain enabled and are recorded in reports. The next full acceptance run must
 prove this configuration; it is not accepted based on index sizes or profiling.
 
+The index/cache full run, `load-test-index-consolidation.json`, accepted and
+processed all 300,000 events without transport errors or failed jobs. It still
+missed the latency target: median/p95 lag was 4.638/29.005 s, with 13,200 pending
+at load end and a 22.140 s drain. Settings in the report confirm durable commits
+and five-minute checkpoints. This result is retained as another failed gate.
+
+## Ingestion/processing lock compatibility
+
+The worker's original `FOR UPDATE` site mutex also conflicts with the key-share
+lock used by incoming events' foreign-key checks. That serialized ingestion
+behind classification even though the worker never changes the site's key.
+The mutex now uses `FOR NO KEY UPDATE` (`with_for_update(key_share=True)` in
+SQLAlchemy): workers still exclude one another while the ingestion key-share
+lock can proceed. Owner operations retain the same Site-before-Incident order.
+
+The real PostgreSQL/Redis integration test deliberately pauses a worker inside
+its locked processing section, then requires ingestion to finish before releasing
+that worker. It also runs two duplicate workers concurrently and requires exactly
+one to process the event. This passed locally in a separate test database/Redis
+database; a full-load latency result is still required.
+
+See PostgreSQL's [row-lock conflict table](https://www.postgresql.org/docs/16/explicit-locking.html#LOCKING-ROWS).
+
 PostgreSQL documents the tradeoffs for [partial indexes](https://www.postgresql.org/docs/16/indexes-partial.html),
 [cache/background writer settings](https://www.postgresql.org/docs/16/runtime-config-resource.html)
 and [WAL compression](https://www.postgresql.org/docs/16/runtime-config-wal.html).

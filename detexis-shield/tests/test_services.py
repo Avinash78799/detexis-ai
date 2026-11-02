@@ -39,6 +39,39 @@ SimpleWorker([Queue("shield",connection=redis)],connection=redis).work(burst=Tru
 with SessionLocal() as db:
     assert db.get(Event,(item["event_id"],site_id)).processed_at is not None
     assert db.scalar(select(Incident).where(Incident.site_id==site_id)) is not None
+# Ingestion must complete while a worker holds the per-site processing mutex.
+from threading import Event as ThreadEvent
+from concurrent.futures import ThreadPoolExecutor
+import app.worker as worker_module
+entered,released,timed_out=ThreadEvent(),ThreadEvent(),ThreadEvent()
+original_evaluate=worker_module.evaluate
+def hold_processing(*args,**kwargs):
+    entered.set()
+    if not released.wait(6):
+        timed_out.set()
+    return original_evaluate(*args,**kwargs)
+probe={**item,"event_id":str(uuid.uuid4()),"path":"/concurrency-probe"}
+during={**probe,"event_id":str(uuid.uuid4())}
+with TestClient(app) as transport:
+    assert transport.post("/v1/events",headers={"X-API-Key":raw},json={"events":[probe]}).status_code==202
+    worker_module.evaluate=hold_processing
+    try:
+        with ThreadPoolExecutor(max_workers=1) as pool:
+            active=pool.submit(worker_module.process_batch,site_id,[probe["event_id"]],redis)
+            try:
+                assert entered.wait(5),"worker never entered its locked processing section"
+                response=transport.post("/v1/events",headers={"X-API-Key":raw},json={"events":[during]})
+                assert response.status_code==202,response.text
+                assert not timed_out.is_set(),"ingestion waited for the processing mutex"
+            finally:
+                released.set()
+            assert active.result(timeout=5)==1
+    finally:
+        worker_module.evaluate=original_evaluate
+# The compatible ingestion lock must still exclude duplicate worker processing.
+with ThreadPoolExecutor(max_workers=2) as pool:
+    outcomes=list(pool.map(lambda _:worker_module.process_batch(site_id,[during["event_id"]],redis),range(2)))
+assert sorted(outcomes)==[0,1],outcomes
 with TestClient(app,base_url="https://testserver") as owner:
     origin={"Origin":"https://testserver"}
     registered=owner.post("/app/api/register",headers=origin,json={"email":str(uuid.uuid4())+"@integration.example","password":"Synthetic-integration-passphrase"})

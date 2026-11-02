@@ -1,0 +1,104 @@
+{
+  "target_rate": 500,
+  "duration_seconds": 600,
+  "events": 300000,
+  "accepted": 300000,
+  "failed": 0,
+  "elapsed_seconds": 599.9850000000006,
+  "accepted_per_second": 500.0125003125073,
+  "batch_latency_median_ms": 118.779699994775,
+  "batch_latency_p95_ms": 386.3349000021117,
+  "http_responses": {
+    "202": 3000
+  },
+  "transport_errors": {},
+  "note": "Ingest acceptance only. Check pending events, RQ failures and processing lag separately.",
+  "backlog_samples_each_minute": [
+    {
+      "total": 30603,
+      "pending": 100
+    },
+    {
+      "total": 61503,
+      "pending": 200
+    },
+    {
+      "total": 92803,
+      "pending": 1700
+    },
+    {
+      "total": 124303,
+      "pending": 2400
+    },
+    {
+      "total": 155303,
+      "pending": 300
+    },
+    {
+      "total": 186503,
+      "pending": 5400
+    },
+    {
+      "total": 219003,
+      "pending": 9500
+    },
+    {
+      "total": 251803,
+      "pending": 10000
+    },
+    {
+      "total": 284703,
+      "pending": 11200
+    }
+  ],
+  "database_at_load_end": {
+    "total": 300003,
+    "pending": 13200
+  },
+  "database_after_drain": {
+    "total": 300003,
+    "pending": 0
+  },
+  "processing_drain_seconds": 22.139999999999418,
+  "processing": {
+    "lag_median_seconds": 4.638437,
+    "lag_p95_seconds": 29.0047033,
+    "failed_jobs": 0,
+    "queued_jobs": 0
+  },
+  "functional_checks": {
+    "ingest_idempotency": true,
+    "rq_incident": true,
+    "dashboard_auth": true,
+    "real_backend_outage_fail_open": true
+  },
+  "environment": "Dedicated local Docker validation stack; see runtime_details",
+  "runtime_details": {
+    "python": "3.12.16",
+    "visible_cpus": 8,
+    "packages": {
+      "fastapi": "0.115.6",
+      "sqlalchemy": "2.0.36",
+      "rq": "2.1.0",
+      "psycopg2-binary": "2.9.10"
+    },
+    "postgresql": "16.15 (Debian 16.15-1.pgdg12+2)",
+    "redis": "7.4.10",
+    "postgresql_settings": {
+      "shared_buffers": "512MB",
+      "wal_compression": "pglz",
+      "bgwriter_lru_maxpages": "1000",
+      "checkpoint_timeout": "5min",
+      "fsync": "on",
+      "synchronous_commit": "on"
+    },
+    "migration": "0008",
+    "model_enabled": false,
+    "worker_source_sha256": "3ea03bce27f38163b6871356620bd54594d819684ee20a210ca02dd794a17fe2"
+  },
+  "compose_override": true,
+  "capacity_passed": true,
+  "max_processing_p95_seconds": 10.0,
+  "latency_target_passed": false,
+  "acceptance_passed": false
+}

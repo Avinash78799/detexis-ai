@@ -53,7 +53,7 @@ with SessionLocal() as db:
     settings={name:db.execute(text('SELECT current_setting(:name)'),{'name':name}).scalar()
               for name in ['shared_buffers','wal_compression','bgwriter_lru_maxpages','checkpoint_timeout','fsync','synchronous_commit']}
 print(json.dumps({'python':platform.python_version(),'visible_cpus':os.cpu_count(),
-    'packages':{name:version(name) for name in ['fastapi','sqlalchemy','rq','psycopg2-binary']},
+    'packages':{name:version(name) for name in ['fastapi','uvicorn','starlette','pydantic','httpx','sqlalchemy','rq','psycopg2-binary']},
     'postgresql':database,'redis':get_redis().info('server')['redis_version'],
     'postgresql_settings':settings,
     'migration':migration,'model_enabled':bool(os.getenv('SHIELD_MODEL_DIR')),

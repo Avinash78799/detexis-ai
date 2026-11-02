@@ -62,8 +62,10 @@ def save_event_results(db, updates):
 def process_batch(site_id, event_ids, redis=None):
     redis = redis if redis is not None else get_redis()
     with SessionLocal() as db:
-        # Serializes processing per site on PostgreSQL, including duplicate RQ jobs.
-        site = db.scalar(select(Site).where(Site.id == site_id).with_for_update())
+        # FOR NO KEY UPDATE serializes workers without blocking the KEY SHARE
+        # lock taken by new event inserts' site foreign-key checks. The worker
+        # never changes the site's key. SQLAlchemy calls this key_share=True.
+        site = db.scalar(select(Site).where(Site.id == site_id).with_for_update(key_share=True))
         if site is None:
             return 0
         # New sites can grow faster than PostgreSQL's column statistics refresh.
