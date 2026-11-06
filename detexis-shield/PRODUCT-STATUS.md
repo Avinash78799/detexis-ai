@@ -34,8 +34,10 @@ This document records current implementation, not a production certification.
 
 ## Validation checkpoint
 
-237 local tests passed with one real-service test skipped locally after the
-transactional worker/index changes. CI at `a60fb76` passed 238 tests with real PostgreSQL/Redis,
+240 local tests passed with one real-service test skipped after the maintenance
+health and incident-retention race changes; six additional worker-health tests
+passed after that checkpoint. Worker and maintenance Docker probes were verified
+healthy in the running stack. CI at `a60fb76` passed 238 tests with real PostgreSQL/Redis,
 including concurrent ingestion/worker exclusion, incident triage and one-use recovery races;
 the separate ML software smoke job also passed. JavaScript syntax checks passed.
 The Docker stack rebuilt and started successfully through migration `0008`.
@@ -68,7 +70,10 @@ investigation remain in `PROCESSING-LATENCY.md`.
 
 - Measure mixed-traffic and actual deployment performance; the passing local
   workload is rules-only, one site/IP hash and uniform benchmark requests.
-- Measure new dashboard and account routes. Finish accessibility and error-state review.
+- Warm sequential owner-route application latency was measured against real
+  PostgreSQL/Redis with 10,000 synthetic events; dashboard p95 was 44.087 ms.
+  See `OWNER-ROUTE-PERFORMANCE.md` for scope and reproduction. Concurrent/deployed
+  browser measurements, accessibility and error-state review remain required.
 - Finish recovery browser acceptance. The owner chose
   in-app alerts first; email verification, delivery and email-based resets need a
   configured sender and will be documented rather than silently simulated.
