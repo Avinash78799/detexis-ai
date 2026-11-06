@@ -72,6 +72,13 @@ investigation remain in `PROCESSING-LATENCY.md`.
 
 ## Required before inviting real users
 
+- Resolve the upgraded stack's ten-minute mixed-load latency miss: 300,000
+  events were accepted/processed, but processing p95 was 17.814 seconds against
+  a ten-second target. See `MIXED-LOAD.md`; the two-minute pass is insufficient.
+- Hosting now requires no card verification as well as no paid services. Oracle
+  is excluded. No permanent cardless host for the complete stack has yet been
+  verified; student-credit eligibility is being checked as a temporary option.
+
 - Measure mixed-traffic and actual deployment performance; the passing local
   workload is rules-only, one site/IP hash and uniform benchmark requests.
 - Warm sequential owner-route application latency was measured against real

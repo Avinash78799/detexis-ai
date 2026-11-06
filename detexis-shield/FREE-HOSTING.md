@@ -1,5 +1,36 @@
 # Hosting with no paid services
 
+## Current constraint: no payment-card details
+
+The owner explicitly requires zero paid services **and no card verification**.
+Oracle is excluded from the current deployment path; the Oracle instructions
+below are retained as reference, not an action to take. No provider account or
+paid resource has been created by this guide.
+
+As checked on 6 November 2026:
+
+- [Azure for Students](https://azure.microsoft.com/en-us/free/students/) advertises
+  no card and $100 valid for 12 months. Current student eligibility is required.
+  This is a possible credit-limited bridge, not permanent free hosting. Do not
+  upgrade to a paid subscription; capacity/cost must fit the credit allowance.
+- [Northflank pricing](https://northflank.com/pricing) advertises a no-card
+  Sandbox, but its [billing documentation](https://northflank.com/docs/v1/application/billing/pricing-on-northflank)
+  says all users need a payment method before creating resources and says the
+  Sandbox is not for production. These conflicting statements do not establish
+  a suitable deployment route. Its status page also reports an ongoing security
+  incident review; do not connect project secrets based on the pricing claim.
+- [Hugging Face Spaces](https://huggingface.co/docs/hub/spaces-overview) documents
+  sleeping on free hardware. It does not establish continuous security monitoring
+  or durable PostgreSQL storage for this stack.
+- Cloudflare Tunnel exposes an origin; the current Docker origin still needs a
+  running computer/server. Moving the application to Workers would require an
+  explicit architecture migration and new quota/performance/security validation.
+
+No permanent, always-on, cardless host for the complete measured stack has yet
+been verified. Continue local validation while checking student eligibility or
+access to a permissioned college/community server. Do not silently substitute
+sleeping demos, trial credits or a rewritten backend for a verified deployment.
+
 Use the existing Docker stack on your computer for development and demos. For
 a public deployment, an available Oracle Cloud Always Free VM is a possible
 host. Free capacity and continued availability are not guaranteed. Oracle can
@@ -14,6 +45,34 @@ Set `POSTGRES_SHARED_BUFFERS` for the chosen host and repeat acceptance there.
 Do not assume a 1 GiB VM can run the complete measured workload.
 
 ## Choose the host
+
+### Account signup: verified 6 November 2026
+
+Open https://signup.cloud.oracle.com/ and select your actual country. Verify your
+email and complete Oracle's identity/card verification yourself. Keep passwords,
+card details, OTPs and private SSH keys outside chat and the repository. Oracle's
+FAQ says supported cards may receive temporary authorization holds; these are
+not actual service charges. Some card types, including prepaid/virtual cards,
+are not accepted. Use accurate details; one free account per person is allowed.
+
+Choose an offered home region suitable for your users. Do not upgrade to Pay As
+You Go. Trial credits are separate from Always Free and are not our hosting plan.
+After account creation, use the console's Always Free eligibility and resource
+limits as the final check before provisioning.
+
+The current documentation lists an A1 Arm allowance equivalent to **2 OCPUs and
+12 GB RAM**, with **200 GB combined boot/block storage**. Do not follow older
+guides promising larger allowances. A single eligible Ubuntu A1 VM within these
+limits is a candidate for the stack; Arm build and actual-host performance still
+need validation. The 1 GB E2 Micro is not sufficient evidence for the measured
+full-stack workload. If free A1 capacity is unavailable, wait or keep the local
+demo rather than choosing a paid shape. Free-tier resources have no SLA and idle
+instances may be reclaimed, so off-host backups remain necessary.
+
+Once the console is available, record the selected region and eligible shape.
+Create the VM only after checking the console's cost/eligibility summary; use SSH
+keys and restrict SSH ingress to your IP. The remaining sections describe service
+setup, public HTTPS and validation. Account creation alone does not deploy Shield.
 
 Create an Oracle Free Tier account yourself and select only resources explicitly
 labelled Always Free eligible. Check the current console limits and estimated

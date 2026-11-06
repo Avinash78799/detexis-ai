@@ -1,5 +1,24 @@
 # Mixed-traffic checkpoint
 
+## Ten-minute run: latency gate failed
+
+The subsequent full-duration run on 6 November 2026 accepted all 300,000 events
+at 500.118 events/s over 600 seconds. There were zero transport failures, failed
+RQ jobs or queued jobs after draining. Ingest median/p95 was 71.602/192.916 ms.
+Processing median/p95 was 0.171/**17.814 seconds**, exceeding the unchanged
+ten-second target. Capacity passed, latency failed, and overall acceptance failed.
+
+The final 7,500 pending events drained in 11.922 seconds. Minute samples were
+low until a late rise to 6,700 pending. The worker had zero restarts and was not
+OOM-killed. PostgreSQL checkpoint activity was present, but this observation
+does not establish the cause of the slowdown. Profiling and a validated fix are
+still required. Raw results: `mixed-load-upgraded-600s.json`.
+
+The passing shorter run below does not override this failure. Do not describe
+the upgraded stack as meeting the full mixed-load latency release requirement.
+
+## Earlier two-minute run
+
 On 6 November 2026, the upgraded local stack accepted and processed 60,000
 events at 500 events/second for 120 seconds, with one RQ worker and ML disabled.
 The raw report is `mixed-load-upgraded-120s.json`; it records runtime versions,
