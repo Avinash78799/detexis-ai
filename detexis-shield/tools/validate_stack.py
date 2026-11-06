@@ -98,6 +98,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--rate", type=int, default=500)
     parser.add_argument("--seconds", type=int, default=600)
+    parser.add_argument("--profile", choices=["uniform", "mixed"], default="uniform")
     parser.add_argument("--max-processing-p95-seconds", type=float, default=10,
                         help="Local rules-only processing-lag release target (default: 10 seconds)")
     parser.add_argument("--output", type=Path, default=Path("load-test-results.json"))
@@ -167,7 +168,7 @@ def main():
                 print(f"Load progress: {sample['total']} received, {sample['pending']} pending", flush=True)
         task = asyncio.create_task(monitor())
         try:
-            report = await load.run("http://127.0.0.1:8000", key, args.rate, args.seconds)
+            report = await load.run("http://127.0.0.1:8000", key, args.rate, args.seconds, args.profile)
             report["backlog_samples_each_minute"] = samples
             return report
         finally:
