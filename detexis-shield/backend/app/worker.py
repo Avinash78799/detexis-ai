@@ -1,9 +1,10 @@
 """Recoverable processing: the database is the source of pending events."""
 from datetime import datetime, timedelta, timezone
 from statistics import mean, pstdev
+from uuid import uuid4
 
 from rq import Queue
-from sqlalchemy import select, literal, bindparam
+from sqlalchemy import select, literal, bindparam, tuple_
 
 from detexis_shield.features import extract_features
 from .db import SessionLocal
@@ -87,7 +88,17 @@ def process_batch(site_id, event_ids, redis=None):
             if login:
                 pipeline.eval(WINDOW, 1, key + ":login", stamp.timestamp(), event.event_id)
         counts = iter(pipeline.execute())
-        buckets, thresholds, incidents, alerted = {}, {}, {}, set()
+        # Fetch at most this batch's groups once; the Site lock still serializes
+        # incident/outbox decisions with other workers and owner triage.
+        groups = {(row.ip_hash, int(utc(row.received_at).timestamp()) // 300) for row in rows}
+        existing = db.scalars(select(Incident).where(Incident.site_id == site_id,
+            tuple_(Incident.ip_hash, Incident.bucket).in_(groups))).all() if groups else []
+        incidents = {(incident.ip_hash, incident.bucket): incident for incident in existing}
+        existing_ids = [incident.id for incident in existing]
+        alerted = set(db.scalars(select(Alert.incident_id).where(Alert.site_id == site_id,
+            Alert.incident_id.in_(existing_ids))).all()) if existing_ids else set()
+        pending_alerts = set()
+        buckets, thresholds = {}, {}
         updates = []
         for event, login in zip(rows, login_events):
             stamp = utc(event.received_at)
@@ -127,16 +138,13 @@ def process_batch(site_id, event_ids, redis=None):
             if hits:
                 group = int(stamp.timestamp()) // 300
                 group_key = (event.ip_hash, group)
-                if group_key not in incidents:
-                    incidents[group_key] = db.scalar(select(Incident).where(Incident.site_id == site_id, Incident.ip_hash == event.ip_hash, Incident.bucket == group))
-                incident = incidents[group_key]
+                incident = incidents.get(group_key)
                 severity = max((h["severity"] for h in hits), key=SEVERITY.get)
                 if incident is None:
-                    incident = Incident(site_id=site_id, ip_hash=event.ip_hash, bucket=group,
+                    incident = Incident(id=str(uuid4()), site_id=site_id, ip_hash=event.ip_hash, bucket=group,
                                         severity=severity, rules=[], correlations=[], event_count=0,
                                         first_seen=stamp, last_seen=stamp)
                     db.add(incident)
-                    db.flush()
                     incidents[group_key] = incident
                 incident.severity = max(incident.severity, severity, key=SEVERITY.get)
                 if incident.status == "resolved":
@@ -157,13 +165,17 @@ def process_batch(site_id, event_ids, redis=None):
                 incident.last_seen = max(utc(incident.last_seen), stamp)
                 incident.event_count += 1
                 if SEVERITY[incident.severity] >= 2 and incident.id not in alerted:
-                    if not db.scalar(select(Alert).where(Alert.incident_id == incident.id)):
-                        db.add(Alert(site_id=site_id, incident_id=incident.id))
+                    pending_alerts.add(incident.id)
                     alerted.add(incident.id)
             updates.append({"batch_site_id": site_id, "batch_event_id": event.event_id,
                             "result_features": features, "result_findings": hits,
                             "result_processed_at": datetime.now(timezone.utc)})
         save_event_results(db, updates)
+        if pending_alerts:
+            # Insert all new incident parents before their outbox foreign keys.
+            # Flush is not commit: a failure still rolls back the entire batch.
+            db.flush()
+            db.add_all([Alert(site_id=site_id, incident_id=identity) for identity in pending_alerts])
         db.commit()
         return len(rows)
 

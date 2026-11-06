@@ -39,6 +39,28 @@ def test_pipeline_is_tenant_scoped_idempotent_and_recomputes_features(isolated_r
         assert db.get(Event, (other, b)).processed_at is None
 
 
+def test_many_client_batch_preserves_groups_correlations_and_outbox_dedupe(isolated_redis):
+    site, _ = make_site("many-client-batch.test")
+    stamp = datetime.now(timezone.utc).replace(second=0, microsecond=0)
+    first, second = [], []
+    for index in range(12):
+        client = f"{index:064x}"
+        first.extend([seed(site, "/.env", ip_hash=client, received_at=stamp),
+                      seed(site, "/search", query_redacted="q=union+select+name", ip_hash=client, received_at=stamp + timedelta(seconds=1))])
+        second.append(seed(site, "/.env", ip_hash=client, received_at=stamp + timedelta(seconds=2)))
+    assert process_batch(site, first, isolated_redis) == 24
+    assert process_batch(site, second, isolated_redis) == 12
+    assert process_batch(site, first + second, isolated_redis) == 0
+    with SessionLocal() as db:
+        groups = db.scalars(select(Incident).where(Incident.site_id == site)).all()
+        assert len(groups) == 12
+        assert all(group.event_count == 3 for group in groups)
+        assert all("recon_to_exploit" in group.correlations for group in groups)
+        alerts = db.scalars(select(Alert).where(Alert.site_id == site)).all()
+        assert len(alerts) == 12
+        assert {alert.incident_id for alert in alerts} == {group.id for group in groups}
+
+
 def test_login_and_flood_state_isolated_and_canary_flags_not_trusted(isolated_redis):
     site, _ = make_site("state.test")
     ids = [seed(site, "/login", status=401) for _ in range(10)]

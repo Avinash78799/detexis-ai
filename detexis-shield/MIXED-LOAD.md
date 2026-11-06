@@ -19,6 +19,27 @@ the upgraded stack as meeting the full mixed-load latency release requirement.
 
 ## Earlier two-minute run
 
+### Follow-up candidate: batch incident/outbox work
+
+The failed run's per-minute p95 stayed below 2.42 seconds through 17:50 UTC,
+then rose to about 19.98 seconds in 17:51 UTC. No worker restart/OOM was observed.
+The cause of the late spike remains unproven.
+
+A separate direct-worker profile of 2,000 mixed events in 20 batches found 1,020
+SQLAlchemy SQL executions and 148 flush calls. A candidate prefetches all
+batch-scoped incident groups and existing outbox identities, allocates incident
+IDs locally, and flushes new parents together before adding outbox children.
+The Site mutex, tenant predicates and single atomic commit remain in place.
+
+The candidate profile recorded 162 SQL executions and 33 flush calls. Direct
+wall time changed from 1.640 to 1.843 seconds; this does **not** prove a speedup
+or resolve the failed gate. The local suite passed 249 tests with one service
+skip. Existing real-service assertions also passed with the candidate loaded in
+an isolated database `shield_upgrade_ac63947ebf2c` and Redis DB 11. A new test
+checks twelve client groups across repeated batches, correlation, counts,
+idempotency and exactly one outbox entry per incident. Rebuild and full-duration
+load validation are still required before calling this a performance fix.
+
 On 6 November 2026, the upgraded local stack accepted and processed 60,000
 events at 500 events/second for 120 seconds, with one RQ worker and ML disabled.
 The raw report is `mixed-load-upgraded-120s.json`; it records runtime versions,
