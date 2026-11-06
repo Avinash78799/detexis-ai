@@ -16,7 +16,7 @@ basic = HTTPBasic(auto_error=False)
 templates = Jinja2Templates(directory=str(Path(__file__).parent / "templates"))
 templates.env.globals["asset_versions"] = {
     name: hashlib.sha256((Path(__file__).parent / "static" / name).read_bytes()).hexdigest()[:12]
-    for name in ("dashboard.css", "account.css", "account.js", "htmx.min.js", "inbox.js")
+    for name in ("dashboard.css", "dashboard.js", "account.css", "account.js", "htmx.min.js", "inbox.js")
 }
 
 

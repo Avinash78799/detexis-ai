@@ -19,6 +19,10 @@ def test_dashboard_requires_auth_and_escapes_attacker_fields():
         assert "tenant-secret-marker" in client.get("/dashboard/feed", auth=("site", other_key)).text
         assert response.headers["Cache-Control"] == "no-store"
         assert "unsafe-inline" not in response.headers["Content-Security-Policy"]
+        assert 'id="feed-status" role="status"' in response.text
+        assert 'id="refresh-feed"' in response.text
+        assert '/static/dashboard.js?v=' in response.text
+        assert '"timeout":10000' in response.text
 
 
 def test_dashboard_reports_stale_heartbeat_and_expired_verification():

@@ -31,6 +31,10 @@ This document records current implementation, not a production certification.
   FastAPI/Flask examples, secret setup, persistent-process limitations and connection
   checks. `/app/data` describes collection, redaction limits, access, retention,
   operator-managed removal and backup responsibilities before account creation.
+- Dashboard update status warns on refresh failures and expired sessions, provides
+  manual retry/navigation and records successful update times. Refresh requests
+  time out after ten seconds. Node regression coverage exercises failure, recovery
+  and retry behavior; fresh browser inspection of these controls remains pending.
 
 ## Validation checkpoint
 
