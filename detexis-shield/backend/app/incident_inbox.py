@@ -50,6 +50,9 @@ def find_incident(db, user, incident_id, lock=False):
         # Match the worker's Site -> Incident lock order.
         owned_site(db, user, row.site_id)
         row = db.scalar(select(Incident).where(Incident.id == incident_id).with_for_update().execution_options(populate_existing=True))
+        if row is None:
+            # Retention can remove an old incident between the two reads.
+            raise HTTPException(404, "Incident not found")
     return row
 
 

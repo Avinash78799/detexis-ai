@@ -6,8 +6,39 @@ from app.main import app
 from app.db import SessionLocal
 from app.models import Incident, IncidentAction
 from app.worker import process_batch
+from app import incident_inbox
 from test_accounts import register, ORIGIN
 from test_pipeline import seed
+
+
+def test_triage_returns_not_found_when_retention_removes_incident(monkeypatch):
+    with TestClient(app, base_url="https://testserver") as client:
+        headers = register(client, "inbox-retention-race")
+        site = client.post("/app/api/sites", headers=headers, json={"domain":"retention.example"}).json()["id"]
+        stamp = datetime.now(timezone.utc)
+        with SessionLocal() as db:
+            row = Incident(site_id=site, ip_hash="a" * 64, bucket=0, severity="low",
+                           rules=[], correlations=[], first_seen=stamp, last_seen=stamp)
+            db.add(row)
+            db.commit()
+            incident_id = row.id
+
+        original = incident_inbox.owned_site
+
+        def remove_before_locked_read(db, user, site_id):
+            result = original(db, user, site_id)
+            # Deterministically reproduce retention winning before the second read.
+            db.delete(db.get(Incident, incident_id))
+            db.flush()
+            return result
+
+        monkeypatch.setattr(incident_inbox, "owned_site", remove_before_locked_read)
+        response = client.post(f"/app/api/incidents/{incident_id}/status", headers=headers,
+                               json={"status":"resolved"})
+        assert response.status_code == 404
+        assert response.json()["detail"] == "Incident not found"
+        with SessionLocal() as db:
+            assert db.scalar(select(IncidentAction).where(IncidentAction.incident_id == incident_id)) is None
 
 
 def test_inbox_evidence_triage_reopen_and_tenant_boundaries(isolated_redis):
