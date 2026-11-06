@@ -6,13 +6,17 @@ from rq import Queue, Worker
 from . import scan_jobs, worker  # noqa: F401: imports are inherited by each fork.
 from .db import engine
 from .redis_store import get_redis
+from .worker_health import REGISTRATION_FILE
 
 
 def main():
     # A fork must never reuse a database connection opened by its parent.
     os.register_at_fork(after_in_child=lambda: engine.dispose(close=False))
     connection = get_redis()
-    Worker([Queue("shield", connection=connection)], connection=connection).work()
+    worker = Worker([Queue("shield", connection=connection)], connection=connection)
+    # Keep RQ's unique worker name; a restart must not reuse a stale registration.
+    REGISTRATION_FILE.write_text(worker.key)
+    worker.work()
 
 
 if __name__ == "__main__":

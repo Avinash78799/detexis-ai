@@ -133,6 +133,16 @@ restart an unhealthy process or notify an operator; external monitoring and a
 response procedure still need configuration. This check does not measure worker
 queue delay or scanner availability.
 
+The worker has its own Docker probe using its unique RQ registration, written to
+`/tmp/shield-worker-registration` on each process start. It accepts only an idle
+or busy worker on the `shield` queue with a live expiring registration and no
+death marker. Missing files, Redis failures, suspension and expired registrations
+fail the check. RQ's default idle heartbeat expiry can take up to 480 seconds to
+reveal a stalled process, plus the 30-second probe interval; a busy worker uses
+RQ's shorter monitoring heartbeat. Healthy means registered and heartbeating,
+not that jobs are succeeding or meeting latency targets. Monitor failed jobs and
+pending-event age separately. An unhealthy container still needs operator action.
+
 ## Migration from the original ZIP
 
 The Alembic initial migration expects an empty Shield database. It is not a blind

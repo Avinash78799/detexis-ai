@@ -49,6 +49,12 @@ services:
       context: .
       dockerfile: backend/Dockerfile
     command: ["python", "-m", "app.run_worker"]
+    healthcheck:
+      test: ["CMD", "python", "-m", "app.worker_health"]
+      interval: 30s
+      timeout: 3s
+      retries: 1
+      start_period: 30s
     environment:
       DATABASE_URL: postgresql+psycopg2://detexis:${POSTGRES_PASSWORD:-local-dev-only}@db:5432/detexis
       REDIS_URL: redis://redis:6379/0
