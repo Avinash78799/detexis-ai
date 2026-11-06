@@ -1,5 +1,27 @@
 # Owner-route latency checkpoint
 
+## Upgraded runtime: 6 November 2026
+
+Repeated the same fixture and measurement procedure on source `68c77d8`, using
+FastAPI 0.162.0, Starlette 1.10.0, dnspython 2.9.0 and AnyIO 4.16.0 in the Linux
+API container. Raw results: `owner-route-benchmark-upgraded.json`.
+
+| Route | Median ms | p95 ms |
+| --- | ---: | ---: |
+| Workspace shell | 0.984 | 1.147 |
+| Session | 3.475 | 5.137 |
+| Site list | 6.966 | 9.042 |
+| Incident inbox | 7.691 | 11.740 |
+| Connection diagnostics | 9.964 | 11.109 |
+| Site dashboard | 13.795 | 27.873 |
+| Feed refresh | 12.600 | 13.402 |
+
+Cache, timing and fixture differences prevent attributing changes to the upgrade.
+The limitations below apply equally to both runs. Neither run measures concurrent
+ingest or multi-user browser performance.
+
+## Previous runtime checkpoint
+
 On 6 November 2026, the local Docker API ran `tools/benchmark_owner_routes.py`
 against real PostgreSQL/Redis. The application source was commit `62afd38`.
 The fixture is one synthetic account/site, 10,000 processed events and 100

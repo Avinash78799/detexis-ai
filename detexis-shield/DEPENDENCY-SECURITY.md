@@ -23,8 +23,21 @@ its installed application/test environment using a separate audit-tool venv.
 The local project itself has no published advisory identity; auditing third-party
 packages does not assess Shield's own code or prove the absence of vulnerabilities.
 
-This is a dated advisory check, not a security guarantee. Linux-only dependencies,
-container OS packages, image builds, real PostgreSQL/Redis integration and the
-optional ML image require their corresponding release checks. Historical load
-and owner-route reports used the previous framework stack and do not establish
-performance of the upgraded stack. Rebuild and validate before deployment.
+Both API and scanner images subsequently built and started. Audits of the exact
+installed Python package lists from both Linux containers also reported no known
+vulnerabilities (the local Shield package itself is excluded as unpublished code).
+API, worker and maintenance Docker health probes were healthy. Scanner startup
+was observed; no real domain was scanned as part of this check.
+
+The real-service assertions from `tests/test_services.py` passed inside the
+upgraded API image, using isolated database `shield_upgrade_3b4545e3eae7` and a
+previously empty Redis DB 12. Coverage includes migrations, RQ processing,
+concurrent ingestion while processing, duplicate-worker exclusion, owner incident
+evidence, tenant boundaries and one-use account recovery races. CI run
+`42262890822` at source `68c77d8` completed successfully, including its audit gate.
+
+Owner routes were remeasured; see `OWNER-ROUTE-PERFORMANCE.md`. The historical
+500 events/s load report still uses the previous framework stack. This is a dated
+advisory check, not a security guarantee. Container OS packages, the optional ML
+image, concurrent deployment performance and browser acceptance remain separate
+release checks.
