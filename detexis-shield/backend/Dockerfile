@@ -1,5 +1,6 @@
 FROM python:3.12-slim
 WORKDIR /srv
+RUN python -m pip install --no-cache-dir --upgrade pip==26.2.2
 COPY backend/requirements.txt .
 COPY sensor-sdk /sensor-sdk
 RUN pip install --no-cache-dir -r requirements.txt /sensor-sdk
