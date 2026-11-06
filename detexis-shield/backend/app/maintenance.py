@@ -37,11 +37,23 @@ def tick():
     purge()
 
 
+def run_once():
+    tick()
+    # Refresh only after every maintenance operation completed successfully.
+    from .maintenance_health import record_success
+    from .redis_store import get_redis
+    record_success(get_redis())
+
+
 if __name__ == "__main__":
     import logging
+    from .maintenance_health import progress_key
+    from .redis_store import get_redis
+    # A restarted process must earn its own healthy status.
+    get_redis().delete(progress_key())
     while True:
         try:
-            tick()
+            run_once()
         except Exception:
             logging.error("Maintenance failed; will retry next minute")
         time.sleep(60)

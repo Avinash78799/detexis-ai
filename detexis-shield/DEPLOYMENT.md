@@ -123,6 +123,16 @@ delivers notifications and purges records after 30 days by default. Change
 Observe failed RQ jobs and alert outbox status. Data retention also requires a
 backup-retention policy outside this code.
 
+Maintenance has a separate Docker health check: it becomes healthy only after
+all operations in a cycle succeed. A Redis marker scoped to the container expires
+after 180 seconds without success; a restart clears the old marker. Startup has
+a 180-second grace period. Inspect `docker compose ps` and maintenance logs when
+it becomes unhealthy. A healthy API `/ready` checks database/Redis connectivity
+only and does not prove background progress. Docker health status alone does not
+restart an unhealthy process or notify an operator; external monitoring and a
+response procedure still need configuration. This check does not measure worker
+queue delay or scanner availability.
+
 ## Migration from the original ZIP
 
 The Alembic initial migration expects an empty Shield database. It is not a blind
