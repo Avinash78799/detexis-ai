@@ -34,11 +34,11 @@ This document records current implementation, not a production certification.
 
 ## Validation checkpoint
 
-236 local tests passed with one real-service test skipped locally after the
-installation/data guides. CI at `0369c12` passed 235 tests with real PostgreSQL/Redis,
-including incident evidence/triage and simultaneous one-use recovery attempts;
+237 local tests passed with one real-service test skipped locally after the
+transactional worker/index changes. CI at `a60fb76` passed 238 tests with real PostgreSQL/Redis,
+including concurrent ingestion/worker exclusion, incident triage and one-use recovery races;
 the separate ML software smoke job also passed. JavaScript syntax checks passed.
-The Docker stack rebuilt and started successfully through migration `0007`.
+The Docker stack rebuilt and started successfully through migration `0008`.
 A custom-format database restore into a separate database preserved 899,915
 synthetic events and passed the recorded integrity checks in `BACKUP-RESTORE.md`.
 A real browser previously verified
@@ -58,14 +58,16 @@ navigation and a setup checklist; desktop and 390-pixel browser review passed
 without horizontal overflow. The public data-handling link/page also worked.
 
 The latest ten-minute run accepted and processed 300,000 events at 500 events/s
-with no failed jobs or final backlog, but p95 processing delay was 102.931 seconds.
-It fails the new ten-second processing-latency release target. The original report
-and query investigation are preserved in `PROCESSING-LATENCY.md`; the historical
-faster run must not be substituted for this result.
+with no HTTP/transport failures or failed jobs. Median/p95 processing lag was
+0.106/2.198 seconds, passing the ten-second local target. The 3,000-event backlog
+at load end drained in 8.953 seconds. `load-test-compatible-lock.json` records the
+runtime/source/settings; failed preceding reports and the query/write/locking
+investigation remain in `PROCESSING-LATENCY.md`.
 
 ## Required before inviting real users
 
-- Fix and remeasure processing latency for new, growing tenants under the full load test.
+- Measure mixed-traffic and actual deployment performance; the passing local
+  workload is rules-only, one site/IP hash and uniform benchmark requests.
 - Measure new dashboard and account routes. Finish accessibility and error-state review.
 - Finish recovery browser acceptance. The owner chose
   in-app alerts first; email verification, delivery and email-based resets need a

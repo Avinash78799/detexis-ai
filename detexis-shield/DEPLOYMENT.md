@@ -54,9 +54,10 @@ for ten minutes. It reports ingestion latency, processing latency, minute-by-min
 backlog, failed RQ jobs and a bounded drain check in `load-test-results.json`.
 The test sends only to loopback. It leaves test data in the validation volume.
 Acceptance also requires p95 receipt-to-processing lag at most ten seconds by
-default (`--max-processing-p95-seconds 10`). See `PROCESSING-LATENCY.md`: the latest
-capacity run drained successfully but missed this latency target and remains
-release work. Event acceptance alone is not prompt incident delivery.
+default (`--max-processing-p95-seconds 10`). See `PROCESSING-LATENCY.md`: after
+query, write, index and lock fixes, the latest local run passed at 2.198 seconds
+p95. Earlier missed targets are retained. Repeat this gate on the deployment host;
+event acceptance alone is not prompt incident delivery.
 For a short diagnostic use `--seconds 30`; this is not the full acceptance run.
 An optional absolute `SHIELD_VALIDATION_COMPOSE` path supplies a local Compose
 override. Reports mark whether an override was used. The default worker uses

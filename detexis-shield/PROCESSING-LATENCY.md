@@ -133,6 +133,27 @@ database; a full-load latency result is still required.
 
 See PostgreSQL's [row-lock conflict table](https://www.postgresql.org/docs/16/explicit-locking.html#LOCKING-ROWS).
 
+## Passing full run
+
+`load-test-compatible-lock.json` passed the unchanged gate with source commit
+`a60fb76` (worker SHA-256 `893aeb200cff591e9577aab11faaf617c4fdd12d89fc054917fa286a3cda6a8f`).
+It sent, accepted and processed 300,000 events in the nominal 500 events/s,
+600-second workload. Actual send/accept duration was 599.906 s. Median/p95
+receipt-to-processing lag was **0.106/2.198 s**. All 3,000 HTTP batches returned
+202, with no transport failures or failed RQ jobs. There were 3,000 events pending
+at load end; the queue drained in 8.953 s, leaving zero pending/queued jobs.
+
+The environment used one rules-only RQ worker, one site/IP hash and uniform
+`GET /benchmark` requests, migration `0008`, Python 3.12.16, PostgreSQL 16.15,
+Redis 7.4.10 and eight visible CPUs. Cache/write settings and durable-commit flags
+are recorded in the report. CI at `a60fb76` passed 238 tests including real
+PostgreSQL ingestion/worker concurrency, duplicate workers and recovery races;
+the separate ML software smoke job passed. Earlier failed reports remain intact.
+
+This clears this local workload's processing-latency gate. It does not prove a
+production SLA, mixed-attack performance, dashboard freshness including batching/
+polling, ML-enabled throughput, real-data false-positive rate or real-user usage.
+
 PostgreSQL documents the tradeoffs for [partial indexes](https://www.postgresql.org/docs/16/indexes-partial.html),
 [cache/background writer settings](https://www.postgresql.org/docs/16/runtime-config-resource.html)
 and [WAL compression](https://www.postgresql.org/docs/16/runtime-config-wal.html).

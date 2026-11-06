@@ -1,6 +1,7 @@
 services:
   proxy:
     image: caddy:2
+    restart: unless-stopped
     environment:
       SHIELD_DOMAIN: ${SHIELD_DOMAIN:?Set the Shield backend DNS domain}
     ports: ['80:80', '443:443']
