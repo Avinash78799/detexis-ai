@@ -7,6 +7,7 @@ import json
 import math
 import re
 import subprocess
+import tempfile
 import time
 import uuid
 from datetime import datetime, timezone
@@ -25,6 +26,23 @@ def docker(*args):
     if result.returncode:
         raise RuntimeError(result.stderr)
     return result.stdout
+
+
+def write_report(target, report):
+    """Replace a snapshot atomically so interruptions cannot truncate the prior one."""
+    target.parent.mkdir(parents=True, exist_ok=True)
+    temporary = None
+    try:
+        with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", dir=target.parent,
+                                         prefix=target.name, suffix=".tmp", delete=False) as handle:
+            temporary = Path(handle.name)
+            json.dump(report, handle, indent=2)
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.replace(temporary, target)
+    finally:
+        if temporary is not None:
+            temporary.unlink(missing_ok=True)
 
 
 def ready():
@@ -158,6 +176,11 @@ def main():
     load = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(load)
     print(f"Starting {args.rate} events/second for {args.seconds} seconds", flush=True)
+    checkpoint = {"state": "running", "started_at": datetime.now(timezone.utc).isoformat(),
+                  "site_id": site_id, "profile": args.profile, "target_rate": args.rate,
+                  "duration_seconds": args.seconds, "runtime_details": runtime,
+                  "note": "Incomplete checkpoint, not an acceptance result or proof the process is live."}
+    write_report(args.output, checkpoint)
     async def measured_load():
         samples = []
         async def monitor():
@@ -165,6 +188,8 @@ def main():
                 await asyncio.sleep(60)
                 sample = await asyncio.to_thread(counters, site_id)
                 samples.append(sample)
+                write_report(args.output, {**checkpoint, "updated_at": datetime.now(timezone.utc).isoformat(),
+                                          "backlog_samples_each_minute": list(samples)})
                 print(f"Load progress: {sample['total']} received, {sample['pending']} pending", flush=True)
         task = asyncio.create_task(monitor())
         try:
@@ -178,6 +203,10 @@ def main():
             except asyncio.CancelledError:
                 pass
     report = asyncio.run(measured_load())
+    report["state"] = "draining"
+    report["site_id"] = site_id
+    report["runtime_details"] = runtime
+    write_report(args.output, report)
     report["database_at_load_end"] = counters(site_id)
     start = time.monotonic()
     final = report["database_at_load_end"]
@@ -196,8 +225,8 @@ def main():
     lag = report["processing"]["lag_p95_seconds"]
     report["latency_target_passed"] = lag is not None and lag <= args.max_processing_p95_seconds
     report["acceptance_passed"] = report["capacity_passed"] and report["latency_target_passed"]
-    target = args.output
-    target.write_text(json.dumps(report, indent=2), encoding="utf-8")
+    report["state"] = "completed"
+    write_report(args.output, report)
     print(json.dumps(report, indent=2), flush=True)
     if not report["acceptance_passed"]:
         raise SystemExit(1)

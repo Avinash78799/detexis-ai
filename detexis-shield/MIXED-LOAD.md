@@ -1,5 +1,15 @@
 # Mixed-traffic checkpoint
 
+## Interrupted candidate run
+
+After the 6 November batching change, a ten-minute run was started but its process
+handle was missing on 7 November, Docker was stopped, and no final report existed.
+That run is unverified; do not infer a pass or failure from it. The validation
+runner now atomically saves initial and minute-by-minute checkpoints, followed by
+a draining snapshot and a completed report. Only a completed report with the
+acceptance flags proves the gate result. A `running` file may be stale and is
+never proof of a live process. Failed serialization preserves the prior snapshot.
+
 ## Ten-minute run: latency gate failed
 
 The subsequent full-duration run on 6 November 2026 accepted all 300,000 events
