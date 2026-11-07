@@ -98,6 +98,16 @@ p95 for a normal query, and 1.07665 / 1.7761 ms for the large-query profile. See
 [SENSOR.md](SENSOR.md) and the original JSON reports for method and limits. These
 are not Flask or deployed-server overhead measurements.
 
+The 7 November Flask/WSGI paired test-client run measured added latency of
+0.090 ms median / 0.492 ms p95 for a normal query, and 0.749 / 2.410 ms for
+a large encoded query. Both passed the <5 ms median / <10 ms p95 added-latency
+targets. Each profile used 100 warmups and 1,000 paired samples with alternating
+baseline/sensor order, including response consumption and close. The real sender
+ran against unavailable loopback port 9; all host responses completed. This is
+not a socket-server, concurrent or production latency measurement. See
+`flask-overhead-20261107.json` for versions/source hashes and
+`tools/benchmark_flask_sensor.py` for reproduction. Differences are not clamped.
+
 The Docker test checks duplicate suppression, RQ incident creation, authenticated
 dashboard access and a host response while the actual ingest API is stopped.
 Scanner-container checks confirmed no datastore DNS access, datastore credentials

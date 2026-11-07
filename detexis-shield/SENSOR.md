@@ -85,7 +85,12 @@ per variant and a simulated backend connection failure:
 | Large query | 1.07665 ms | 1.7761 ms |
 
 Both meet the <5 ms median / <10 ms p95 targets in that microbenchmark. These are
-not Flask, network/server or production measurements. Automated tests cover
+not Flask, network/server or production measurements. A separate Flask paired
+test-client run on 7 November measured normal-query added median/p95 of
+0.090/0.492 ms and large-query added median/p95 of 0.749/2.410 ms. Its real
+sender used an unavailable loopback backend and every response completed.
+See `flask-overhead-20261107.json` and `tools/benchmark_flask_sensor.py`.
+This does not establish deployed-server or concurrent overhead. Automated tests cover
 buffer pressure, retries, request exceptions and fail-open behavior; the Docker
 validation also checks a host response while the real ingest API is stopped.
 

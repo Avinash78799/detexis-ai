@@ -1,6 +1,17 @@
 # Implementation and acceptance status
 
-Updated 1 November 2026. This file distinguishes code from evidence.
+Current checkpoint: 7 November 2026. See [PRODUCT-STATUS.md](PRODUCT-STATUS.md)
+for current features and [RELEASE-READINESS.md](RELEASE-READINESS.md) for unresolved
+release gates. CI run 42345456703 at source `f9dc418` passed. The full mixed local
+load gate passed with 300,000 events and 1.608-second processing p95. ASGI and
+Flask in-process overhead measurements are recorded in `BENCHMARKS.md`.
+These checks do not establish production hosting, real-user adoption or real-data
+ML quality. Hosting must require neither payment nor card verification.
+
+## Historical 1 November checkpoint
+
+The phase table and measurements below are retained as historical evidence;
+they are not the latest test counts, runtime versions or load results.
 
 | Phase | Implemented | Remaining acceptance |
 | --- | --- | --- |
