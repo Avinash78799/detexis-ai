@@ -43,6 +43,11 @@ This document records current implementation, not a production certification.
 
 ## Validation checkpoint
 
+On 7 November, the current local suite passed 251 Python tests (one real-service
+test skipped locally) and six Node UI failure/recovery tests. The completed
+mixed-load report's worker hash matches current source. The earlier checkpoint
+history below records separately scoped CI and browser evidence.
+
 240 local tests passed with one real-service test skipped after the maintenance
 health and incident-retention race changes; six additional worker-health tests
 passed after that checkpoint. Worker and maintenance Docker probes were verified
@@ -68,24 +73,21 @@ The revised signed-in workspace has separate website controls, incident/setup
 navigation and a setup checklist; desktop and 390-pixel browser review passed
 without horizontal overflow. The public data-handling link/page also worked.
 
-The latest ten-minute run accepted and processed 300,000 events at 500 events/s
-with no HTTP/transport failures or failed jobs. Median/p95 processing lag was
-0.106/2.198 seconds, passing the ten-second local target. The 3,000-event backlog
-at load end drained in 8.953 seconds. `load-test-compatible-lock.json` records the
-runtime/source/settings; failed preceding reports and the query/write/locking
-investigation remain in `PROCESSING-LATENCY.md`.
+The 7 November ten-minute mixed run accepted and processed 300,000 events at
+500.104 events/s, with zero HTTP/transport failures, failed jobs or final backlog.
+Processing median/p95 was 0.135/1.608 seconds, passing the ten-second local target.
+`mixed-load-batched-600s.json` records runtime/source/settings. `MIXED-LOAD.md`
+retains the prior 17.814-second failure; older uniform results and investigations
+remain in `PROCESSING-LATENCY.md`.
 
 ## Required before inviting real users
 
-- Resolve the upgraded stack's ten-minute mixed-load latency miss: 300,000
-  events were accepted/processed, but processing p95 was 17.814 seconds against
-  a ten-second target. See `MIXED-LOAD.md`; the two-minute pass is insufficient.
 - Hosting now requires no card verification as well as no paid services. Oracle
   is excluded. No permanent cardless host for the complete stack has yet been
   verified; student-credit eligibility is being checked as a temporary option.
 
-- Measure mixed-traffic and actual deployment performance; the passing local
-  workload is rules-only, one site/IP hash and uniform benchmark requests.
+- Measure actual deployment and multi-tenant/concurrent-browser performance;
+  the passing mixed local workload is rules-only, one site and 128 client hashes.
 - Warm sequential owner-route application latency was measured against real
   PostgreSQL/Redis with 10,000 synthetic events; dashboard p95 was 44.087 ms.
   See `OWNER-ROUTE-PERFORMANCE.md` for scope and reproduction. Concurrent/deployed

@@ -1,5 +1,25 @@
 # Mixed-traffic checkpoint
 
+## Full batched-worker run: passed 7 November 2026
+
+The completed report `mixed-load-batched-600s.json` passed both unchanged gates:
+300,000 events at 500 events/s for 600 seconds, and processing p95 <=10 seconds.
+Actual acceptance rate was 500.104 events/s. Processing median/p95 was
+0.135/1.608 seconds. Ingest median/p95 was 80.295/322.197 ms. All 3,000 HTTP
+batches returned 202, with zero transport failures, failed RQ jobs, queued jobs
+or pending events at load end. Three functional setup events are additional.
+
+This run used the batched worker introduced at `0012b66`, the upgraded framework,
+one RQ worker and ML disabled. The recorded worker SHA256
+`053a4b701903d24e3ce7ba708c22d3575a5a9a0623818ba0efe3e92a4d4ed574`
+matched the current source. Atomic checkpoint reporting was enabled. One minute
+sample reached 1,500 pending and the following sample returned to 100.
+
+The prior 17.814-second failure remains below. The improved result validates
+this local synthetic profile; differences in cache, database history and shared
+desktop activity prevent assigning the whole change to batching alone. This is
+not an actual-host, multi-tenant, concurrent-browser or ML-enabled load result.
+
 ## Interrupted candidate run
 
 After the 6 November batching change, a ten-minute run was started but its process

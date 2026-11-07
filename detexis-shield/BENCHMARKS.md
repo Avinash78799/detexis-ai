@@ -1,6 +1,18 @@
 # Local validation results
 
-## Latest full run: 2 November 2026
+## Latest full mixed run: 7 November 2026
+
+The upgraded stack with the batched worker processed all 300,000 mixed-profile
+events at 500.104 events/s over 600 seconds. Processing median/p95 was
+0.135/1.608 seconds, passing the unchanged ten-second target. Ingest batch
+median/p95 was 80.295/322.197 ms. No transport failures, failed RQ jobs, queued
+jobs or pending events remained at load end. One worker, 128 synthetic client
+hashes, one site and ML disabled. See [MIXED-LOAD.md](MIXED-LOAD.md) and the
+[complete raw report](mixed-load-batched-600s.json) for provenance and limits.
+This passing local run does not establish production or multi-tenant performance;
+the preceding failed full mixed run is retained.
+
+## Previous uniform full run: 2 November 2026
 
 Source `a60fb76`, migration `0008`. The [runtime-fingerprinted report](load-test-compatible-lock.json)
 passed the 500 events/s, ten-minute rules-only workload and the ten-second p95
