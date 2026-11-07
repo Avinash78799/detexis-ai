@@ -42,6 +42,37 @@ def test_threshold_selected_from_benign_fpr_confidence_bound():
     assert result["recall"] == 1
 
 
+def test_fast_threshold_matches_exhaustive_search_with_ties_and_endpoints():
+    import random
+    rng = random.Random(42)
+    labels = [0] * 200 + [1] * 60
+    probabilities = [rng.choice([0, .1, .25, .5, .9, 1]) for _ in labels]
+    for target in (.05, .2, .8):
+        candidates = sorted({0.0, 1.0, *probabilities})
+        expected = next(value for value in candidates
+                        if training.metrics(labels, probabilities, value)["fpr_upper_95"] <= target)
+        assert training.choose_threshold(labels, probabilities, target) == expected
+
+
+@pytest.mark.parametrize("labels,probabilities", [
+    ([0, 1], [.1]), ([0], [float("nan")]), ([0], [float("inf")]),
+    ([0], [-.1]), ([1], [1.1]), ([2], [.5]), ([True], [.5]), ([], []),
+])
+def test_invalid_evaluation_scores_cannot_silently_improve_metrics(labels, probabilities):
+    with pytest.raises(ValueError):
+        training.metrics(labels, probabilities, .5)
+    with pytest.raises(ValueError):
+        training.choose_threshold(labels, probabilities, .1)
+
+
+def test_large_distinct_score_calibration_selects_first_feasible_threshold():
+    probabilities = [index / 20000 for index in range(20000)]
+    threshold = training.choose_threshold([0] * len(probabilities), probabilities, .01)
+    index = probabilities.index(threshold)
+    assert training.upper_fpr(len(probabilities) - index - 1, len(probabilities)) <= .01
+    assert training.upper_fpr(len(probabilities) - index, len(probabilities)) > .01
+
+
 def test_rejected_artifact_is_not_loaded(tmp_path, monkeypatch):
     import json
     from app.ml_runtime import classify

@@ -5,6 +5,7 @@ import json
 import math
 import sys
 import uuid
+from bisect import bisect_right
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -67,7 +68,22 @@ def upper_fpr(fp, negatives):
     return (p + z*z/(2*negatives) + z*math.sqrt(p*(1-p)/negatives + z*z/(4*negatives*negatives))) / (1 + z*z/negatives)
 
 
+def checked_scores(labels, probabilities):
+    labels, probabilities = list(labels), list(probabilities)
+    if not labels or len(labels) != len(probabilities):
+        raise ValueError("labels and probabilities must be nonempty and have equal lengths")
+    if any(type(label) is not int or label not in (0, 1) for label in labels):
+        raise ValueError("evaluation labels must be integer 0 or 1")
+    probabilities = [float(value) for value in probabilities]
+    if any(not math.isfinite(value) or not 0 <= value <= 1 for value in probabilities):
+        raise ValueError("probabilities must be finite and between zero and one")
+    return labels, probabilities
+
+
 def metrics(labels, probabilities, threshold):
+    labels, probabilities = checked_scores(labels, probabilities)
+    if not math.isfinite(threshold) or not 0 <= threshold <= 1:
+        raise ValueError("invalid operating threshold")
     tp = fp = tn = fn = 0
     for label, probability in zip(labels, probabilities):
         alert = probability > threshold
@@ -81,9 +97,17 @@ def metrics(labels, probabilities, threshold):
 
 
 def choose_threshold(labels, probabilities, target):
+    if not 0 < target < 1:
+        raise ValueError("invalid target FPR")
+    labels, probabilities = checked_scores(labels, probabilities)
+    benign = sorted(probability for label, probability in zip(labels, probabilities) if label == 0)
     candidates = sorted({0.0, 1.0, *(float(p) for p in probabilities)})
     for value in candidates:
-        if metrics(labels, probabilities, value)["fpr_upper_95"] <= target:
+        # Strict `score > threshold` means ties at the threshold do not alert.
+        # Binary search counts the benign scores above it without rescanning all
+        # records for every candidate: O(n log n), instead of quadratic work.
+        false_positives = len(benign) - bisect_right(benign, value)
+        if upper_fpr(false_positives, len(benign)) <= target:
             return value
     raise ValueError("insufficient benign calibration evidence for target FPR")
 
@@ -121,6 +145,7 @@ def train(rows, output, cross_dataset, target_fpr=.01, model_kind="logistic", mi
                 "model_version": str(uuid.uuid4()), "model_kind": model_kind,
                 "evaluation_status": "validated" if validated else "rejected",
                 "metrics": evaluations, "audit": audit,
+                "fpr_bound_method": "Wilson 95%; assumes independent Bernoulli requests",
                 "training_records": len(fit), "cross_dataset_name": cross_dataset,
                 "dataset_sha256": hashlib.sha256(json.dumps([
                     [r["path"], r["query_redacted"], r["ts"], r["session_id"], r["dataset"], r["label"]]

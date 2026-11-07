@@ -43,6 +43,19 @@ sets cannot justify it. Artifacts are rejected when temporal or cross-dataset
 results fail the FPR/recall gates. Choose data, thresholds and minimum recall before
 opening the final test set; do not tune repeatedly on the held-out set.
 
+Threshold search sorts scores and counts benign values above each candidate with
+binary search, preserving the runtime's strict `score > threshold` comparison,
+including ties. It requires O(n log n) work rather than rescanning every record
+for every score. Unequal score/label lengths, empty evaluation sets, nonbinary
+labels and nonfinite/out-of-range probabilities are rejected instead of silently
+truncating metrics or treating invalid scores as non-alerts.
+
+The Wilson bound assumes independent Bernoulli requests. Session grouping reduces
+split leakage but does not make requests within sessions independent. Metadata
+records this assumption; the bound is not a guarantee for correlated production
+traffic. Representative site/session-level uncertainty analysis remains required
+before real-world FPR claims. Public benchmark labels are not customer evidence.
+
 Use a new artifact directory for each run. Only a validated artifact contains
 `model.joblib`. After independently reviewing its report, mount it read-only in the
 worker, install compatible ML dependencies, set `SHIELD_MODEL_DIR`, and restart the
