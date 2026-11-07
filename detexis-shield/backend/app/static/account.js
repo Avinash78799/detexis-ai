@@ -2,10 +2,7 @@
 let csrf = "";
 const node = id => document.getElementById(id);
 async function api(path, body) {
-  const response = await fetch('/app/api/' + path, {method: body === undefined ? 'GET' : 'POST', credentials:'same-origin', headers:{'Content-Type':'application/json','X-CSRF-Token':csrf}, body:body === undefined ? undefined : JSON.stringify(body)});
-  const data = response.status === 204 ? {} : await response.json();
-  if (!response.ok) throw new Error(typeof data.detail === 'string' ? data.detail : 'Check your details and try again.');
-  return data;
+  return window.shieldApi(path, body, csrf);
 }
 async function showWorkspace(data) {
   csrf = data.csrf_token;
@@ -166,4 +163,4 @@ for (const id of ['auth-form','site-form','recover-form','recovery-form','passwo
   finally {buttons.forEach(b => b.disabled = false);}
 });
 node('logout').addEventListener('click', async () => {try {await api('logout', {}); location.reload();} catch (error) {node('message').textContent = error.message;}});
-api('session').then(showWorkspace).catch(() => {node('auth').hidden = false;});
+api('session').then(showWorkspace).catch(error => {node('auth').hidden = false; if (error.status !== 401) node('message').textContent = error.message;});

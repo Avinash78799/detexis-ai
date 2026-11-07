@@ -3,11 +3,7 @@ const el = id => document.getElementById(id);
 let csrf = '', cursor = null, selected = null;
 const statuses = {open:'Open', acknowledged:'Acknowledged', resolved:'Resolved', false_positive:'False positive'};
 async function api(path, body) {
-  const response = await fetch('/app/api/' + path, {method:body === undefined ? 'GET':'POST', credentials:'same-origin', headers:{'Content-Type':'application/json','X-CSRF-Token':csrf}, body:body === undefined ? undefined:JSON.stringify(body)});
-  const data = await response.json();
-  if (response.status === 401) throw new Error('Your session expired. Return to your workspace and sign in.');
-  if (!response.ok) throw new Error(typeof data.detail === 'string' ? data.detail:'Unable to complete this action.');
-  return data;
+  return window.shieldApi(path, body, csrf);
 }
 function text(tag, content) {const node = document.createElement(tag); node.textContent = content; return node;}
 async function load(reset = true) {

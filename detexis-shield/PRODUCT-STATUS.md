@@ -35,6 +35,11 @@ This document records current implementation, not a production certification.
   manual retry/navigation and records successful update times. Refresh requests
   time out after ten seconds. Node regression coverage exercises failure, recovery
   and retry behavior; fresh browser inspection of these controls remains pending.
+- Account and inbox requests share a fifteen-second timeout and actionable
+  offline/server/session-expiry errors. Timed-out mutations warn that completion
+  is uncertain and are never automatically retried. Node tests cover these paths;
+  both templates render with the shared helper loaded first. Browser review of
+  these states remains pending.
 
 ## Validation checkpoint
 
