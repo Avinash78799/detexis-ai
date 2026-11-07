@@ -17,12 +17,12 @@ The percentage previously discussed was an effort estimate, not a release gate.
 | ML judged by FPR, time/session split and cross-dataset test | Logistic/XGBoost/SHAP software checks; hardened/scalable calibration | Compatible provenance-reviewed datasets, real benign traffic, independent evaluation; ML remains disabled |
 | 500 events/s for ten minutes | Full mixed local report passes with 1.608-second p95 and zero final backlog | Actual-host, multi-tenant/concurrent-browser and ML-enabled measurements |
 | Durable deployment and operations | Compose/TLS definitions, worker/maintenance health probes, local restore rehearsal | Persistent HTTPS origin, off-host backup restore, monitoring destination, operator contact/privacy/removal process |
-| Zero cost and no card | Constraint documented; no paid resources created | A verified suitable hosting account/server; Oracle excluded; student-credit eligibility unanswered |
+| Zero cost and no card | Owner chose computer hosting; no cloud account is required; see `COMPUTER-HOSTING.md` | Working Docker engine, stable reachable HTTPS access for remote sensors, availability and backup arrangements |
 | Five to ten real sites and honest resume/demo | Onboarding runbook; synthetic fixtures clearly labeled | Owner permission, installation, observed usage, actual N and demo video |
 
 Next independently actionable work includes deployment-config validation, further
 local multi-tenant/abuse checks and accessibility review. External inputs needed
-are a suitable no-card host or permissioned existing server, a stable HTTPS origin,
+are the chosen computer's operating/backup arrangements, a stable HTTPS origin,
 operator contact/backup arrangements, and permissioned owners/traffic. Credit-limited
 student hosting, sleeping demos and computer-hosted tunnels cannot be represented
 as permanent production hosting. Do not invent timestamps, sessions, labels,

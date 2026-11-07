@@ -1,5 +1,8 @@
 # Running Shield
 
+The current chosen target is the owner's computer. Start with
+[COMPUTER-HOSTING.md](COMPUTER-HOSTING.md); obtaining a cloud server is not required.
+
 The existing app at https://detexis.vercel.app/ is Detexis AI. Shield is a separate
 long-running service with PostgreSQL, Redis, workers and an isolated scanner. Root
 `vercel.json` and `render.yaml` continue to describe the legacy app. No production

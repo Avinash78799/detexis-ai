@@ -82,9 +82,9 @@ remain in `PROCESSING-LATENCY.md`.
 
 ## Required before inviting real users
 
-- Hosting now requires no card verification as well as no paid services. Oracle
-  is excluded. No permanent cardless host for the complete stack has yet been
-  verified; student-credit eligibility is being checked as a temporary option.
+- The owner chose computer hosting, removing the cloud-account requirement.
+  See `COMPUTER-HOSTING.md` for the isolated instance launcher, HTTPS access,
+  restart/availability limits and private backup commands.
 
 - Measure actual deployment and multi-tenant/concurrent-browser performance;
   the passing mixed local workload is rules-only, one site and 128 client hashes.
@@ -97,8 +97,8 @@ remain in `PROCESSING-LATENCY.md`.
   configured sender and will be documented rather than silently simulated.
 - Deployment configuration validation, off-host backup/restore, session/key
   abuse review, operational monitoring and deployment-specific operator/privacy details.
-- Persistent hosting within the user's zero-paid-services budget. A temporary
-  computer-hosted Cloudflare tunnel is a development demonstration.
+- Computer-hosted operation within the zero-paid-services budget: a stable
+  reachable HTTPS address, power/internet availability and recovery procedures.
 - Permissioned site-owner onboarding and observed usage. Synthetic requests and
   test accounts must never be counted as actual customer adoption.
 

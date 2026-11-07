@@ -1,5 +1,9 @@
 # Hosting with no paid services
 
+The owner has now chosen to host on their own computer. Follow
+[COMPUTER-HOSTING.md](COMPUTER-HOSTING.md); a cloud account is no longer required.
+The provider research below is retained as optional historical reference.
+
 ## Current constraint: no payment-card details
 
 The owner explicitly requires zero paid services **and no card verification**.

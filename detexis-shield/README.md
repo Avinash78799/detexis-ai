@@ -20,6 +20,10 @@ flowchart LR
 
 ## Run and test
 
+To use your computer as the host, follow [COMPUTER-HOSTING.md](COMPUTER-HOSTING.md).
+It provides a separate persistent instance, private credentials, status/log/backup
+commands and HTTPS-access guidance. The commands below are for development.
+
 Use Python 3.12. From this directory:
 
 ```sh
