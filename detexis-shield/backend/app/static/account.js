@@ -163,4 +163,9 @@ for (const id of ['auth-form','site-form','recover-form','recovery-form','passwo
   finally {buttons.forEach(b => b.disabled = false);}
 });
 node('logout').addEventListener('click', async () => {try {await api('logout', {}); location.reload();} catch (error) {node('message').textContent = error.message;}});
-api('session').then(showWorkspace).catch(error => {node('auth').hidden = false; if (error.status !== 401) node('message').textContent = error.message;});
+if (location.protocol !== 'https:') {
+  node('message').textContent = 'Account actions require HTTPS. Open your Shield service’s HTTPS address to sign in, create an account or recover access. The installation and data-handling guides remain available here.';
+  node('auth').querySelectorAll('input, button[type="submit"]').forEach(field => field.disabled = true);
+} else {
+  api('session').then(showWorkspace).catch(error => {node('auth').hidden = false; if (error.status !== 401) node('message').textContent = error.message;});
+}
