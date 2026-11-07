@@ -20,6 +20,10 @@ from werkzeug.security import generate_password_hash, check_password_hash
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'intrusion-detection-secret-key-2024')
 
+
+from shield_verification import blueprint as shield_verification
+app.register_blueprint(shield_verification)
+
 if not app.debug:
     app.config.update(
         SESSION_COOKIE_SECURE=True,

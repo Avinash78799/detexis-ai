@@ -1,0 +1,68 @@
+name: Shield tests
+on:
+  push:
+    paths: ['detexis-shield/**', '.github/workflows/shield.yml', 'shield_verification.py', 'app.py']
+  pull_request:
+    paths: ['detexis-shield/**', '.github/workflows/shield.yml', 'shield_verification.py', 'app.py']
+permissions:
+  contents: read
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: shield
+          POSTGRES_PASSWORD: ci-only
+          POSTGRES_DB: shield
+        ports: ['5432:5432']
+        options: --health-cmd "pg_isready -U shield" --health-interval 5s --health-timeout 3s --health-retries 10
+      redis:
+        image: redis:7-alpine
+        ports: ['6379:6379']
+        options: --health-cmd "redis-cli ping" --health-interval 5s --health-timeout 3s --health-retries 10
+    env:
+      INTEGRATION_DATABASE_URL: postgresql+psycopg2://shield:ci-only@localhost:5432/shield
+      INTEGRATION_REDIS_URL: redis://localhost:6379/15
+    defaults:
+      run:
+        working-directory: detexis-shield
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install --upgrade pip==26.2.2
+      - run: python -m pip install -r requirements-dev.txt -e sensor-sdk
+      - name: Audit installed application and test dependencies
+        run: |
+          python -m venv /tmp/shield-audit
+          /tmp/shield-audit/bin/python -m pip install pip-audit==2.10.1
+          /tmp/shield-audit/bin/python -m pip_audit --path "$(python -c 'import sysconfig; print(sysconfig.get_path("purelib"))')"
+      - run: python -m pytest -q -p no:cacheprovider
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --test tests/*.test.cjs
+      - run: docker compose config --quiet
+  ml-smoke:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: detexis-shield
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r ml/requirements.txt -e sensor-sdk
+      - run: python tools/smoke_ml.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ml-software-smoke
+          path: detexis-shield/ml-smoke-results.json

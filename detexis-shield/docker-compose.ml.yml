@@ -1,0 +1,9 @@
+services:
+  worker:
+    build:
+      args:
+        WITH_ML: '1'
+    environment:
+      SHIELD_MODEL_DIR: /models
+    volumes:
+      - ${SHIELD_MODEL_PATH:?Set the absolute validated artifact directory}:/models:ro
