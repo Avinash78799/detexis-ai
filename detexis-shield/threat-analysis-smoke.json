@@ -1,0 +1,37 @@
+{
+  "checked_at": "2026-11-08T07:46:38.181354+00:00",
+  "passed": true,
+  "ready_before": {
+    "ok": true
+  },
+  "ready_after": {
+    "ok": true
+  },
+  "results": [
+    {
+      "sample": "benign_text",
+      "sha256": "6032255efba305db392d8228e248a1e6f01c55c4b50c6cb14e7f7e1302377f63",
+      "bytes": 47,
+      "elapsed_ms": 10.73825699995723,
+      "verdict": "no_signature_detected",
+      "signature": null,
+      "engine": "ClamAV 1.4.6/28177/Sun Nov  8 06:23:52 2026",
+      "signatures_updated_at": "2026-11-08T06:23:52+00:00"
+    },
+    {
+      "sample": "harmless_eicar_test",
+      "sha256": "275a021bbfb6489e54d471899f7db9d1663fc695ec2fe2a2c4538aabf651fd0f",
+      "bytes": 68,
+      "elapsed_ms": 4.5468980000578085,
+      "verdict": "signature_detected",
+      "signature": "Eicar-Test-Signature",
+      "engine": "ClamAV 1.4.6/28177/Sun Nov  8 06:23:52 2026",
+      "signatures_updated_at": "2026-11-08T06:23:52+00:00"
+    }
+  ],
+  "source_sha256": {
+    "malware.py": "b8505822538a556cd93adcec1288c1e90ab62a7cd31a27cfdea664a196b4840d",
+    "threat_analysis.py": "ef6acf37c3b3b1952c4f512e0991ce96499b8a00a0d1f6bea73916f0343cf85a"
+  },
+  "scope": "Real engine wiring using benign text and harmless EICAR only. Not real-malware accuracy, broad file coverage, concurrent load or browser validation."
+}

@@ -338,6 +338,12 @@ def data_handling_page(request: Request):
     return templates.TemplateResponse(request=request, name="data.html", context={})
 
 
+@pages.get("/app/analyze")
+def analysis_page(request: Request, user=Depends(owner)):
+    from .dashboard import templates
+    return templates.TemplateResponse(request=request, name="analyze.html", context={})
+
+
 @pages.get("/")
 def home():
     from fastapi.responses import RedirectResponse

@@ -3,6 +3,14 @@
 The active objective is a self-service product with permissioned real users.
 This document records current implementation, not a production certification.
 
+8 November: authenticated `/app/analyze` adds bounded request-rule inspection
+and optional isolated ClamAV file-signature scanning. Real benign/EICAR engine
+acceptance passed; see `THREAT-ANALYSIS.md` and its fingerprinted runtime report.
+The new analysis UI has Node interaction coverage but still needs rendered browser
+acceptance. The root Detexis app is prepared as a lightweight entry point; the
+old analyzer source is archived and its POST routes explain migration (410).
+Vercel production migration is not verified or claimed; see `../MIGRATION.md`.
+
 ## Owner workflow implemented
 
 - `/` opens `/app`: account registration/sign-in and owner workspace.

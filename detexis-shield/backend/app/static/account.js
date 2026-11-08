@@ -18,7 +18,7 @@ async function showWorkspace(data) {
   const next = new URLSearchParams(location.search).get('next');
   if (next && !data.recovery_code) {
     const target = new URL(next, location.origin);
-    if (target.origin === location.origin && (target.pathname === '/app/inbox' || /^\/app\/sites\/[0-9a-f-]+$/.test(target.pathname))) location.assign(target.pathname + target.search);
+    if (target.origin === location.origin && (['/app/inbox', '/app/analyze'].includes(target.pathname) || /^\/app\/sites\/[0-9a-f-]+$/.test(target.pathname))) location.assign(target.pathname + target.search);
   }
 }
 async function refreshSites() {

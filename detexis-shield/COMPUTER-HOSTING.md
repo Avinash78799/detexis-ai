@@ -19,6 +19,12 @@ outage; do not promise continuous coverage or replay of every request.
 
 ## Start the separate instance
 
+The signed-in workspace also links to [on-demand threat analysis](THREAT-ANALYSIS.md).
+Request inspection is included. File-signature scanning is an optional separate
+ClamAV engine: use `python tools/computer.py malware-start` after normal startup.
+It requires additional memory and signature updates; unavailable scans never
+produce a safety verdict. See that guide for limits and privacy behavior.
+
 Open Docker Desktop and wait until its engine is running. From this directory:
 
 ```powershell

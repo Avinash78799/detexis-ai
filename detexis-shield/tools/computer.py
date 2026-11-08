@@ -47,12 +47,13 @@ def prepare_env(path, existing_volume):
 def compose(*args, capture=False):
     return command("compose", "-p", PROJECT, "--env-file", str(ENV),
                    "-f", "docker-compose.yml", "-f", "docker-compose.computer.yml",
+                   "-f", "docker-compose.malware.yml",
                    *args, capture=capture)
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("action", choices=["start", "status", "logs", "stop", "backup"])
+    parser.add_argument("action", choices=["start", "status", "logs", "stop", "backup", "malware-start", "malware-stop"])
     parser.add_argument("--backup-dir", type=Path)
     args = parser.parse_args()
     command("info", "--format", "{{.ServerVersion}}", capture=True)
@@ -74,7 +75,11 @@ def main():
     elif args.action == "logs":
         compose("logs", "--tail", "100", "api", "worker", "maintenance", "scanner")
     elif args.action == "stop":
-        compose("stop")  # Preserve containers, credentials and database volume.
+        compose("--profile", "malware", "stop")  # Preserve containers, credentials and database volume.
+    elif args.action == "malware-start":
+        compose("--profile", "malware", "up", "-d", "--wait", "--wait-timeout", "240", "clamav")
+    elif args.action == "malware-stop":
+        compose("--profile", "malware", "stop", "clamav")
     elif args.action == "backup":
         if args.backup_dir is None:
             parser.error("backup requires --backup-dir pointing to a private directory")
