@@ -14,13 +14,15 @@ import httpx
 def event(index, profile="uniform"):
     row = {"event_id": str(uuid.uuid4()), "ts": datetime.now(timezone.utc).isoformat(),
            "ip_hash": "a" * 64, "method": "GET", "path": "/benchmark", "status": 200, "latency_ms": 1}
-    if profile == "mixed":
+    if profile in {"mixed", "mixed_comments"}:
         # 80% benign-shaped, 10% honeytoken, 10% SQLi-shaped; 128 clients.
         row["ip_hash"] = f"{(index // 10) % 128:064x}"
         kind = index % 10
         row["path"] = ["/", "/products", "/search", "/docs", "/cart", "/account", "/api/items", "/health", "/.env", "/search"][kind]
         row["status"] = 404 if kind == 8 else 200
         row["query_redacted"] = "q=union+select+name+from+users" if kind == 9 else "q=notebook&page=1" if kind == 2 else ""
+        if profile == "mixed_comments" and kind == 9:
+            row["query_redacted"] = "q=union%2F%2A%2A%2Fselect+name+from+users"
     elif profile != "uniform":
         raise ValueError("unknown workload profile")
     return row
@@ -82,6 +84,6 @@ if __name__ == "__main__":
     parser.add_argument("--url", default="http://127.0.0.1:8000")
     parser.add_argument("--rate", type=int, default=500)
     parser.add_argument("--seconds", type=int, default=600)
-    parser.add_argument("--profile", choices=["uniform", "mixed"], default="uniform")
+    parser.add_argument("--profile", choices=["uniform", "mixed", "mixed_comments"], default="uniform")
     args = parser.parse_args()
     print(json.dumps(asyncio.run(run(args.url.rstrip("/"), os.environ["SHIELD_API_KEY"], args.rate, args.seconds, args.profile)), indent=2))

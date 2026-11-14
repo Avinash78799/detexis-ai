@@ -19,3 +19,11 @@ def test_uniform_profile_remains_the_original_workload():
     row = load.event(1000)
     assert row["path"] == "/benchmark" and row["ip_hash"] == "a" * 64
     assert "query_redacted" not in row
+
+
+def test_comment_workload_uses_real_detector_without_changing_benign_distribution():
+    from app.rules import evaluate
+    rows = [load.event(i, "mixed_comments") for i in range(100)]
+    assert sum("sqli_union" in {f.rule_id for f in evaluate(row["path"], row["query_redacted"])} for row in rows) == 10
+    assert sum(row["path"] == "/.env" for row in rows) == 10
+    assert sum(not evaluate(row["path"], row["query_redacted"]) for row in rows) == 80

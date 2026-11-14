@@ -60,6 +60,7 @@ jobs:
           node-version: '22'
       - run: node --test tests/*.test.cjs
       - run: docker compose config --quiet
+      - run: docker compose -f docker-compose.yml -f docker-compose.validation.yml config --quiet
       - run: docker compose -f docker-compose.yml -f docker-compose.computer.yml -f docker-compose.malware.yml --profile malware config --quiet
   ml-smoke:
     if: github.event_name == 'pull_request'
