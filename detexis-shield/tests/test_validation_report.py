@@ -60,3 +60,18 @@ def test_ingest_capacity_does_not_pass_without_actual_rule_evidence(monkeypatch,
     result = json.loads(args.output.read_text())
     assert result["capacity_passed"] and result["latency_target_passed"]
     assert not result["rules_evidence_passed"] and not result["acceptance_passed"]
+
+
+def test_evidence_failure_preserves_draining_snapshot_without_acceptance(monkeypatch, tmp_path):
+    monkeypatch.setattr(runner, "counters", lambda site: {"total":103,"pending":0})
+    monkeypatch.setattr(runner, "processing_metrics", lambda site: {"lag_p95_seconds":1,"failed_jobs":0,"queued_jobs":0})
+    def failed_probe(*args):
+        raise RuntimeError("evidence query unavailable")
+    monkeypatch.setattr(runner, "docker", failed_probe)
+    target = tmp_path / "checkpoint.json"
+    report = {"state":"draining","runtime_details":{"detection_release":{"rules_source_sha256":"fixture"}}}
+    with pytest.raises(RuntimeError):
+        runner.complete_measurement(SimpleNamespace(output=target), report, "fixture")
+    saved = json.loads(target.read_text())
+    assert saved["state"] == "draining" and saved["database_at_load_end"]["total"] == 103
+    assert "acceptance_passed" not in saved

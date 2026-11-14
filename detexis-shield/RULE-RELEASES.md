@@ -96,7 +96,10 @@ Retain actual known-good images before future upgrades.
 (2,000 iterations each). Its slowest profile had a 1.10 ms p95 on this computer.
 This excludes SDK, HTTP, queueing, database and concurrent traffic. Historical
 version-1 throughput reports are not performance acceptance for this release.
-Rendered coverage-page acceptance and version-2 end-to-end load testing remain
-pending; authenticated page/API behavior has automated regression coverage.
+The version-2 ten-minute local SQL-comment workload passed; see `MIXED-LOAD.md`
+for the measured scope and explicit report-recovery limits. Rendered coverage-page
+acceptance remains pending; authenticated page/API behavior has automated
+regression coverage. Multi-tenant, concurrent-browser and actual sensor overhead
+remain separate performance gates.
 
 Primary detection reference: [OWASP SQL injection testing and comment bypasses](https://wstg.owasp.org/v4.2/4-Web_Application_Security_Testing/07-Input_Validation_Testing/05-Testing_for_SQL_Injection/).

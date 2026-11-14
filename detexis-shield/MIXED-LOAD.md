@@ -1,5 +1,42 @@
 # Mixed-traffic checkpoint
 
+## Version-2 SQL-comment workload: passed 14 November 2026
+
+`mixed-comments-v2-600s.json` records 300,000 accepted workload events at
+500.053 events/second over 599.937 seconds. Ingest batch median/p95 was
+81.520/160.648 ms; processing median/p95 was 0.187/1.212 seconds, within the
+unchanged ten-second p95 target. All 3,000 workload batches returned 202 with
+zero transport errors. The final observed database contained 300,003 processed
+events (including three functional setup events), with zero pending events,
+queued jobs or failed jobs. All processed rows carried the measured version-2
+rule-source fingerprint; 30,001 rows had SQL UNION findings (30,000 workload
+SQL examples plus one setup example).
+
+The dedicated `detexis-shield-validation-v2` stack used loopback port 18000,
+a separate PostgreSQL volume, one RQ worker and no ML model. The computer-hosted
+API stayed running separately. Its API and the validation worker were observed
+healthy with zero restarts and no memory kill during the run. The workload has
+80% benign-shaped requests, 10% sensitive-path probes and 10% comment-separated
+SQL examples across 128 synthetic IP hashes for one site. See `VALIDATION.md`
+for commands, isolation checks and exact gate definitions.
+
+The original load process finished and persisted its draining checkpoint, then
+failed in the final generated evidence query because of Python string quoting.
+The corrected query and report completion were run read-only against the same
+database after checking unchanged worker/rule identities. The workload was not
+repeated and measured latencies were not modified. The exact end-of-load database
+snapshot was not preserved; the report marks it null and labels the later
+recovery snapshot. Its recorded drain interval covers report completion only.
+The runner now saves database/processing snapshots before subsequent queries,
+and regression coverage verifies that query failures retain an incomplete report.
+
+This establishes this local, synthetic, single-site rules-only workload. It does
+not establish multi-tenant capacity, internet/TLS or sensor overhead, concurrent
+browser latency, ML performance, malware scanning capacity, or representative
+recall/FPR. Background desktop activity and database history limit comparisons
+with the earlier version-1 run; do not attribute timing differences solely to
+the detector change.
+
 ## Full batched-worker run: passed 7 November 2026
 
 The completed report `mixed-load-batched-600s.json` passed both unchanged gates:

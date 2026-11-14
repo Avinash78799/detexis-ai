@@ -249,6 +249,8 @@ def complete_measurement(args, report, site_id):
     report["database_after_drain"] = final
     report["processing_drain_seconds"] = time.monotonic() - start
     report["processing"] = processing_metrics(site_id)
+    # Preserve measured snapshots even if a later evidence query fails.
+    write_report(args.output, report)
     evidence_source = """
 import sys,json
 from sqlalchemy import text
