@@ -5,8 +5,10 @@ changing the unrelated Hookpilot services. API, PostgreSQL, Redis, maintenance,
 ClamAV and the worker were verified healthy after fixes. The worker now requests
 a warm restart after three invalid native registrations; its controlled idle
 recovery check passed in about 87 seconds. See `WORKER-RECOVERY.md`. Python
-dependency pins include the dnspython 2.9.2 security update. Current CI passed
-300 Python tests and twelve Node tests. These are local/CI acceptance results,
+dependency pins include the dnspython 2.9.2 security update. Current rule-release CI passed
+326 Python tests and twelve Node tests. Version-2 deployment and a controlled
+previous-source rollback passed; current images are explicitly retained. See
+`RULE-RELEASES.md` for the limited rehearsal scope. These are local/CI acceptance results,
 not a continuous availability promise.
 
 Local acceptance on 7 November: the separate instance started with healthy API,
