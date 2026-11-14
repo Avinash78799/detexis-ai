@@ -13,6 +13,7 @@ from .accounts import owner, throttle
 from .redis_store import get_redis
 from .rules import evaluate
 from . import malware
+from .rule_manifest import RULESET_VERSION, RULESET_RELEASE, RULES_SHA256
 
 router = APIRouter(prefix="/app/api/analyze")
 scan_slot = threading.BoundedSemaphore(1)
@@ -41,7 +42,8 @@ def analyze_request(body: RequestSample, request: Request, user=Depends(owner), 
                      if any(f["severity"] == level for f in findings)), "none")
     return {"verdict": "suspicious_pattern" if findings else "no_pattern_detected",
             "severity": severity, "findings": findings,
-            "features": extract_features(body.path, query), "engine": "shield-rules-v1",
+            "features": extract_features(body.path, query), "engine": "shield-rules-v" + str(RULESET_VERSION),
+            "rules_release":RULESET_RELEASE, "rules_source_sha256":RULES_SHA256,
             "scope": "Single request; no traffic history, site honeytokens, body inspection or malware analysis.",
             "limitations": "A match is a review signal, not proof of compromise. No match does not establish safety. Named secret fields are excluded; inputs are not stored by this tool."}
 
@@ -75,7 +77,7 @@ def analyze_file(body: FileSample, request: Request, user=Depends(owner), redis=
 
 @router.get("/capabilities")
 def capabilities(user=Depends(owner)):
-    return {"request_engine": "shield-rules-v1", "file_engine": "ClamAV",
+    return {"request_engine": "shield-rules-v" + str(RULESET_VERSION), "file_engine": "ClamAV",
             "file_max_bytes": malware.MAX_FILE_BYTES,
             **malware.status(),
             "note": "Status can be cached for five seconds. Every scan checks the engine and signature age again."}

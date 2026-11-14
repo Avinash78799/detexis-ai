@@ -14,6 +14,8 @@ from .scan_api import router as scan_router
 from .accounts import router as account_router, pages as account_pages
 from .incident_inbox import router as inbox_router
 from .threat_analysis import router as analysis_router
+from .rule_manifest import RULESET_VERSION, RULESET_RELEASE, RULES_SHA256
+from .detection import router as detection_router
 from pathlib import Path
 from fastapi.staticfiles import StaticFiles
 from fastapi.exception_handlers import http_exception_handler
@@ -29,13 +31,14 @@ app.include_router(account_router)
 app.include_router(account_pages)
 app.include_router(inbox_router)
 app.include_router(analysis_router)
+app.include_router(detection_router)
 app.mount("/static", StaticFiles(directory=str(Path(__file__).parent / "static")), name="static")
 
 
 @app.exception_handler(StarletteHTTPException)
 async def account_navigation_errors(request, exc):
     if (exc.status_code == 401 and request.method == "GET" and "text/html" in request.headers.get("accept", "")
-            and (request.url.path in {"/app/inbox", "/app/analyze"} or request.url.path.startswith("/app/sites/"))):
+            and (request.url.path in {"/app/inbox", "/app/analyze", "/app/detection"} or request.url.path.startswith("/app/sites/"))):
         target = request.url.path + ("?" + request.url.query if request.url.query else "")
         return RedirectResponse("/app?" + urlencode({"next": target}), status_code=303,
                                 headers={"Cache-Control": "no-store"})
@@ -100,7 +103,8 @@ def ingest(batch: BatchIn, site: Site = Depends(current_site), db: Session = Dep
 @app.get("/v1/config")
 def config(site: Site = Depends(current_site)):
     # Blocking stays disabled in v1 regardless of the stored mode.
-    return {"mode": "monitor", "rules_version": 1, "honeytokens": site.honeytokens}
+    return {"mode": "monitor", "rules_version": RULESET_VERSION, "rules_release":RULESET_RELEASE,
+            "rules_source_sha256":RULES_SHA256, "honeytokens": site.honeytokens}
 
 
 @app.post("/v1/heartbeat")

@@ -11,6 +11,7 @@ from .db import SessionLocal
 from .models import Alert, Event, HourBucket, Incident, Site, IncidentAction
 from .redis_store import get_redis
 from .rules import LOGIN_PATHS, evaluate
+from .rule_manifest import RULESET_RELEASE, RULES_SHA256
 
 WINDOW = """
 redis.call('ZADD', KEYS[1], 'NX', ARGV[1], ARGV[2])
@@ -110,6 +111,7 @@ def process_batch(site_id, event_ids, redis=None):
                 login_threshold=max(3, int(settings.get("login_threshold", 10))),
                 flood_threshold=max(20, int(settings.get("flood_threshold", 300))))]
             features = extract_features(event.path, event.query_redacted)  # Never trust client features.
+            features.update(rules_release=RULESET_RELEASE, rules_source_sha256=RULES_SHA256)
             hour = stamp.replace(minute=0, second=0, microsecond=0)
             if hour not in buckets:
                 # Persist a prior hour before using it as baseline history.

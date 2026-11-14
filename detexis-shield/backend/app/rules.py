@@ -4,6 +4,14 @@ import re
 from dataclasses import asdict, dataclass
 from urllib.parse import parse_qsl, unquote, urlsplit
 
+RULESET_VERSION = 2
+RULESET_RELEASE = "2026.11.14.1"
+RULESET_DATE = "2026-11-14"
+MAX_PATH = 2048
+MAX_QUERY = 2048
+MAX_FIELDS = 50
+MAX_UA = 512
+
 
 @dataclass(frozen=True)
 class Finding:
@@ -14,7 +22,7 @@ class Finding:
     reason: str
 
     def json(self):
-        return asdict(self)
+        return {**asdict(self), "rules_release": RULESET_RELEASE}
 
 
 RULES = {
@@ -43,6 +51,30 @@ PATTERNS = {
 URL_FIELDS = {"url", "uri", "target", "redirect", "callback", "webhook", "dest", "host"}
 LOGIN_PATHS = {"/login", "/signin", "/auth/login", "/api/login"}
 SENSITIVE_PATHS = {"/.env", "/.git/config", "/wp-config.php", "/etc/passwd", "/backup.sql"}
+MYSQL_COMMENT_VERSION = re.compile(r"^[0-9]{5,6}")
+
+
+def sql_view(value):
+    """Bounded heuristic view, not a SQL parser. Keep original HTML evidence.
+
+    Comments separate SQL tokens. MySQL's executable comments retain their
+    contents. Ordinary comment contents are ignored rather than treated as SQL.
+    Never normalize across two request fields or concatenate split keywords.
+    """
+    if "/*" not in value:
+        return value
+    parts, cursor = [], 0
+    while True:
+        start = value.find("/*", cursor)
+        end = value.find("*/", start + 2) if start >= 0 else -1
+        if start < 0 or end < 0:
+            parts.append(value[cursor:])
+            break
+        parts.append(value[cursor:start])
+        body = value[start + 2:end]
+        parts.append(" " + MYSQL_COMMENT_VERSION.sub("", body[1:]) + " " if body.startswith("!") else " ")
+        cursor = end + 2
+    return "".join(parts)
 
 
 def private_target(value):
@@ -63,14 +95,16 @@ def private_target(value):
 
 def evaluate(path, query="", ua="", status=200, *, honeytokens=(), failed_logins=0,
              request_count=0, login_threshold=10, flood_threshold=300):
-    path = path[:2048]
-    pairs = parse_qsl("&".join(query[:2048].split("&", 50)[:50]), keep_blank_values=True)
+    path = path[:MAX_PATH]
+    pairs = parse_qsl("&".join(query[:MAX_QUERY].split("&", MAX_FIELDS)[:MAX_FIELDS]), keep_blank_values=True)
     # One query decoding pass; bounded second path decoding catches common encodings.
-    text = unquote(path) + " " + " ".join(k + "=" + v for k, v in pairs)
-    hits = [name for name, pattern in PATTERNS.items() if pattern.search(text)]
+    inputs = [unquote(path)] + [k + "=" + v for k, v in pairs]
+    sql_inputs = [sql_view(value) for value in inputs]
+    hits = [name for name, pattern in PATTERNS.items()
+            if any(pattern.search(value) for value in (sql_inputs if name.startswith("sqli_") else inputs))]
     if any(k.lower() in URL_FIELDS and private_target(v) for k, v in pairs):
         hits.append("ssrf_params")
-    if re.search(r"\b(?:sqlmap|nikto|nuclei|masscan|zgrab)\b", ua[:512], re.I):
+    if re.search(r"\b(?:sqlmap|nikto|nuclei|masscan|zgrab)\b", ua[:MAX_UA], re.I):
         hits.append("scanner_ua")
     if path.lower().rstrip("/") in SENSITIVE_PATHS:
         hits.append("sensitive_path")

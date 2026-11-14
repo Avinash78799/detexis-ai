@@ -31,20 +31,30 @@ need explicit release review, including ClamAV engine patches, PostgreSQL/Redis,
 scanner images and relevant operating-system packages. A passing package audit
 is not a complete software supply-chain security assessment.
 
-## Required detection-update lifecycle — not implemented yet
+## Versioned web-release path
+
+The new `2026.11.14.1` / version-2 source update, packaged fingerprints, immutable
+release records, CI version gate, event provenance and owner coverage page are
+implemented with regression coverage. See `RULE-RELEASES.md` for commands, exact
+scope and the controlled runtime/rollback acceptance report. The original twelve families
+remain; tested SQL-comment coverage and cross-field false-positive handling are
+improved. No real-traffic quality claim follows from the fixture tests.
+
+## Remaining detection-update work
 
 1. Review CISA KEV and vendor advisories for actively exploited vulnerabilities.
    Determine applicability from owner-provided technology/version inventory.
    A feed entry alone does not prove a monitored site is vulnerable or under attack.
-2. Maintain versioned web-detection releases with source references, supported
-   inputs, known blind spots and stable rule identifiers. Broader CRS integration
+2. Maintain the implemented versioned web-release process with source references,
+   supported inputs, known blind spots and stable rule identifiers. Broader CRS integration
    requires a compatible detection engine and privacy/input review; the current
    Python regex engine cannot simply execute CRS rules.
 3. Add representative attack, encoding/evasion and legitimate-traffic regression
    cases before releasing an updated detector. Measure false positives on
    permissioned traffic and preserve detection-only operation.
-4. Validate a release before activation, show active version/update health, and
-   retain a tested rollback. Do not download and execute arbitrary remote code
+4. Extend the completed empty-instance rollback rehearsal to isolated traffic/job
+   recovery scenarios and maintain release regression gates. The coverage page shows the installed source and explicitly reports that
+   a live web-rule feed is not connected. Do not download and execute arbitrary remote code
    or accept unreviewed regex patterns as updates.
 5. Evaluate ML only with provenance-reviewed data, time/session separation and
    independent tests. Do not automatically learn labels from an attacker-controlled
