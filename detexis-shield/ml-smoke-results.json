@@ -1,0 +1,6 @@
+{
+  "evidence_type": "controlled software fixture; not real-data FPR",
+  "logistic_artifact_runtime": "passed",
+  "xgboost_artifact_runtime": "passed",
+  "shap_reasons": "passed"
+}

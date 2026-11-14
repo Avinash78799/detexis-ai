@@ -1,0 +1,29 @@
+{
+  "target_rate": 500,
+  "duration_seconds": 600,
+  "events": 300000,
+  "accepted": 300000,
+  "failed": 0,
+  "elapsed_seconds": 599.9220000000005,
+  "accepted_per_second": 500.06500845109827,
+  "batch_latency_median_ms": 87.25839999942764,
+  "batch_latency_p95_ms": 460.83770000041113,
+  "note": "Ingest acceptance only. Check pending events, RQ failures and processing lag separately.",
+  "database_at_load_end": {
+    "total": 300003,
+    "pending": 220700
+  },
+  "database_after_drain": {
+    "total": 300003,
+    "pending": 201200
+  },
+  "processing_drain_seconds": 122.03099999999995,
+  "functional_checks": {
+    "ingest_idempotency": true,
+    "rq_incident": true,
+    "dashboard_auth": true,
+    "real_backend_outage_fail_open": true
+  },
+  "environment": "Local Docker Desktop, PostgreSQL 16 (cached pgvector image; extension not enabled), Redis 7, one RQ worker",
+  "acceptance_passed": false
+}

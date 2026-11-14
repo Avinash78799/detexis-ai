@@ -1,0 +1,5 @@
+{$SHIELD_DOMAIN} {
+    encode gzip
+    header Strict-Transport-Security "max-age=31536000"
+    reverse_proxy api:8000
+}

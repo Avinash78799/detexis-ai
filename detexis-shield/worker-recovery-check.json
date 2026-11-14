@@ -1,0 +1,15 @@
+{
+  "passed": true,
+  "checked_at": "2026-11-14T05:28:16.813775+00:00",
+  "elapsed_seconds": 86.625,
+  "restart_count_delta": 1,
+  "new_registration": true,
+  "native_health": true,
+  "scope": "Idle recovery on a zero-site instance with an empty queue. No active job, customer data, host suspend or Redis outage was tested.",
+  "source_sha256": {
+    "run_worker.py": "a59f5e0d7343340ed2ccfe6bdc1f84e6f382417c4df27361fa39c5f735e87383",
+    "worker_watch.py": "f00d9e27b2b5cff791a891cecae102d6c3e13dd6aae7caeecad5003a5cab401e",
+    "worker_health.py": "8090107aa5025c2636895e6a8ffa4e0edc966e5d146a9c17a269a45f5ae50ba4"
+  },
+  "image_id": "sha256:bc6e7a981d68d6b29ca93bec7ffed2711ad490f5b5f44ab7051f11069e0e2459"
+}

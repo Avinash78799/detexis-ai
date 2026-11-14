@@ -1,0 +1,44 @@
+{
+  "checked_at": "2026-11-14T13:30:53.548905+00:00",
+  "release_id": "2026.11.14.1",
+  "rules_source_sha256": "d39123a7a05e7c29bfd1e29976edd5d22b9eae2710b39159d5e6fdb6fd2bdf80",
+  "profiles": {
+    "ordinary_search": {
+      "samples": 2000,
+      "median_ms": 0.0199,
+      "p95_ms": 0.0345,
+      "max_ms": 0.1659
+    },
+    "canary_path": {
+      "samples": 2000,
+      "median_ms": 0.0197,
+      "p95_ms": 0.0359,
+      "max_ms": 0.9141
+    },
+    "comment_separated_sql": {
+      "samples": 2000,
+      "median_ms": 0.0434,
+      "p95_ms": 0.0976,
+      "max_ms": 0.6936
+    },
+    "maximum_query_fields": {
+      "samples": 2000,
+      "median_ms": 0.3427,
+      "p95_ms": 0.605,
+      "max_ms": 4.423
+    },
+    "bounded_unterminated_comments": {
+      "samples": 2000,
+      "median_ms": 0.70595,
+      "p95_ms": 1.0997,
+      "max_ms": 6.7285
+    },
+    "bounded_separator_flood": {
+      "samples": 2000,
+      "median_ms": 0.0164,
+      "p95_ms": 0.0267,
+      "max_ms": 0.1033
+    }
+  },
+  "scope": "Repeated synthetic in-process evaluation and finding serialization on this computer. Excludes SDK, HTTP, DB, queue, worker concurrency, malware engine and ML. No real-traffic FPR/recall or end-to-end throughput claim."
+}

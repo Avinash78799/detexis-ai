@@ -1,0 +1,60 @@
+{
+  "at": "2026-11-06T17:35:59.980291+00:00",
+  "source": "68c77d8d5d336682969b507639e23f644b04f434",
+  "scope": "sequential warm ASGI application; real PostgreSQL/Redis; no network/TLS/browser",
+  "fixture_site": "a5df52c3-7272-4a3d-bbb5-1b16bf13ad6c",
+  "events": 10000,
+  "incidents": 100,
+  "warmups_per_route": 5,
+  "versions": {
+    "fastapi": "0.162.0",
+    "starlette": "1.10.0",
+    "dnspython": "2.9.0",
+    "pydantic": "2.10.4",
+    "anyio": "4.16.0"
+  },
+  "results": [
+    {
+      "route": "/app",
+      "samples": 100,
+      "median_ms": 0.984,
+      "p95_ms": 1.147
+    },
+    {
+      "route": "/app/api/session",
+      "samples": 100,
+      "median_ms": 3.475,
+      "p95_ms": 5.137
+    },
+    {
+      "route": "/app/api/sites",
+      "samples": 100,
+      "median_ms": 6.966,
+      "p95_ms": 9.042
+    },
+    {
+      "route": "/app/api/inbox",
+      "samples": 100,
+      "median_ms": 7.691,
+      "p95_ms": 11.74
+    },
+    {
+      "route": "/app/api/sites/{site_id}/connection",
+      "samples": 100,
+      "median_ms": 9.964,
+      "p95_ms": 11.109
+    },
+    {
+      "route": "/app/sites/{site_id}",
+      "samples": 100,
+      "median_ms": 13.795,
+      "p95_ms": 27.873
+    },
+    {
+      "route": "/app/sites/{site_id}/feed",
+      "samples": 100,
+      "median_ms": 12.6,
+      "p95_ms": 13.402
+    }
+  ]
+}

@@ -1,0 +1,111 @@
+{
+  "profile": "mixed",
+  "target_rate": 500,
+  "duration_seconds": 600,
+  "events": 300000,
+  "accepted": 300000,
+  "failed": 0,
+  "elapsed_seconds": 599.875,
+  "accepted_per_second": 500.1041883725776,
+  "batch_latency_median_ms": 80.29529999839724,
+  "batch_latency_p95_ms": 322.19700000132434,
+  "http_responses": {
+    "202": 3000
+  },
+  "transport_errors": {},
+  "note": "Ingest acceptance only. Check pending events, RQ failures and processing lag separately.",
+  "backlog_samples_each_minute": [
+    {
+      "total": 30603,
+      "pending": 0
+    },
+    {
+      "total": 61203,
+      "pending": 0
+    },
+    {
+      "total": 92203,
+      "pending": 100
+    },
+    {
+      "total": 122703,
+      "pending": 0
+    },
+    {
+      "total": 153203,
+      "pending": 0
+    },
+    {
+      "total": 184003,
+      "pending": 1500
+    },
+    {
+      "total": 216703,
+      "pending": 100
+    },
+    {
+      "total": 247503,
+      "pending": 0
+    },
+    {
+      "total": 278203,
+      "pending": 100
+    }
+  ],
+  "state": "completed",
+  "site_id": "a886ff5f-9b0e-4d6d-a6e1-5b13b0e2b662",
+  "runtime_details": {
+    "python": "3.12.16",
+    "visible_cpus": 8,
+    "packages": {
+      "fastapi": "0.162.0",
+      "uvicorn": "0.34.0",
+      "starlette": "1.10.0",
+      "pydantic": "2.10.4",
+      "httpx": "0.28.1",
+      "sqlalchemy": "2.0.36",
+      "rq": "2.1.0",
+      "psycopg2-binary": "2.9.10"
+    },
+    "postgresql": "16.15 (Debian 16.15-1.pgdg12+2)",
+    "redis": "7.4.10",
+    "postgresql_settings": {
+      "shared_buffers": "512MB",
+      "wal_compression": "pglz",
+      "bgwriter_lru_maxpages": "1000",
+      "checkpoint_timeout": "5min",
+      "fsync": "on",
+      "synchronous_commit": "on"
+    },
+    "migration": "0008",
+    "model_enabled": false,
+    "worker_source_sha256": "053a4b701903d24e3ce7ba708c22d3575a5a9a0623818ba0efe3e92a4d4ed574"
+  },
+  "database_at_load_end": {
+    "total": 300003,
+    "pending": 0
+  },
+  "database_after_drain": {
+    "total": 300003,
+    "pending": 0
+  },
+  "processing_drain_seconds": 0.0,
+  "processing": {
+    "lag_median_seconds": 0.13518,
+    "lag_p95_seconds": 1.6078024999999985,
+    "failed_jobs": 0,
+    "queued_jobs": 0
+  },
+  "functional_checks": {
+    "ingest_idempotency": true,
+    "rq_incident": true,
+    "dashboard_auth": true,
+    "real_backend_outage_fail_open": true
+  },
+  "environment": "Dedicated local Docker validation stack; see runtime_details",
+  "compose_override": true,
+  "capacity_passed": true,
+  "max_processing_p95_seconds": 10.0,
+  "latency_target_passed": true,
+  "acceptance_passed": true
+}
