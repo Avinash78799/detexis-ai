@@ -28,6 +28,11 @@ python tools/check_worker_recovery.py --confirm-idle-fault-check --output worker
 It refuses to run unless the instance has zero Site rows, an empty queue and an
 idle healthy worker. It removes only that worker's ephemeral registration and
 waits for a container restart, a new registration and native health. It does not
-touch tenant events or credentials. Until a passing runtime report is recorded,
-the automated idle-recovery path is not accepted. Active-job recovery, a real
-host suspend and a Redis outage require separate validation.
+touch tenant events or credentials.
+
+The 14 November [runtime report](worker-recovery-check.json) passed: one container
+restart, a new registration and native health after 86.625 seconds. Source hashes
+were checked against the running worker and local files; the report includes its
+image ID. The logs showed a warm shutdown and subsequent queue listening. This
+accepts idle registration recovery only. Active-job recovery, a real host suspend
+and a Redis outage require separate validation.

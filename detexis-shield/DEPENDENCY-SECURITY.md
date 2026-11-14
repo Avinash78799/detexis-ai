@@ -9,6 +9,13 @@ text. Shield's ordinary DNS lookups do not establish exposure to that exact
 parser path; the affected package is still being patched. The audit gate remains
 enabled. The older clean audit below is historical, not current release evidence.
 
+CI run `43561554348` at `d4ea1be` then passed the audit with no known findings
+in its inspected Python environment, 300 Python tests including real services,
+twelve Node tests and ML software smoke. Running API and scanner containers both
+reported dnspython 2.9.2. The separate worker registration recovery check passed;
+see `WORKER-RECOVERY.md`. These claims do not cover every container OS package or
+all third-party client assets.
+
 On 6 November 2026, pip-audit 2.10.1 inspected the installed local validation
 environment. The original report identified affected Starlette 0.41.3,
 dnspython 2.7.0, Flask 3.1.1, pytest 8.3.4 and pip 24.3.1. Some advisory records

@@ -59,6 +59,11 @@ assert r.delete(key)==1
                           "restart_count_delta":restarts-before_restarts,
                           "new_registration":True, "native_health":True,
                           "scope":"Idle recovery on a zero-site instance with an empty queue. No active job, customer data, host suspend or Redis outage was tested."}
+                code = ("import hashlib,json;from pathlib import Path;print(json.dumps({n:"
+                        "hashlib.sha256(Path('app',n).read_bytes().replace(bytes([13,10]),bytes([10]))).hexdigest() "
+                        "for n in ['run_worker.py','worker_watch.py','worker_health.py']}))")
+                report["source_sha256"] = json.loads(compose("exec", "-T", "worker", "python", "-c", code, capture=True))
+                report["image_id"] = command("inspect", identity, "--format", "{{.Image}}", capture=True).strip()
                 args.output.write_text(json.dumps(report,indent=2)+"\n",encoding="utf-8")
                 print(json.dumps(report))
                 return

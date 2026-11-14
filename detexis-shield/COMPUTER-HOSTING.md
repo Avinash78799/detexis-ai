@@ -1,5 +1,14 @@
 # Run Shield on your computer
 
+14 November checkpoint: the existing computer instance was restored without
+changing the unrelated Hookpilot services. API, PostgreSQL, Redis, maintenance,
+ClamAV and the worker were verified healthy after fixes. The worker now requests
+a warm restart after three invalid native registrations; its controlled idle
+recovery check passed in about 87 seconds. See `WORKER-RECOVERY.md`. Python
+dependency pins include the dnspython 2.9.2 security update. Current CI passed
+300 Python tests and twelve Node tests. These are local/CI acceptance results,
+not a continuous availability promise.
+
 Local acceptance on 7 November: the separate instance started with healthy API,
 database, Redis, worker and maintenance services. `http://127.0.0.1:8000/ready`
 returned `{"ok":true}`. Backup creation and restoration into a separate rehearsal
