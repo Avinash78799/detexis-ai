@@ -11,8 +11,10 @@ from computer import compose
 
 CODE = r'''
 import hashlib
+import io
 import json
 import time
+import zipfile
 from datetime import datetime, timezone
 from pathlib import Path
 from urllib.request import urlopen
@@ -27,9 +29,22 @@ def ready():
 before = ready()
 test = (b'X5O!P%@AP[4' + bytes([92]) + b'PZX54(P^)7CC)7}' + bytes([36])
         + b'EICAR-STANDARD-ANTIVIRUS-TEST-FILE!' + bytes([36]) + b'H+H*')
+def archive(content):
+    buffer = io.BytesIO()
+    entry = zipfile.ZipInfo('sample.txt', date_time=(2026, 1, 1, 0, 0, 0))
+    entry.compress_type = zipfile.ZIP_DEFLATED
+    with zipfile.ZipFile(buffer, 'w') as writer:
+        writer.writestr(entry, content)
+    return buffer.getvalue()
+
+fixtures = [('benign_text', b'Hello from Detexis Shield. This is benign text.', 'no_signature_detected'),
+            ('harmless_eicar_test', test, 'signature_detected'),
+            ('benign_zip', archive(b'Harmless archive text.'), 'no_signature_detected'),
+            ('harmless_eicar_zip', archive(test), 'signature_detected'),
+            ('archive_member_over_transport_limit', archive(b'x' * (1024*1024+1)), 'no_signature_detected'),
+            ('archive_exceeds_unpacked_scan_limit', archive(b'x' * (8*1024*1024+1)), 'needs_review')]
 results = []
-for name, content, expected in [('benign_text', b'Hello from Detexis Shield. This is benign text.', 'no_signature_detected'),
-                                ('harmless_eicar_test', test, 'signature_detected')]:
+for name, content, expected in fixtures:
     started = time.perf_counter()
     value = scan(content)
     assert value['verdict'] == expected, value
@@ -39,7 +54,7 @@ print(json.dumps({'checked_at': datetime.now(timezone.utc).isoformat(), 'passed'
                   'ready_before': before, 'ready_after': ready(), 'results': results,
                   'source_sha256': {name: hashlib.sha256(Path('app', name).read_bytes().replace(b'\r\n', b'\n')).hexdigest()
                                     for name in ['malware.py', 'threat_analysis.py']},
-                  'scope': 'Real engine wiring using benign text and harmless EICAR only. Not real-malware accuracy, broad file coverage, concurrent load or browser validation.'}))
+                  'scope': 'Real engine wiring with benign text, harmless EICAR, ZIP wrappers, a 1 MiB+1 member and a bounded 8 MiB+1 unpacked-limit fixture. Not real-malware accuracy, broad file coverage, concurrent load or browser validation.'}))
 '''
 
 

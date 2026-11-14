@@ -1,0 +1,24 @@
+version: 2
+updates:
+  # Reviewed PRs, never unattended deployment. CI must pass before an update lands.
+  - package-ecosystem: pip
+    directories:
+      - /
+      - /detexis-shield
+      - /detexis-shield/backend
+      - /detexis-shield/demo
+      - /detexis-shield/ml
+      - /detexis-shield/sensor-sdk
+    schedule:
+      interval: daily
+    open-pull-requests-limit: 5
+  - package-ecosystem: docker
+    directory: /detexis-shield/backend
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 3
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 3

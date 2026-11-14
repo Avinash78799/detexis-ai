@@ -65,6 +65,7 @@ def analyze_file(body: FileSample, request: Request, user=Depends(owner), redis=
     try:
         result = malware.scan(content)
     except malware.ScanUnavailable:
+        malware.invalidate_status()
         raise HTTPException(503, "File scanning is unavailable or incomplete. No safety verdict was produced.")
     finally:
         scan_slot.release()
@@ -76,5 +77,5 @@ def analyze_file(body: FileSample, request: Request, user=Depends(owner), redis=
 def capabilities(user=Depends(owner)):
     return {"request_engine": "shield-rules-v1", "file_engine": "ClamAV",
             "file_max_bytes": malware.MAX_FILE_BYTES,
-            "file_scan": "configured" if malware.configured() else "not_configured",
-            "note": "Configured does not mean ready; the scan itself verifies engine response and signature age."}
+            **malware.status(),
+            "note": "Status can be cached for five seconds. Every scan checks the engine and signature age again."}

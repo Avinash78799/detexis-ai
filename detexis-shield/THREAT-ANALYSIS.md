@@ -86,4 +86,19 @@ fingerprinted [runtime report](threat-analysis-smoke.json) records the engine,
 definition date, sample hashes and scope. This is wiring acceptance with harmless
 fixtures, not real-malware recall/FPR, broad file coverage or a load test. The
 local suite passed 293 Python tests (one integration skip) and nine Node tests.
-Rendered browser acceptance of the new analysis screen remains outstanding.
+
+14 November update: the local suite passed 296 Python tests (one integration skip)
+and twelve Node tests after adding cached engine readiness and UI retry handling.
+Readiness distinguishes offline/unconfigured engines, stale definitions and an
+in-progress probe; it is cached for five seconds. Every scan checks independently,
+and a failed scan invalidates that cache. Uploads stay disabled until ready.
+
+Real extended acceptance passed all six harmless fixtures in
+`threat-analysis-smoke-extended.json`. The original 1 MiB engine file cap could
+silently skip a larger member within a small ZIP. `MaxFileSize` now matches the
+8 MiB aggregate scan budget; input remains capped at 1 MiB. A bounded 8 MiB+1
+unpacked fixture returned `needs_review`, not a no-signature verdict. This result
+does not prove inspection completeness for every archive or file format.
+
+Authenticated request/file flows and responsive layouts passed focused real-browser
+acceptance. See `ANALYSIS-UI-REVIEW.md` for exact scope and remaining checks.

@@ -4,7 +4,7 @@ const {readFileSync} = require('node:fs');
 const {runInNewContext} = require('node:vm');
 const {join} = require('node:path');
 
-async function screen(analysis) {
+async function screen(analysis, capability = () => ({file_scan:'ready', signatures_updated_at:'2026-11-08T00:00:00Z'})) {
   const nodes = new Map(), calls = [];
   function node() {
     return {textContent:'', hidden:true, dataset:{}, children:[], handlers:{}, fieldset:{disabled:true},
@@ -17,7 +17,7 @@ async function screen(analysis) {
   const get = id => {if (!nodes.has(id)) nodes.set(id, node()); return nodes.get(id);};
   const api = async (path, body, csrf) => {
     if (path === 'session') return {csrf_token:'csrf-fixture'};
-    if (path === 'analyze/capabilities') return {file_scan:'configured'};
+    if (path === 'analyze/capabilities') return capability();
     calls.push({path, body, csrf}); return analysis(path, body);
   };
   runInNewContext(readFileSync(join(__dirname, '../backend/app/static/analyze.js'), 'utf8'), {
@@ -38,6 +38,43 @@ async function screen(analysis) {
   return {get, calls, submit};
 }
 function content(node) {return node.textContent + node.children.map(content).join(' ');}
+
+test('offline scanner disables uploads while request inspection stays usable, and manual status retry recovers', async () => {
+  let ready = false;
+  const ui = await screen(async () => {}, () => ({file_scan:ready ? 'ready':'unavailable', signatures_updated_at:'2026-11-08T00:00:00Z'}));
+  assert.equal(ui.get('file-form').fieldset.disabled, true);
+  assert.equal(ui.get('request-form').fieldset.disabled, false);
+  assert.match(ui.get('file-capability').textContent, /offline, starting or updating/);
+  ready = true;
+  await ui.get('scanner-refresh').handlers.click();
+  assert.equal(ui.get('file-form').fieldset.disabled, false);
+  assert.match(ui.get('file-capability').textContent, /Scanner ready/);
+});
+
+test('stale definitions and failed readiness requests cannot enable an upload', async () => {
+  let fail = false;
+  const ui = await screen(async () => {}, () => {if (fail) throw new Error('network unavailable'); return {file_scan:'stale_definitions'};});
+  assert.equal(ui.get('file-form').fieldset.disabled, true);
+  assert.match(ui.get('file-capability').textContent, /out of date/);
+  fail = true;
+  await ui.get('scanner-refresh').handlers.click();
+  assert.equal(ui.get('file-form').fieldset.disabled, true);
+  assert.equal(ui.get('request-form').fieldset.disabled, false);
+  assert.equal(ui.get('scanner-refresh').disabled, false);
+  assert.match(ui.get('file-capability').textContent, /Unable to check/);
+});
+
+test('a status check cannot enable file controls during an in-flight scan', async () => {
+  let finish;
+  const ui = await screen(() => new Promise(resolve => {finish=resolve;}));
+  const pending = ui.submit('file-form', {file:{size:3,arrayBuffer:async()=>new Uint8Array([65,66,67]).buffer}});
+  await new Promise(resolve=>setImmediate(resolve));
+  await ui.get('scanner-refresh').handlers.click();
+  assert.equal(ui.get('file-form').fieldset.disabled, true);
+  finish({verdict:'no_signature_detected',bytes:3,sha256:'abc',engine:'fixture',limitations:'No signature is not safe'});
+  await pending;
+  assert.equal(ui.get('file-form').fieldset.disabled, false);
+});
 
 test('request analysis submits values and CSRF, renders evidence as text and removes a stale verdict on failure', async () => {
   let attempts = 0;

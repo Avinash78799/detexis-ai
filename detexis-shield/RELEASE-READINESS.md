@@ -1,4 +1,4 @@
-# Release readiness: 8 November 2026
+# Release readiness: 14 November 2026
 
 The complete product goal is **not achieved**. Implemented code, local tests and
 temporary demonstrations do not prove a continuously operated public service.
@@ -6,7 +6,8 @@ The percentage previously discussed was an effort estimate, not a release gate.
 
 | Requirement | Current evidence | Remaining proof |
 | --- | --- | --- |
-| Replace legacy predictions with evidence-based analysis | Authenticated request-rule inspector, optional isolated ClamAV, real benign/EICAR acceptance; 293 Python / 9 Node tests | Rendered analysis UI, broader file compatibility and resource/abuse load; harmless fixtures do not prove real-malware recall/FPR |
+| Keep pace with changing threats | Automatic ClamAV signature-update configuration, stale-definition refusal, locally tested readiness states, prepared dependency-update PR configuration; see `THREAT-MAINTENANCE.md` | Activate/observe dependency updates; implement reviewed/versioned web-rule updates, advisory relevance checks, evasion/FPR release gates, update visibility and rollback |
+| Replace legacy predictions with evidence-based analysis | Authenticated request/file browser flows, desktop/mobile checks, six real-engine harmless fixtures including archive-limit review; 296 local Python / 12 Node tests; see `ANALYSIS-UI-REVIEW.md` | Broader file compatibility, failure-state browser checks and resource/abuse load; harmless fixtures do not prove real-malware recall/FPR |
 | Connect the existing Detexis deployment | Lightweight root entry, preserved archive/data, HTTPS-origin validation, ownership proof and migration tests | Vercel preview, configured live Shield origin and verified production rollout; legacy accounts/history are intentionally separate |
 | ASGI/Flask sensor, bounded/retried fail-open delivery, redaction/features/config/heartbeat | SDK source, sensor/Flask/retry tests, API-stop acceptance | Persistent-host socket/concurrent overhead and actual deployment configuration |
 | <5 ms median / <10 ms p95 added latency | ASGI reports; fingerprinted Flask paired report passes both profiles | Actual-host measurement; microbenchmarks do not prove production latency |
