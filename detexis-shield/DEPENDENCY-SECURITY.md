@@ -1,5 +1,14 @@
 # Dependency security checkpoint
 
+14 November update: CI at `f827c94` blocked release on
+`CVE-2026-128089` / `GHSA-vvf4-9x63-8xvv` in dnspython 2.9.0.
+API and isolated-scanner pins are updated to the maintainer's patched 2.9.2.
+The [advisory](https://github.com/rthalley/dnspython/security/advisories/GHSA-vvf4-9x63-8xvv)
+concerns excessive resource use when parsing attacker-controlled WKS zonefile
+text. Shield's ordinary DNS lookups do not establish exposure to that exact
+parser path; the affected package is still being patched. The audit gate remains
+enabled. The older clean audit below is historical, not current release evidence.
+
 On 6 November 2026, pip-audit 2.10.1 inspected the installed local validation
 environment. The original report identified affected Starlette 0.41.3,
 dnspython 2.7.0, Flask 3.1.1, pytest 8.3.4 and pip 24.3.1. Some advisory records

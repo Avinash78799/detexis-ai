@@ -1,7 +1,7 @@
 FROM python:3.12-slim
 WORKDIR /srv
 RUN python -m pip install --no-cache-dir --upgrade pip==26.2.2
-RUN pip install --no-cache-dir fastapi==0.162.0 starlette==1.10.0 pydantic==2.10.4 uvicorn==0.34.0 dnspython==2.9.0
+RUN pip install --no-cache-dir fastapi==0.162.0 starlette==1.10.0 pydantic==2.10.4 uvicorn==0.34.0 dnspython==2.9.2
 COPY backend/app/__init__.py backend/app/safe_fetch.py backend/app/scanner.py backend/app/scanner_service.py ./app/
 RUN useradd --uid 10001 --create-home scanner
 USER 10001
