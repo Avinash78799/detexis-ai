@@ -27,3 +27,6 @@ exit $ExitCode
     Remove-Item -LiteralPath $fixture -ErrorAction SilentlyContinue
     Remove-Item -LiteralPath $fixtureFolder -ErrorAction SilentlyContinue
 }
+# The nonzero fixture was expected and asserted above. CI must not inherit its
+# LASTEXITCODE after this test script itself has completed successfully.
+exit 0
