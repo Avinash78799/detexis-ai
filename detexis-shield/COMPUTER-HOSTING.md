@@ -1,3 +1,11 @@
+15 November: the owner chose local-only operation, without a new public tunnel.
+The previous temporary hostname expired. Existing computer-instance services were
+resumed with their saved volumes/credentials and API/worker readiness verified.
+Optional local HTTPS is prepared and passed isolated CI; Windows activation and
+certificate/browser trust remain pending. See [LOCAL-HTTPS.md](LOCAL-HTTPS.md).
+The historical public-tunnel commands below are for reference, not authorization
+to start a new public tunnel after this local-only decision.
+
 # Run Shield on your computer
 
 14 November checkpoint: the existing computer instance was restored without

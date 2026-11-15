@@ -1,8 +1,11 @@
 # Local-only HTTPS workspace
 
 Prepared on 15 November 2026 after the owner chose local computer hosting without
-a domain. Runtime activation and certificate trust are not yet verified. Do not
-claim this replaces the expired public tunnel until the checks below pass.
+a domain. Disposable Linux CI at commit `3a69f146` passed CA/hostname verification,
+HTTPS account registration/session cookies, the authenticated coverage page and
+manifest, no-store, CSRF/origin refusals and refusal by a client without the CA.
+No host trust was installed. Windows activation, certificate trust and warning-free
+desktop-browser acceptance remain pending; this is not a public address.
 
 Shield keeps its HTTPS Origin checks and Secure, HttpOnly, SameSite cookies.
 The optional Caddy proxy provides `https://localhost:8443` and
@@ -13,7 +16,19 @@ The proxy has no database credentials, Docker socket or host trust-store mount.
 
 ## Start the prepared proxy
 
-From this directory, after the computer instance is healthy:
+The reviewed PowerShell helper starts only the optional proxy and exports its
+public root, without installing trust:
+
+```powershell
+./tools/start_local_https.ps1 -CertificateDirectory C:\PRIVATE\ShieldCertificates
+```
+
+Replace that output directory with a folder you control. Review the helper before
+running it. Its PowerShell syntax was checked; its Windows Docker execution has
+not been verified. Local activation was stopped by an automatic approval-review
+usage-limit failure, not by a finding that the configuration was unsafe.
+
+For manual startup, from this directory after the computer instance is healthy:
 
 ```powershell
 docker compose -p detexis-shield-computer --env-file .computer.env -f docker-compose.yml -f docker-compose.computer.yml -f docker-compose.malware.yml -f docker-compose.local-tls.yml --profile localtls up -d --no-build --no-deps localproxy

@@ -35,6 +35,6 @@ Later sensor modes and integrations remain explicit roadmap work in `SENSOR.md`;
 their presence in planning documents is not proof they were implemented.
 
 Owner steering on 15 November: keep computer hosting local; no new public tunnel
-is being opened. The former temporary hostname expired. A trusted local HTTPS
-setup is needed for signed-in browser use; public availability and permissioned
+is being opened. The former temporary hostname expired. A loopback-only Caddy HTTPS configuration and CA-verified account/coverage CI
+flow now pass. Windows activation and trusted-browser setup remain pending; public availability and permissioned
 remote-site trials remain deferred, not completed.
