@@ -40,3 +40,35 @@ python tools/benchmark_sensor_sockets.py --samples 400
 
 Only ephemeral loopback listeners and synthetic traffic are used. No public URL,
 real website, private API key, persistent account or malware is involved.
+
+## Production WSGI comparison
+
+Waitress 3.0.2, four worker threads, passed all four unchanged targets in two
+independent 400-pair runs with the same SDK sources. The first run's added
+median/p95 was 0.112/0.651 ms (normal online), 0.634/2.477 ms (large online),
+0.139/0.641 ms (normal refused), and 0.907/3.017 ms (large refused). The repeat's
+largest added p95 was 3.455 ms. Each online run received all 840 expected events,
+with zero drops and zero seeded-secret occurrences. Offline responses completed
+and every expected event was counted as dropped after shutdown.
+
+Raw reports: `sensor-socket-waitress.json` and
+`sensor-socket-waitress-repeat.json`. The earlier failed Werkzeug result remains
+unchanged. This comparison changes the host-server harness, not SDK code. It
+supports this tested server configuration; it does not identify every source of
+Werkzeug timing variation or establish concurrent/deployed Flask performance.
+
+```powershell
+python -m pip install waitress==3.0.2
+$env:NO_PROXY='127.0.0.1'
+python tools/benchmark_sensor_sockets.py --framework wsgi --wsgi-server waitress --samples 400 --output sensor-socket-waitress.json
+```
+
+For a real Flask host, use an appropriate production server rather than the
+Flask development server. On Windows, a module exporting `app` can be served
+locally using `waitress-serve --listen=127.0.0.1:8080 --threads=4 your_module:app`
+after wrapping `app.wsgi_app` with the SDK. Replace `your_module` with the actual
+module name. The server dependency is optional for sensor users; it is pinned in
+development requirements for this benchmark, not added to the sensor package.
+TLS, process supervision and actual workload sizing remain deployment work.
+
+Primary server reference: [Waitress documentation](https://docs.pylonsproject.org/projects/waitress/en/stable/).

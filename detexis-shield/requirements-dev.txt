@@ -7,3 +7,6 @@ scikit-learn==1.6.1
 numpy==2.2.6
 scipy==1.15.3
 joblib==1.4.2
+
+# Optional production WSGI comparison for local sensor benchmarks.
+waitress==3.0.2

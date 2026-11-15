@@ -94,6 +94,15 @@ This does not establish deployed-server or concurrent overhead. Automated tests 
 buffer pressure, retries, request exceptions and fail-open behavior; the Docker
 validation also checks a host response while the real ingest API is stopped.
 
+## Loopback TCP measurements
+
+On 15 November the real-socket ASGI cases met the <5 ms median / <10 ms p95
+added-latency targets. A threaded Werkzeug WSGI harness failed three p95 cases;
+two subsequent Waitress 3.0.2 runs passed with unchanged SDK code and targets.
+`SOCKET-OVERHEAD.md` preserves every result and its limits. These sequential
+Windows/loopback measurements are stronger than in-process tests, but do not
+establish concurrent, remote-TLS or arbitrary deployed-server performance.
+
 ## Not included yet
 
 - Dedicated Django integration/validation and a Node/Express package.

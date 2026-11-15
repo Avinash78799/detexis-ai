@@ -84,7 +84,7 @@ def collector(online):
 
 
 @contextmanager
-def host(framework, sensor):
+def host(framework, sensor, wsgi_server="werkzeug"):
     if framework == "asgi":
         async def app(scope, receive, send):
             await send({"type":"http.response.start","status":200,"headers":[(b"content-length",b"2")]})
@@ -113,17 +113,33 @@ def host(framework, sensor):
         observed = sensor(app)
         def dispatch(environ, start_response):
             return (observed if environ["PATH_INFO"] == "/observed" else app)(environ, start_response)
-        class QuietHandler(WSGIRequestHandler):
-            def log(self, *args, **kwargs):
-                pass
-        server = make_server("127.0.0.1", 0, dispatch, threaded=True, request_handler=QuietHandler)
-        port = server.server_port
-        thread = threading.Thread(target=server.serve_forever, daemon=True)
-        thread.start()
-        def stop():
-            server.shutdown()
-            server.server_close()
-            thread.join(timeout=5)
+        if wsgi_server == "waitress":
+            from waitress import create_server
+            server = create_server(dispatch, host="127.0.0.1", port=0, threads=4,
+                                   map={}, asyncore_loop_timeout=.1)
+            port = server.socket.getsockname()[1]
+            thread = threading.Thread(target=server.run, daemon=True)
+            thread.start()
+            def stop():
+                server.close()
+                server.task_dispatcher.shutdown()
+                for channel in list(server._map.values()):
+                    channel.close()
+                thread.join(timeout=5)
+                if thread.is_alive():
+                    raise RuntimeError("Benchmark WSGI server did not stop")
+        else:
+            class QuietHandler(WSGIRequestHandler):
+                def log(self, *args, **kwargs):
+                    pass
+            server = make_server("127.0.0.1", 0, dispatch, threaded=True, request_handler=QuietHandler)
+            port = server.server_port
+            thread = threading.Thread(target=server.serve_forever, daemon=True)
+            thread.start()
+            def stop():
+                server.shutdown()
+                server.server_close()
+                thread.join(timeout=5)
     try:
         with httpx.Client(base_url=f"http://127.0.0.1:{port}", timeout=3, trust_env=False) as client:
             for _ in range(100):
@@ -140,14 +156,14 @@ def host(framework, sensor):
         observed.client.close()
 
 
-def measure(framework, online, samples):
+def measure(framework, online, samples, wsgi_server="werkzeug"):
     cls = ShieldMiddleware if framework == "asgi" else ShieldWSGIMiddleware
     profiles = {"normal":"q=notebook&password=synthetic-secret", "large":"q="+"%3C%3E%27%22"*512+"&password=synthetic-secret"}
     with collector(online) as (backend, counts):
         def wrap(app):
             return cls(app, backend, "synthetic-benchmark-key", "synthetic-benchmark-salt", flush_interval=.2)
         results = {}
-        with host(framework, wrap) as (origin, observed):
+        with host(framework, wrap, wsgi_server) as (origin, observed):
             with httpx.Client(base_url=origin, timeout=5, trust_env=False) as client:
                 def request(path):
                     started = time.perf_counter_ns()
@@ -178,22 +194,25 @@ def measure(framework, online, samples):
             if online and (counts["events"] != expected or counts["redaction_failures"]):
                 raise RuntimeError("Online telemetry completion or redaction check failed")
         sender["dropped_after_close"] = observed.client.dropped
-    return {"framework":framework,"collector":"online" if online else "connection_refused", "profiles":results,"sender":sender}
+    return {"framework":framework,"host_server":"uvicorn" if framework == "asgi" else wsgi_server,"collector":"online" if online else "connection_refused", "profiles":results,"sender":sender}
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--samples", type=int, default=400)
     parser.add_argument("--output", type=Path, default=Path("sensor-socket-benchmark.json"))
+    parser.add_argument("--framework", choices=["both","asgi","wsgi"], default="both")
+    parser.add_argument("--wsgi-server", choices=["werkzeug","waitress"], default="werkzeug")
     args = parser.parse_args()
     if not 100 <= args.samples <= 1000:
         parser.error("samples must be between 100 and 1000")
-    cases = [measure(framework, online, args.samples) for framework in ("asgi","wsgi") for online in (True,False)]
+    frameworks = ("asgi","wsgi") if args.framework == "both" else (args.framework,)
+    cases = [measure(framework, online, args.samples, args.wsgi_server) for framework in frameworks for online in (True,False)]
     root = Path(__file__).resolve().parents[1]
     report = {"checked_at":datetime.now(timezone.utc).isoformat(),"python":platform.python_version(),
               "source_sha256":{str(p.relative_to(root)):hashlib.sha256(p.read_bytes()).hexdigest() for p in [Path(__file__).resolve(), *sorted((root/'sensor-sdk/detexis_shield').glob('*.py'))]},
               "cases":cases,"targets_passed":all(p["target_passed"] for c in cases for p in c["profiles"].values()),
-              "scope":"Alternating sequential loopback TCP pairs, one host process and real background sender. Uvicorn ASGI and Werkzeug threaded WSGI harnesses. Collector acknowledges synthetic events only; no actual ingest/Redis/DB, remote TLS, concurrency, production-server capacity or representative traffic claim. Offline telemetry loss is expected and explicitly counted."}
+              "scope":"Alternating sequential loopback TCP pairs, one host process and real background sender. Server choice is recorded per case; Waitress uses four worker threads. Collector acknowledges synthetic events only; no actual ingest/Redis/DB, remote TLS, concurrency, production-server capacity or representative traffic claim. Offline telemetry loss is expected and explicitly counted."}
     args.output.write_text(json.dumps(report,indent=2)+"\n",encoding="utf-8")
     print(json.dumps(report,indent=2))
     if not report["targets_passed"]:
