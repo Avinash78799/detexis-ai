@@ -1,0 +1,201 @@
+{
+  "checked_at": "2026-11-15T06:36:35.790977+00:00",
+  "python": "3.12.9",
+  "source_sha256": {
+    "tools\\benchmark_sensor_sockets.py": "eb308dcdb0fbf8cd7777de07cfc99c436ebca2ac0c2ecf3d603a165ebfad5eac",
+    "sensor-sdk\\detexis_shield\\__init__.py": "9f285333e68327d1fc357608e270ef308813903954d584ac34726b363db4d07b",
+    "sensor-sdk\\detexis_shield\\client.py": "508654edde9ae6643f1dbd8622f6e8d3002d9c374edcc62e3429629dbd6eb522",
+    "sensor-sdk\\detexis_shield\\features.py": "b95bc9218a3f9f532a40117094ce2029f17e28f3b99879a6e503464fd0bbfc86",
+    "sensor-sdk\\detexis_shield\\middleware.py": "cf6d7bed42b988206902ae35d1a88a9ad9c1d536aedeb0618ceb4403929be751",
+    "sensor-sdk\\detexis_shield\\redact.py": "cea1c9f9be5ebb32d8da31e907d8feab11ca70e476275d52db9b9d8c36abf4ee",
+    "sensor-sdk\\detexis_shield\\wsgi.py": "71cacff1160dfdd3bbb908e42404c542dd5a7911de95af59a2a56a7610be39b3"
+  },
+  "cases": [
+    {
+      "framework": "asgi",
+      "collector": "online",
+      "profiles": {
+        "normal": {
+          "samples": 400,
+          "baseline": {
+            "median_ms": 0.7611,
+            "p95_ms": 1.0898
+          },
+          "with_sensor": {
+            "median_ms": 0.8926000000000001,
+            "p95_ms": 1.3201
+          },
+          "paired_added_latency": {
+            "median_ms": 0.12115000000000004,
+            "p95_ms": 0.36040000000000005
+          },
+          "target_passed": true
+        },
+        "large": {
+          "samples": 400,
+          "baseline": {
+            "median_ms": 3.02435,
+            "p95_ms": 3.7485
+          },
+          "with_sensor": {
+            "median_ms": 3.84585,
+            "p95_ms": 4.9463
+          },
+          "paired_added_latency": {
+            "median_ms": 0.8051999999999997,
+            "p95_ms": 1.6100000000000003
+          },
+          "target_passed": true
+        }
+      },
+      "sender": {
+        "expected_synthetic_events": 840,
+        "events": 840,
+        "redaction_failures": 0,
+        "dropped_before_close": 0,
+        "buffered_before_close": 0,
+        "dropped_after_close": 0
+      }
+    },
+    {
+      "framework": "asgi",
+      "collector": "connection_refused",
+      "profiles": {
+        "normal": {
+          "samples": 400,
+          "baseline": {
+            "median_ms": 0.7171,
+            "p95_ms": 0.8202
+          },
+          "with_sensor": {
+            "median_ms": 0.8098000000000001,
+            "p95_ms": 0.9815
+          },
+          "paired_added_latency": {
+            "median_ms": 0.09405000000000008,
+            "p95_ms": 0.25149999999999995
+          },
+          "target_passed": true
+        },
+        "large": {
+          "samples": 400,
+          "baseline": {
+            "median_ms": 3.0241,
+            "p95_ms": 5.4076
+          },
+          "with_sensor": {
+            "median_ms": 3.80975,
+            "p95_ms": 7.2108
+          },
+          "paired_added_latency": {
+            "median_ms": 0.7855000000000001,
+            "p95_ms": 1.9849999999999999
+          },
+          "target_passed": true
+        }
+      },
+      "sender": {
+        "expected_synthetic_events": 840,
+        "events": 0,
+        "redaction_failures": 0,
+        "dropped_before_close": 0,
+        "buffered_before_close": 839,
+        "dropped_after_close": 840
+      }
+    },
+    {
+      "framework": "wsgi",
+      "collector": "online",
+      "profiles": {
+        "normal": {
+          "samples": 400,
+          "baseline": {
+            "median_ms": 5.4625,
+            "p95_ms": 20.4427
+          },
+          "with_sensor": {
+            "median_ms": 5.7035,
+            "p95_ms": 18.1003
+          },
+          "paired_added_latency": {
+            "median_ms": 0.3306000000000001,
+            "p95_ms": 13.162099999999999
+          },
+          "target_passed": false
+        },
+        "large": {
+          "samples": 400,
+          "baseline": {
+            "median_ms": 10.26875,
+            "p95_ms": 31.3393
+          },
+          "with_sensor": {
+            "median_ms": 11.4851,
+            "p95_ms": 33.9858
+          },
+          "paired_added_latency": {
+            "median_ms": 1.2416,
+            "p95_ms": 18.9001
+          },
+          "target_passed": false
+        }
+      },
+      "sender": {
+        "expected_synthetic_events": 840,
+        "events": 840,
+        "redaction_failures": 0,
+        "dropped_before_close": 0,
+        "buffered_before_close": 0,
+        "dropped_after_close": 0
+      }
+    },
+    {
+      "framework": "wsgi",
+      "collector": "connection_refused",
+      "profiles": {
+        "normal": {
+          "samples": 400,
+          "baseline": {
+            "median_ms": 3.3856,
+            "p95_ms": 14.1462
+          },
+          "with_sensor": {
+            "median_ms": 3.5896,
+            "p95_ms": 15.6983
+          },
+          "paired_added_latency": {
+            "median_ms": 0.20394999999999985,
+            "p95_ms": 8.5627
+          },
+          "target_passed": true
+        },
+        "large": {
+          "samples": 400,
+          "baseline": {
+            "median_ms": 9.7858,
+            "p95_ms": 27.7431
+          },
+          "with_sensor": {
+            "median_ms": 11.019449999999999,
+            "p95_ms": 28.0349
+          },
+          "paired_added_latency": {
+            "median_ms": 1.0955999999999997,
+            "p95_ms": 15.942
+          },
+          "target_passed": false
+        }
+      },
+      "sender": {
+        "expected_synthetic_events": 840,
+        "events": 0,
+        "redaction_failures": 0,
+        "dropped_before_close": 1,
+        "buffered_before_close": 789,
+        "dropped_after_close": 840
+      }
+    }
+  ],
+  "targets_passed": false,
+  "scope": "Alternating sequential loopback TCP pairs, one host process and real background sender. Uvicorn ASGI and Werkzeug threaded WSGI harnesses. Collector acknowledges synthetic events only; no actual ingest/Redis/DB, remote TLS, concurrency, production-server capacity or representative traffic claim. Offline telemetry loss is expected and explicitly counted."
+}
