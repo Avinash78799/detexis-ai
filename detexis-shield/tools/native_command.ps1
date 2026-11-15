@@ -3,7 +3,12 @@ function Invoke-ShieldNative {
         [Parameter(Mandatory=$true)][string]$Program,
         [string[]]$Arguments = @()
     )
-    $executable = Get-Command $Program -CommandType Application -ErrorAction Stop
+    # Docker Desktop ships both docker.exe and an extensionless docker file.
+    # Resolve the Windows executable explicitly and retain exactly one result.
+    if ([Environment]::OSVersion.Platform -eq [PlatformID]::Win32NT -and -not [IO.Path]::GetExtension($Program)) {
+        $Program += '.exe'
+    }
+    $executable = Get-Command $Program -CommandType Application -ErrorAction Stop | Select-Object -First 1
     # Windows PowerShell 5.1 wraps native stderr in ErrorRecord objects, even
     # for successful commands. Keep this preference local and check the exit code.
     $ErrorActionPreference = 'Continue'
