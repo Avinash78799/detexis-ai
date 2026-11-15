@@ -109,7 +109,8 @@ establish concurrent, remote-TLS or arbitrary deployed-server performance.
 - Reverse-proxy mode, browser JavaScript/CSP script monitoring and auto-hardening.
 - Opt-in redacted body capture or response body inspection.
 - Fake API-key/DB-record traps and account-aware credential-stuffing detection.
-- Offline/downtime alerts, MITRE mappings and LLM-written incident summaries.
+- MITRE mappings and LLM-written incident summaries.
+- Browser push and external delivery of sensor-health signals (in-app history is implemented in `SENSOR-HEALTH.md`).
 - LLM-app firewall, account-takeover, ASN/device/travel and API-abuse analysis.
 - Blocking or an experimental block switch. V1 always monitors and alerts.
 - PyPI publication, 24/7 hosted operations and a real-site monitoring trial.
@@ -118,3 +119,8 @@ A honeytoken request is a signal for review, not proof of an attacker: authorize
 scanners and security tests can also trigger it. ML smoke tests verify software
 behavior; a real classifier and false-positive measurements still need reviewed
 traffic and compatible datasets.
+
+Heartbeat-gap source update: previously reporting sites now have tenant-scoped
+in-app signals and resumption history, checked by maintenance. Migration 0009,
+rollout scope and operational limits are in `SENSOR-HEALTH.md`. This is not an
+attack verdict or proof that a website is offline.

@@ -98,6 +98,26 @@ with TestClient(app,base_url="https://testserver") as owner:
     reviewed=owner.post(detail_path+"/status",headers=csrf,json={"status":"acknowledged","note":"Reviewed in real PostgreSQL/Redis integration"})
     assert reviewed.status_code==200,reviewed.text
     assert owner.get(detail_path).json()["actions"][0]["status"]=="acknowledged"
+    # Two maintenance processes must not open duplicate heartbeat-gap history.
+    from datetime import timedelta
+    from app.sensor_health import check_sensor_health
+    from app.models import SensorHealthAlert
+    from sqlalchemy import inspect
+    with SessionLocal() as db:
+        db.get(Site,owner_site).last_heartbeat=datetime.now(timezone.utc)-timedelta(minutes=4)
+        for key in db.scalars(select(ApiKey).where(ApiKey.site_id==owner_site)):
+            key.created_at=datetime.now(timezone.utc)-timedelta(minutes=5)
+        db.commit()
+        assert any(index['name']=='uq_sensor_health_open_site' and index['unique'] for index in inspect(db.bind).get_indexes('sensor_health_alerts'))
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        transitions=list(pool.map(lambda _:check_sensor_health(),range(2)))
+    assert sum(item['opened'] for item in transitions)==1,transitions
+    health=owner.get('/app/api/sensor-health').json()
+    assert health['open_count']==1 and len(health['alerts'])==1
+    assert owner.get('/app/sensor-health').status_code==200
+    assert owner.post('/v1/heartbeat',headers={'X-API-Key':created.json()['api_key']}).status_code==200
+    check_sensor_health()
+    assert owner.get('/app/api/sensor-health').json()['alerts'][0]['resolution']=='heartbeat_resumed'
     from concurrent.futures import ThreadPoolExecutor
     recovery_payload={"email":registered.json()["email"],"password":"Concurrent-reset-test-passphrase","recovery_code":registered.json()["recovery_code"]}
     def recover_once():

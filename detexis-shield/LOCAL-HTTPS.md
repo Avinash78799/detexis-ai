@@ -78,8 +78,10 @@ this local origin separately from any previous public origin.
 ## Persistence, stop and removal
 
 The local CA persists in `detexis-shield-computer_local_tls_data`; certificate
-renewal needs that volume and a running proxy. Normal `computer.py start` does
-not activate this optional proxy; repeat the explicit proxy command if needed.
+renewal needs that volume and a running proxy. `python tools/computer.py start --local-https` explicitly starts the optional
+proxy on later application updates. Plain `start` does not activate an inactive
+proxy. `computer.py status` includes optional/stopped services and `stop` includes
+the proxy while retaining its CA volume.
 Docker restart policy cannot start Windows/Docker or prevent sleep.
 
 Stop only the optional proxy using the same Compose files and `stop localproxy`.

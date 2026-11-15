@@ -30,6 +30,22 @@ class ApiKey(Base):
     prefix: Mapped[str] = mapped_column(String(12), unique=True, index=True)
     key_hash: Mapped[str] = mapped_column(String(64))  # sha256 hex; raw key is never stored
     revoked: Mapped[bool] = mapped_column(default=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now, server_default=text("CURRENT_TIMESTAMP"))
+
+
+class SensorHealthAlert(Base):
+    __tablename__ = "sensor_health_alerts"
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    site_id: Mapped[str] = mapped_column(ForeignKey("sites.id"))
+    opened_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
+    heartbeat_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    resolved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    resolution: Mapped[str | None] = mapped_column(String(24), nullable=True)
+    __table_args__ = (
+        Index("ix_sensor_health_site_opened", "site_id", "opened_at"),
+        Index("uq_sensor_health_open_site", "site_id", unique=True,
+              postgresql_where=text("resolved_at IS NULL"), sqlite_where=text("resolved_at IS NULL")),
+    )
 
 
 class Event(Base):

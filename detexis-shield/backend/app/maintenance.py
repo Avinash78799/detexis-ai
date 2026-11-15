@@ -7,7 +7,7 @@ from sqlalchemy import delete, select
 
 from .alerts import send_pending
 from .db import SessionLocal
-from .models import Alert, Event, HourBucket, Incident, Scan, BrowserSession, IncidentAction
+from .models import Alert, Event, HourBucket, Incident, Scan, BrowserSession, IncidentAction, SensorHealthAlert
 from .worker import recover_pending
 
 
@@ -25,11 +25,14 @@ def purge(days=None):
         db.execute(delete(Event).where(Event.received_at < cutoff))
         db.execute(delete(HourBucket).where(HourBucket.hour < cutoff))
         db.execute(delete(Scan).where(Scan.created_at < cutoff))
+        db.execute(delete(SensorHealthAlert).where(SensorHealthAlert.resolved_at < cutoff))
         db.commit()
 
 
 def tick():
     recover_pending()
+    from .sensor_health import check_sensor_health
+    check_sensor_health()
     send_pending()
     from .scan_jobs import schedule_rescans
     from .redis_store import get_redis

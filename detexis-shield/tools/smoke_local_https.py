@@ -44,6 +44,9 @@ def main():
         page = client.get("/app/detection")
         assert page.status_code == 200 and manifest.json()["release_id"] in page.text
         assert page.headers["cache-control"] == "no-store"
+        health = client.get("/app/api/sensor-health")
+        assert health.status_code == 200 and health.json()["open_count"] == 0 and health.json()["alerts"] == []
+        assert client.get("/app/sensor-health").status_code == 200
         assert client.post("/app/api/sites", headers={"Origin":ORIGIN}, json={"domain":"fixture.example"}).status_code == 403
         assert client.post("/app/api/login", headers={"Origin":"https://other.example"}, json=body).status_code == 403
         assert client.post("/app/api/login", headers={"Origin":"http://localhost:8443"}, json=body).status_code == 403

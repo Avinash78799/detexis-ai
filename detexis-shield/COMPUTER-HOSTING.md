@@ -47,7 +47,7 @@ produce a safety verdict. See that guide for limits and privacy behavior.
 Open Docker Desktop and wait until its engine is running. From this directory:
 
 ```powershell
-python tools/computer.py start
+python tools/computer.py start --local-https
 python tools/computer.py status
 ```
 
@@ -116,3 +116,10 @@ site-owner consent, a stable reachable URL, uptime, off-device backups, verified
 domain scans, representative ML labels or real adoption. Record only actual
 permissioned sites and observed usage. See `RELEASE-READINESS.md` for remaining
 checks. The benchmark project and its millions of synthetic events are not users.
+
+Local HTTPS lifecycle: `start --local-https` explicitly includes the optional
+proxy after its first setup, without installing trust. Plain `start` leaves the
+optional proxy inactive unless it is already running. `status` shows optional
+and stopped services; `stop` includes the HTTPS proxy and malware engine while
+preserving their volumes. See `SENSOR-HEALTH.md` for migration 0009 and the new
+heartbeat-gap signals; running-instance acceptance is separate from source tests.
