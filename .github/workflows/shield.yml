@@ -62,6 +62,22 @@ jobs:
       - run: docker compose config --quiet
       - run: docker compose -f docker-compose.yml -f docker-compose.validation.yml config --quiet
       - run: docker compose -f docker-compose.yml -f docker-compose.computer.yml -f docker-compose.malware.yml --profile malware config --quiet
+  windows-helpers:
+    if: github.event_name == 'pull_request'
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: detexis-shield
+        shell: powershell
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify native stderr and exit handling in Windows PowerShell
+        run: ./tests/test_native_command.ps1
+      - name: Parse local HTTPS startup helper
+        run: |
+          $tokens=$null; $errors=$null
+          [System.Management.Automation.Language.Parser]::ParseFile((Join-Path $PWD 'tools/start_local_https.ps1'),[ref]$tokens,[ref]$errors) | Out-Null
+          if ($errors.Count) { throw ($errors | Out-String) }
   local-https:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
