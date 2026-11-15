@@ -1,0 +1,26 @@
+# Layer with base + computer + malware files; never with the public prod proxy.
+services:
+  localproxy:
+    image: caddy:2.11.9
+    profiles: [localtls]
+    restart: unless-stopped
+    ports: ["127.0.0.1:8443:8443"]
+    environment:
+      XDG_DATA_HOME: /data
+      XDG_CONFIG_HOME: /config
+    volumes:
+      - ./Caddyfile.local:/etc/caddy/Caddyfile:ro
+      - local_tls_data:/data
+      - local_tls_config:/config
+    networks: [app_egress]
+    read_only: true
+    tmpfs: [/tmp:size=16m]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 128m
+    pids_limit: 64
+    depends_on:
+      api: {condition: service_healthy}
+volumes:
+  local_tls_data:
+  local_tls_config:

@@ -62,6 +62,34 @@ jobs:
       - run: docker compose config --quiet
       - run: docker compose -f docker-compose.yml -f docker-compose.validation.yml config --quiet
       - run: docker compose -f docker-compose.yml -f docker-compose.computer.yml -f docker-compose.malware.yml --profile malware config --quiet
+  local-https:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: detexis-shield
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install httpx==0.28.1
+      - name: Validate isolated local TLS configuration
+        run: |
+          docker compose -p shield-local-https-ci -f docker-compose.yml -f docker-compose.validation.yml -f docker-compose.local-tls.yml --profile localtls config --quiet
+          docker run --rm -v "$PWD/Caddyfile.local:/etc/caddy/Caddyfile:ro" caddy:2.11.9 caddy validate --config /etc/caddy/Caddyfile
+      - name: Start disposable API and local TLS proxy
+        run: docker compose -p shield-local-https-ci -f docker-compose.yml -f docker-compose.validation.yml -f docker-compose.local-tls.yml --profile localtls up --build -d --wait api localproxy
+      - name: Verify TLS and authenticated account flow without installing trust
+        run: |
+          docker cp shield-local-https-ci-localproxy-1:/data/caddy/pki/authorities/local/root.crt "$RUNNER_TEMP/shield-local-root.crt"
+          python tools/smoke_local_https.py --ca "$RUNNER_TEMP/shield-local-root.crt" --confirm-disposable-ci-stack
+      - name: Show failure logs
+        if: failure()
+        run: docker compose -p shield-local-https-ci -f docker-compose.yml -f docker-compose.validation.yml -f docker-compose.local-tls.yml --profile localtls logs --tail 60 api localproxy
+      - name: Stop disposable CI services
+        if: always()
+        run: docker compose -p shield-local-https-ci -f docker-compose.yml -f docker-compose.validation.yml -f docker-compose.local-tls.yml --profile localtls stop
   ml-smoke:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
