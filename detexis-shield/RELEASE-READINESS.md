@@ -1,4 +1,4 @@
-# Release readiness: 15 November 2026
+# Release readiness: 17 November 2026
 
 The complete product goal is **not achieved**. Implemented code, local tests and
 temporary demonstrations do not prove a continuously operated public service.
@@ -23,6 +23,26 @@ The percentage previously discussed was an effort estimate, not a release gate.
 | Zero cost and no card | Owner chose computer hosting; no cloud account is required; see `COMPUTER-HOSTING.md` | Working Docker engine, stable reachable HTTPS access for remote sensors, availability and backup arrangements |
 | Five to ten real sites and honest resume/demo | Onboarding runbook; synthetic fixtures clearly labeled | Owner permission, installation, observed usage, actual N and demo video |
 
+## Local update checked on 17 November
+
+GitHub Actions run `44046751761` passed all four jobs: 346 Python tests,
+JavaScript checks, dependency audit, Windows helpers, local HTTPS account flow
+and ML software smoke. This does not establish classifier quality.
+
+The computer instance was backed up before updating API, worker and maintenance
+to migration `0009`. The cached candidate's 63 application/migration files matched
+the current source; it reused the existing dependency image rather than fetching
+new packages. Previous images were preserved. All three updated services became
+healthy. Read-only checks confirmed both existing accounts remained, schema/index
+creation, CA-verified HTTPS readiness and unauthenticated owner-API refusal.
+The owner also reports that Chrome opens the local page without a certificate
+warning. Automated signed-in desktop-browser acceptance remains incomplete:
+the browser tool stopped because it could not verify the Incognito URL.
+The upgraded database was restored from its private host backup into a separate
+database: both user rows matched, constraints validated and the partial unique
+health index survived. Site/health history was empty; off-device and populated
+history recovery are not established. See `BACKUP-RESTORE.md`.
+
 Next independently actionable work includes deployment-config validation, further
 local multi-tenant/abuse checks and accessibility review. External inputs needed
 are the chosen computer's operating/backup arrangements, a stable HTTPS origin,
@@ -36,5 +56,5 @@ their presence in planning documents is not proof they were implemented.
 
 Owner steering on 15 November: keep computer hosting local; no new public tunnel
 is being opened. The former temporary hostname expired. A loopback-only Caddy HTTPS configuration and CA-verified account/coverage CI
-flow now pass. Windows activation and trusted-browser setup remain pending; public availability and permissioned
+flow now pass. Windows activation and owner-reported trusted-browser setup now work; public availability and permissioned
 remote-site trials remain deferred, not completed.

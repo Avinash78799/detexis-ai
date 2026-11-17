@@ -1,8 +1,16 @@
 # Sensor heartbeat-gap signals
 
-This change adds operational signals separate from attack incidents. It is source
-implementation and regression work; deployment and rendered-browser acceptance
-must be verified before claiming the running instance has the feature.
+This change adds operational signals separate from attack incidents. The local
+computer instance was upgraded to migration 0009 on 17 November 2026 after a
+private backup. API, worker and maintenance became healthy; source/image matching,
+CA-verified HTTPS readiness and unauthenticated owner-API refusal passed.
+Rendered signed-in browser acceptance remains incomplete.
+
+The workspace now links directly to sensor health. The page uses readable UTC
+`time` elements, a keyboard skip link, a neutral empty state with setup links,
+and expandable monitoring details below the signal history. Offline template
+rendering checked empty, open, resumed and disabled states and domain escaping.
+These checks do not establish rendered visual or assistive-technology acceptance.
 
 Maintenance opens a signal when a site that has previously sent a heartbeat has
 gone more than three minutes without another, while at least one sensor key is

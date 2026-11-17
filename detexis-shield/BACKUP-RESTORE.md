@@ -23,6 +23,22 @@ constraints were validated; checks found zero orphan events and incident actions
 All accounts/traffic in this fixture are synthetic. These are local recovery
 checks, not a measured production recovery-time or recovery-point guarantee.
 
+## Computer instance rehearsal, 17 November 2026
+
+After migration 0009, a new 27,126-byte custom-format dump was copied to the
+private host backup directory, copied back under a new temporary name, and
+restored with `--exit-on-error` into a fresh isolated database. Both user rows
+matched an aggregate digest of the source rows. Counts matched for users (2),
+sites, keys, events and sensor-health history (all 0). Migration 0009, validated
+constraints and the partial unique open-gap index were present in the restore.
+
+The rehearsal database `shield_restore_0009_2dcacbe24bd8` remains isolated; no
+application writers or delivery processes were attached. The private report is
+`outputs/health-0009-restore.json` in the task workspace. This checks the actual
+local account backup and upgraded schema, but cannot establish recovery of
+populated heartbeat history or an off-device backup. No production recovery-time
+or recovery-point objective was measured.
+
 ## Repeat safely
 
 Use the actual database container name shown by `docker compose ps`. These commands
