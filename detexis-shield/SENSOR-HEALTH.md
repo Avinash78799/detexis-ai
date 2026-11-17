@@ -57,6 +57,13 @@ is `python tools/computer.py start --local-https`; it retains the local CA volum
 and never installs certificate trust. `status` now shows optional/stopped services,
 and `stop` includes the optional HTTPS proxy without removing any volumes.
 
+The PowerShell wrapper `tools/update_local.ps1 -BackupDirectory YOUR_PRIVATE_FOLDER`
+performs the existing database backup command first and starts the local stack
+only if it succeeds. Use `-Python` for a specific Python executable. It preserves
+CA volumes and never installs trust. Windows CI checks this ordering and ensures
+a simulated backup failure prevents startup. A same-computer backup is not an
+off-device recovery guarantee.
+
 The previous rollback rehearsal was at migration 0008 and does not prove rollback
 of this release. Downgrading 0009 drops heartbeat-gap history. Do not automatically
 downgrade a live database. Fresh backup/restore and runtime acceptance are still

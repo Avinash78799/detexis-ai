@@ -73,6 +73,8 @@ jobs:
       - uses: actions/checkout@v4
       - name: Verify native stderr and exit handling in Windows PowerShell
         run: ./tests/test_native_command.ps1
+      - name: Verify local update stops after backup failure
+        run: ./tests/test_local_update.ps1
       - name: Parse local HTTPS startup helper
         run: |
           $tokens=$null; $errors=$null
