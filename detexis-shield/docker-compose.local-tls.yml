@@ -4,7 +4,8 @@ services:
     image: caddy:2.11.9
     profiles: [localtls]
     restart: unless-stopped
-    ports: ["127.0.0.1:8443:8443"]
+    # Both loopbacks avoid slow IPv6-to-IPv4 fallback for localhost clients.
+    ports: ["127.0.0.1:8443:8443", "[::1]:8443:8443"]
     environment:
       XDG_DATA_HOME: /data
       XDG_CONFIG_HOME: /config

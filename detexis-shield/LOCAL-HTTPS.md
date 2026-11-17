@@ -4,15 +4,25 @@ Prepared on 15 November 2026 after the owner chose local computer hosting withou
 a domain. Disposable Linux CI at commit `3a69f146` passed CA/hostname verification,
 HTTPS account registration/session cookies, the authenticated coverage page and
 manifest, no-store, CSRF/origin refusals and refusal by a client without the CA.
-No host trust was installed. Windows activation, certificate trust and warning-free
-desktop-browser acceptance remain pending; this is not a public address.
+No host trust was installed by CI. The owner subsequently activated Windows
+hosting, imported the reviewed root and reported warning-free Chrome access.
+Signed-in automated browser acceptance remains incomplete; this is not a public address.
 
 Shield keeps its HTTPS Origin checks and Secure, HttpOnly, SameSite cookies.
-The optional Caddy proxy provides `https://localhost:8443` and
-`https://127.0.0.1:8443`, with a private local certificate authority. Only
-127.0.0.1:8443 is published; there is no public tunnel, DNS purchase, router
+The optional Caddy proxy provides `https://localhost:8443`, with a private local
+certificate authority. Only IPv4 and IPv6 loopback (`127.0.0.1:8443` and
+`[::1]:8443`) are published; there is no public tunnel, DNS purchase, router
 forwarding, database exposure or automatic change to Windows/browser trust.
 The proxy has no database credentials, Docker socket or host trust-store mount.
+Use the `localhost` URL: raw-IP HTTPS failed in the current Python-client check
+and is not an accepted alternative. No certificate-warning bypass is required.
+
+An IPv4-only binding caused roughly 2.1-second cold `localhost` HTTP-client
+connections on the owner machine. In a disposable proxy, adding IPv6 loopback
+reduced four simultaneous cold readiness requests to 50–54 ms with CA/hostname
+verification retained. This diagnostic is not deployed-load or browser evidence.
+The startup helper validates the complete Docker port-binding set and refuses
+wildcards, missing loopbacks, duplicate addresses and unexpected ports.
 
 ## Start the prepared proxy
 

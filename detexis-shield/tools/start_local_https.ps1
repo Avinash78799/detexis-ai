@@ -4,6 +4,7 @@ param(
 )
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'native_command.ps1')
+. (Join-Path $PSScriptRoot 'local_tls_ports.ps1')
 $shieldRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 $shieldEnvironment = Join-Path $shieldRoot '.computer.env'
 if (-not (Test-Path -LiteralPath $shieldEnvironment -PathType Leaf)) {
@@ -29,8 +30,8 @@ Invoke-ShieldNative -Program docker -Arguments ($shieldCompose + @('config','--q
 Invoke-ShieldNative -Program docker -Arguments ($shieldCompose + @('up','-d','--no-build','--no-deps','localproxy'))
 $shieldProxy = ((Invoke-ShieldNative -Program docker -Arguments ($shieldCompose + @('ps','-q','localproxy'))) -join "`n").Trim()
 if (-not $shieldProxy) { throw 'Local proxy container was not found.' }
-$shieldPort = ((Invoke-ShieldNative -Program docker -Arguments ($shieldCompose + @('port','localproxy','8443'))) -join "`n").Trim()
-if ($shieldPort -ne '127.0.0.1:8443') { throw 'Unexpected proxy port mapping. Do not use it until reviewed.' }
+$shieldPorts = ((Invoke-ShieldNative -Program docker -Arguments @('inspect',$shieldProxy,'--format','{{json .HostConfig.PortBindings}}')) -join "`n").Trim()
+Assert-ShieldLocalProxyBindings -Json $shieldPorts
 
 # Export only the public CA certificate. No host trust store is modified.
 Invoke-ShieldNative -Program docker -Arguments @('cp',"${shieldProxy}:/data/caddy/pki/authorities/local/root.crt",$certificateFile)
