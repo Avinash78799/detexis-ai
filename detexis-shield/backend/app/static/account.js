@@ -163,6 +163,31 @@ for (const id of ['auth-form','site-form','recover-form','recovery-form','passwo
   finally {buttons.forEach(b => b.disabled = false);}
 });
 node('logout').addEventListener('click', async () => {try {await api('logout', {}); location.reload();} catch (error) {node('message').textContent = error.message;}});
+node('delete-account-form').addEventListener('submit', async event => {
+  event.preventDefault();
+  const body = Object.fromEntries(new FormData(event.target));
+  const fields = [...node('workspace').querySelectorAll('button, input')];
+  const states = fields.map(field => field.disabled);
+  fields.forEach(field => field.disabled = true);
+  node('delete-status').textContent = 'Removing your account and monitoring history…';
+  try {
+    await api('account/delete', body);
+    csrf = '';
+    node('workspace').hidden = true; node('auth').hidden = false;
+    for (const id of ['credentials', 'snippet', 'recovery-value', 'owner-email']) node(id).textContent = '';
+    node('sites').replaceChildren();
+    node('recovery-secret').hidden = true; node('installation').hidden = true;
+    document.querySelector('.account-shell').classList.remove('signed-in');
+    document.querySelector('.account-shell > h1').textContent = 'Your account was deleted.';
+    document.querySelector('.account-shell > .subtitle').textContent = 'Your sensor keys and saved workspace history were removed from the live database.';
+    node('message').textContent = 'All sessions were signed out. Backup copies follow the operator’s retention policy.';
+    node('auth-form').reset(); node('auth').querySelector('input').focus();
+  } catch (error) {node('delete-status').textContent = error.message;}
+  finally {
+    fields.forEach((field, index) => field.disabled = states[index]);
+    event.target.reset();
+  }
+});
 if (location.protocol !== 'https:') {
   node('message').textContent = 'Account actions require HTTPS. Open your Shield service’s HTTPS address to sign in, create an account or recover access. The installation and data-handling guides remain available here.';
   node('auth').querySelectorAll('input, button[type="submit"]').forEach(field => field.disabled = true);

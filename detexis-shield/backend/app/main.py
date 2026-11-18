@@ -1,6 +1,8 @@
 from datetime import datetime, timezone
-from fastapi import Depends, FastAPI
+from fastapi import Depends, FastAPI, HTTPException
 from sqlalchemy.orm import Session
+from sqlalchemy.orm.exc import StaleDataError
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.dialects import postgresql, sqlite
 from .auth import current_site
 from .db import get_db
@@ -90,7 +92,14 @@ def ingest(batch: BatchIn, site: Site = Depends(current_site), db: Session = Dep
     enforce_limit(redis, site.id, len(batch.events))
     # site_id always comes from the API key, never from the payload (tenant isolation).
     rows = [{**e.model_dump(), "site_id": site.id} for e in batch.events]
-    inserted = insert_ignore(db, rows) if rows else []
+    site_id = site.id
+    try:
+        inserted = insert_ignore(db, rows) if rows else []
+    except IntegrityError:
+        db.rollback()
+        if db.get(Site, site_id) is None:
+            raise HTTPException(401, "invalid api key")
+        raise
     from .worker import enqueue_batch
     from redis.exceptions import RedisError
     queued = True
@@ -113,5 +122,9 @@ def config(site: Site = Depends(current_site)):
 def heartbeat(site: Site = Depends(current_site), db: Session = Depends(get_db)):
     site.last_heartbeat = datetime.now(timezone.utc)
     db.add(site)
-    db.commit()
+    try:
+        db.commit()
+    except StaleDataError:
+        db.rollback()
+        raise HTTPException(401, "invalid api key")
     return {"ok": True}

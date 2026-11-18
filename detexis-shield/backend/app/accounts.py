@@ -5,14 +5,15 @@ import re
 import secrets
 from datetime import datetime, timedelta, timezone
 from urllib.parse import urlsplit
+from typing import Literal
 
 from argon2 import PasswordHasher
 from argon2.exceptions import VerificationError, InvalidHashError
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from pydantic import BaseModel, Field, field_validator
 from redis.exceptions import RedisError
-from sqlalchemy import select, func, delete
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy import select, func, delete, text
+from sqlalchemy.exc import IntegrityError, OperationalError
 
 from .auth import new_api_key
 from .db import get_db
@@ -153,6 +154,40 @@ class CurrentPassword(BaseModel):
     password: str = Field(min_length=12, max_length=128)
 
 
+def locked_owner(db, user, *, no_key_update=False):
+    current = db.scalar(select(User).where(User.id == user.id)
+                        .with_for_update(key_share=no_key_update).execution_options(populate_existing=True))
+    if current is None:
+        raise HTTPException(401, "Account no longer available; sign in again")
+    return current
+
+
+class AccountRemoval(CurrentPassword):
+    confirmation: Literal["DELETE"]
+
+
+@router.post("/account/delete", status_code=204)
+def delete_account(body: AccountRemoval, request: Request, response: Response, user=Depends(owner),
+                   db=Depends(get_db), redis=Depends(get_redis)):
+    from .account_removal import remove_account_data
+    throttle(request, redis, identity=user.id, limit=3, namespace="account-delete")
+    try:
+        if db.bind.dialect.name == "postgresql":
+            db.execute(text("SET LOCAL lock_timeout = '3s'"))
+            db.execute(text("SET LOCAL statement_timeout = '10s'"))
+        user = locked_owner(db, user, no_key_update=True)
+        try:
+            hasher.verify(user.password_hash, body.password)
+        except (VerificationError, InvalidHashError):
+            raise HTTPException(401, "Password is incorrect")
+        remove_account_data(db, user.id)
+        db.commit()
+    except OperationalError:
+        db.rollback()
+        raise HTTPException(503, "Account removal could not be confirmed. Refresh before retrying")
+    response.delete_cookie(COOKIE, path="/", secure=True, httponly=True, samesite="strict")
+
+
 class PasswordChange(CurrentPassword):
     new_password: str = Field(min_length=12, max_length=128)
 
@@ -160,7 +195,7 @@ class PasswordChange(CurrentPassword):
 @router.post("/password")
 def change_password(body: PasswordChange, request: Request, response: Response, user=Depends(owner), db=Depends(get_db), redis=Depends(get_redis)):
     throttle(request, redis, identity=user.id, limit=5, namespace="password-change")
-    user = db.scalar(select(User).where(User.id == user.id).with_for_update().execution_options(populate_existing=True))
+    user = locked_owner(db, user)
     try:
         hasher.verify(user.password_hash, body.password)
     except (VerificationError, InvalidHashError):
@@ -175,7 +210,7 @@ def change_password(body: PasswordChange, request: Request, response: Response, 
 @router.post("/recovery-code")
 def replace_recovery_code(body: CurrentPassword, request: Request, user=Depends(owner), db=Depends(get_db), redis=Depends(get_redis)):
     throttle(request, redis, identity=user.id, limit=5, namespace="recovery-code")
-    user = db.scalar(select(User).where(User.id == user.id).with_for_update().execution_options(populate_existing=True))
+    user = locked_owner(db, user)
     try:
         hasher.verify(user.password_hash, body.password)
     except (VerificationError, InvalidHashError):
@@ -224,7 +259,7 @@ def add_site(body: NewSite, user=Depends(owner), db=Depends(get_db)):
         domain = domain_name(body.domain)
     except UnsafeTarget:
         raise HTTPException(422, "Enter a hostname such as example.com without a URL path")
-    db.scalar(select(User).where(User.id == user.id).with_for_update())
+    locked_owner(db, user)
     if db.scalar(select(func.count()).select_from(Site).where(Site.owner_id == user.id)) >= 10:
         raise HTTPException(409, "This workspace supports up to ten websites")
     if db.scalar(select(Site).where(Site.owner_id == user.id, Site.domain == domain)):

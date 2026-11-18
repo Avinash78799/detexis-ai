@@ -50,6 +50,17 @@ def main():
         assert client.post("/app/api/sites", headers={"Origin":ORIGIN}, json={"domain":"fixture.example"}).status_code == 403
         assert client.post("/app/api/login", headers={"Origin":"https://other.example"}, json=body).status_code == 403
         assert client.post("/app/api/login", headers={"Origin":"http://localhost:8443"}, json=body).status_code == 403
+        headers = {"Origin":ORIGIN, "X-CSRF-Token":created.json()["csrf_token"]}
+        site = client.post("/app/api/sites", headers=headers, json={"domain":"removal-tls.example"})
+        assert site.status_code == 201
+        key_headers = {"X-API-Key":site.json()["api_key"]}
+        removal = {"password":body["password"], "confirmation":"DELETE"}
+        assert client.post("/app/api/account/delete", headers={"Origin":ORIGIN}, json=removal).status_code == 403
+        assert client.get("/v1/config", headers=key_headers).status_code == 200
+        assert client.post("/app/api/account/delete", headers=headers, json=removal).status_code == 204
+        assert client.get("/app/api/session").status_code == 401
+        assert client.get("/v1/config", headers=key_headers).status_code == 401
+        assert client.post("/app/api/login", headers={"Origin":ORIGIN}, json=body).status_code == 401
     try:
         # Explicit context avoids environment CA overrides. No root was installed.
         with httpx.Client(verify=ssl.create_default_context(), trust_env=False, timeout=5) as untrusted:
@@ -58,7 +69,7 @@ def main():
         assert "CERTIFICATE_VERIFY_FAILED" in str(error), "Failure was not certificate verification"
     else:
         raise AssertionError("Test root was unexpectedly trusted by the host")
-    print(json.dumps({"passed":True,"scope":"Disposable CI stack: CA-verified TLS and hostname, secure-cookie account session, authenticated coverage manifest/page, no-store, missing-CSRF and cross/scheme-origin refusal, default trust refusal. No host trust installation or desktop-browser acceptance."}))
+    print(json.dumps({"passed":True,"scope":"Disposable CI stack: CA-verified TLS and hostname, secure-cookie session, authenticated coverage/health, no-store, CSRF/origin refusals, self-service account removal with session/key/login invalidation, default trust refusal. No host trust installation or desktop-browser acceptance."}))
 
 
 if __name__ == "__main__":

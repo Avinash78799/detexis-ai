@@ -18,7 +18,10 @@ window.shieldApi = async function(path, body, csrf = '') {
     }
     const error = new Error('Shield is temporarily unavailable. Please try again shortly.');
     error.status = response.status;
-    if (response.status >= 500) throw error;
+    if (response.status >= 500) {
+      if (path === 'account/delete') error.message = 'Account removal could not be confirmed. Refresh before retrying.';
+      throw error;
+    }
     if (response.status === 204) return {};
     let data;
     try {data = await response.json();}
@@ -30,7 +33,7 @@ window.shieldApi = async function(path, body, csrf = '') {
     }
     if (!response.ok) {
       error.message = typeof data.detail === 'string' ? data.detail : 'Unable to complete this action. Check your details and try again.';
-      if (response.status === 401 && !['login', 'recover'].includes(path)) {
+      if (response.status === 401 && !['login', 'recover', 'password', 'recovery-code', 'account/delete'].includes(path)) {
         error.message = 'Your session expired. Return to your workspace and sign in.';
       }
       throw error;
