@@ -4,6 +4,12 @@ No real-data model or FPR result ships with this change. The runtime defaults to
 rules only. Controlled fixtures test pipeline mechanics and are not portfolio
 accuracy claims.
 
+The [CSIC corpus audit](CSIC-AUDIT.md) now records a complete 97,065-request
+private-mirror diagnostic, source-normal rule-match counts and SDK observability
+collisions. Its anomalous labels are not malicious ground truth, timestamps are
+unestablished, and provenance/terms remain unverified. It is not model-release
+evidence. No training gate was relaxed to make that corpus appear compatible.
+
 Install `ml/requirements.txt` in a dedicated training/ML-worker environment and
 install `sensor-sdk`. Canonical JSONL rows require:
 
