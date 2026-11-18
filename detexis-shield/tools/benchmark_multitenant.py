@@ -45,6 +45,16 @@ def summary(values):
             "max_ms":max(values) if values else None}
 
 
+def validate_proxy_ports(info):
+    expected={('127.0.0.1','18443'),('::1','18443')}
+    for bindings in [info['HostConfig']['PortBindings'],info['NetworkSettings']['Ports']]:
+        published={key:value for key,value in bindings.items() if value is not None}
+        if set(published)!={'8443/tcp'} or len(published['8443/tcp'])!=2:
+            raise RuntimeError('Proxy must actually publish both loopbacks on port 18443')
+        if {(x['HostIp'],x['HostPort']) for x in published['8443/tcp']}!=expected:
+            raise RuntimeError('Refusing unexpected proxy interfaces or ports')
+
+
 def inspect_state(project):
     code = """
 import json
@@ -76,15 +86,15 @@ def main():
     parser.add_argument("--confirm-disposable", action="store_true", required=True)
     parser.add_argument("--seconds", type=int, default=600)
     parser.add_argument("--rate", type=int, default=500)
+    parser.add_argument("--workers", type=int, choices=range(1,5), default=1,
+                        help="Expected healthy worker replicas; does not change the stack")
     args = parser.parse_args()
     import re
     if not re.fullmatch(r"shield-perf-[a-z0-9-]+", args.project) or not 10 <= args.seconds <= 3600 or not 4 <= args.rate <= 1000 or args.rate % 4:
         parser.error("Use a shield-perf-* project, 10–3600 seconds and a rate divisible by four (4–1000)")
     info = json.loads(docker("inspect", args.project+"-localproxy-1"))[0]
     assert info["Config"]["Labels"]["com.docker.compose.project"] == args.project
-    bindings=info["HostConfig"]["PortBindings"]
-    assert set(bindings)=={"8443/tcp"}
-    assert {(x['HostIp'],x['HostPort']) for x in bindings['8443/tcp']}=={('127.0.0.1','18443'),('::1','18443')}
+    validate_proxy_ports(info)
     initial = inspect_state(args.project)
     assert initial["counts"] == {"users":0,"sites":0,"events":0}, "Refusing a nonempty instance"
     assert initial["queued"] == initial["started"] == initial["failed"] == 0
@@ -94,6 +104,13 @@ def main():
               "rate":args.rate,"duration_seconds":args.seconds,"checkpoints":[],"initial":initial,
               "source_sha256":hashlib.sha256(Path(__file__).read_bytes()).hexdigest()}
     report["images"]={service:docker("inspect",args.project+'-'+service+'-1',"--format","{{.Image}}") for service in ['api','worker','maintenance','db','redis','localproxy']}
+    worker_ids=docker("ps","-q","--filter","label=com.docker.compose.project="+args.project,
+                      "--filter","label=com.docker.compose.service=worker").split()
+    assert len(worker_ids)==args.workers, "Worker replica count differs from the requested measurement"
+    workers=json.loads(docker("inspect",*worker_ids))
+    assert all(w["State"].get("Health",{}).get("Status")=="healthy" for w in workers), "Every worker must start healthy"
+    report["workers"]=[{"name":w["Name"],"image":w["Image"],"initial_restarts":w["RestartCount"]} for w in workers]
+    assert all(not any(item.startswith('SHIELD_MODEL_DIR=') and item.partition('=')[2] for item in w['Config']['Env']) for w in workers), "This workload requires rules-only workers"
     lock = threading.Lock()
     def save():
         temporary = args.output.with_suffix(args.output.suffix+".tmp")
@@ -186,10 +203,14 @@ def main():
             finally:
                 stop.set();finished.set()
             for future in readers:future.result()
+        report["elapsed_ingest_seconds"]=elapsed
+        report["accepted_per_second"]=sum(t["accepted"] for t in tenants)/elapsed
+        save()
         # Preserve the first drain snapshot before any later evidence query.
         deadline=time.monotonic()+120
         while True:
-            state=inspect_state(args.project);report["checkpoints"].append({"elapsed_seconds":time.monotonic()-started,"runtime":state});save()
+            state=inspect_state(args.project);report["checkpoints"].append({"elapsed_seconds":time.monotonic()-started,"runtime":state})
+            report["last_observed_runtime"]=state;save()
             if all(s["pending"]==0 for s in state["sites"]) and state["queued"]==state["started"]==0:break
             if time.monotonic()>deadline:raise RuntimeError("Processing did not drain within 120 seconds")
             time.sleep(5)
@@ -211,6 +232,9 @@ def main():
             assert summary(t["owner_ms"])["p95_ms"]<=1000, "Owner HTTP p95 exceeded 1000 ms"
             assert summary(t["batch_ms"])["p95_ms"]<=1000, "Ingest batch p95 exceeded 1000 ms"
         assert state["failed"]==0 and report["accepted_per_second"]>=args.rate*.99
+        final_workers=json.loads(docker("inspect",*worker_ids))
+        report["final_workers"]=[{"name":w["Name"],"status":w["State"].get("Health",{}).get("Status"),"restarts":w["RestartCount"]} for w in final_workers]
+        assert all(w["State"].get("Health",{}).get("Status")=="healthy" and w["RestartCount"]==before["RestartCount"] for w,before in zip(final_workers,workers)), "Workers restarted or lost health during the measurement"
         report["passed"]=True
     except Exception as error:
         report["failure"]={"type":type(error).__name__,"message":str(error) if isinstance(error,(AssertionError,RuntimeError)) else "Transport or runtime failure; inspect services"}

@@ -3,6 +3,9 @@ $ErrorActionPreference = 'Stop'
 Assert-ShieldLocalProxyBindings -Json '{"8443/tcp":[{"HostIp":"127.0.0.1","HostPort":"8443"},{"HostIp":"::1","HostPort":"8443"}]}'
 Assert-ShieldLocalProxyBindings -Json '{"8443/tcp":[{"HostIp":"::1","HostPort":"8443"},{"HostIp":"127.0.0.1","HostPort":"8443"}]}'
 $bad = @(
+    '{"8443/tcp":[]}',
+    '{"8443/tcp":null}',
+    '{}',
     '{"8443/tcp":[{"HostIp":"0.0.0.0","HostPort":"8443"},{"HostIp":"::1","HostPort":"8443"}]}',
     '{"8443/tcp":[{"HostIp":"127.0.0.1","HostPort":"8443"},{"HostIp":"::","HostPort":"8443"}]}',
     '{"8443/tcp":[{"HostIp":"127.0.0.1","HostPort":"8443"}]}',

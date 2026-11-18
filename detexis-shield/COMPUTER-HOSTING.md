@@ -1,8 +1,9 @@
 15 November: the owner chose local-only operation, without a new public tunnel.
 The previous temporary hostname expired. Existing computer-instance services were
 resumed with their saved volumes/credentials and API/worker readiness verified.
-Optional local HTTPS is prepared and passed isolated CI; Windows activation and
-certificate/browser trust remain pending. See [LOCAL-HTTPS.md](LOCAL-HTTPS.md).
+Local HTTPS passed isolated CI and was activated on Windows; the owner reports
+warning-free Chrome access after reviewing/importing the public root. Automated
+signed-in browser acceptance remains pending. See [LOCAL-HTTPS.md](LOCAL-HTTPS.md).
 The historical public-tunnel commands below are for reference, not authorization
 to start a new public tunnel after this local-only decision.
 
@@ -63,6 +64,12 @@ known project first without removing its volumes. Do not stop unrelated apps.
 All services have restart policies. Those policies work only after Docker starts;
 they do not start Windows, sign in, prevent sleep or launch Docker Desktop.
 Configure Docker Desktop startup and Windows power behavior yourself as desired.
+
+The computer overlay starts two RQ workers. On this machine, a fresh four-site
+ten-minute rules-only workload passed at 500.248 events/s with 4.200-second
+processing p95 and no final backlog; the equivalent single-worker run failed.
+This is a measured configuration, not a capacity guarantee for every computer,
+traffic pattern or enabled feature. See `MULTITENANT-PERFORMANCE.md`.
 
 ## Open the account UI over HTTPS
 

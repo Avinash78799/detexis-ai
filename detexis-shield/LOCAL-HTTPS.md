@@ -21,8 +21,10 @@ An IPv4-only binding caused roughly 2.1-second cold `localhost` HTTP-client
 connections on the owner machine. In a disposable proxy, adding IPv6 loopback
 reduced four simultaneous cold readiness requests to 50–54 ms with CA/hostname
 verification retained. This diagnostic is not deployed-load or browser evidence.
-The startup helper validates the complete Docker port-binding set and refuses
-wildcards, missing loopbacks, duplicate addresses and unexpected ports.
+The startup helper validates both requested Docker bindings and actual published
+ports, refusing wildcards, missing loopbacks, duplicate addresses and unexpected
+ports. A running proxy can retain requested bindings after a failed allocation
+without publishing any listener; configured bindings alone are insufficient.
 
 ## Start the prepared proxy
 
@@ -33,10 +35,11 @@ public root, without installing trust:
 ./tools/start_local_https.ps1 -CertificateDirectory C:\PRIVATE\ShieldCertificates
 ```
 
-Replace that output directory with a folder you control. Review the helper before
-running it. Its PowerShell syntax was checked; its Windows Docker execution has
-not been verified. Local activation was stopped by an automatic approval-review
-usage-limit failure, not by a finding that the configuration was unsafe.
+Replace that output directory with a folder you control. The helper has run on
+Windows and exported the same public-root fingerprint after the IPv6 update.
+The owner imported the reviewed certificate and reports warning-free Chrome
+access. The new actual-port guard also passes the Windows regression cases;
+it does not install certificate trust or establish signed-in browser acceptance.
 
 For manual startup, from this directory after the computer instance is healthy:
 

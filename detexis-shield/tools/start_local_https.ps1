@@ -32,6 +32,9 @@ $shieldProxy = ((Invoke-ShieldNative -Program docker -Arguments ($shieldCompose 
 if (-not $shieldProxy) { throw 'Local proxy container was not found.' }
 $shieldPorts = ((Invoke-ShieldNative -Program docker -Arguments @('inspect',$shieldProxy,'--format','{{json .HostConfig.PortBindings}}')) -join "`n").Trim()
 Assert-ShieldLocalProxyBindings -Json $shieldPorts
+$shieldPublishedPorts = ((Invoke-ShieldNative -Program docker -Arguments @('inspect',$shieldProxy,'--format','{{json .NetworkSettings.Ports}}')) -join "`n").Trim()
+# Requested bindings can survive a failed Docker port allocation without listeners.
+Assert-ShieldLocalProxyBindings -Json $shieldPublishedPorts
 
 # Export only the public CA certificate. No host trust store is modified.
 Invoke-ShieldNative -Program docker -Arguments @('cp',"${shieldProxy}:/data/caddy/pki/authorities/local/root.crt",$certificateFile)

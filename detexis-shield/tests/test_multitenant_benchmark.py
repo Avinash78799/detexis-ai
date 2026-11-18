@@ -21,6 +21,15 @@ def test_latency_report_keeps_tail_and_empty_samples_explicit(monkeypatch):
     assert tool.summary([])=={"samples":0,"median_ms":None,"p95_ms":None,"max_ms":None}
 
 
+def test_configured_ports_are_not_proof_of_actual_loopback_publication(monkeypatch):
+    tool=load(monkeypatch)
+    expected={'8443/tcp':[{'HostIp':'127.0.0.1','HostPort':'18443'},{'HostIp':'::1','HostPort':'18443'}]}
+    tool.validate_proxy_ports({'HostConfig':{'PortBindings':expected},'NetworkSettings':{'Ports':expected}})
+    for actual in [{'8443/tcp':[]},{'8443/tcp':None},{'8443/tcp':[{'HostIp':'0.0.0.0','HostPort':'18443'},{'HostIp':'::1','HostPort':'18443'}]}]:
+        with pytest.raises(RuntimeError):
+            tool.validate_proxy_ports({'HostConfig':{'PortBindings':expected},'NetworkSettings':{'Ports':actual}})
+
+
 @pytest.mark.parametrize("project,rate",[("detexis-shield-computer",500),("shield-perf-test",501)])
 def test_unsafe_target_or_rate_refused_before_docker_and_fixture_creation(monkeypatch,tmp_path,project,rate):
     tool=load(monkeypatch)
