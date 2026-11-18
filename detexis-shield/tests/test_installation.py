@@ -83,4 +83,3 @@ def test_operator_contact_is_optional_validated_and_visible_without_signin(monke
             page = client.get("/app/data")
             assert 'href="mailto:' not in page.text
             assert "support contact has not been configured" in page.text
-
