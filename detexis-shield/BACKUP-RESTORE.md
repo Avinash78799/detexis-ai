@@ -39,7 +39,58 @@ local account backup and upgraded schema, but cannot establish recovery of
 populated heartbeat history or an off-device backup. No production recovery-time
 or recovery-point objective was measured.
 
+## Populated schema-0009 fixture, 18 November 2026
+
+The stopped four-tenant capacity fixture was restored from a private host-copy
+dump into `shield_restore_20261118t112014z_7793e543`. Complete-row SHA256 digests
+matched for all twelve public tables, including **300,004 events, 1,536 incidents,
+1,536 alert records, four owners, four sites, four sensor-key verifiers and four
+browser sessions**. The four hourly baseline buckets also matched. Constraints,
+index definitions and sequence positions matched; no invalid constraint/index
+remained. Incident actions, scans and sensor-health history were initially empty,
+so that first round trip does not establish populated recovery for those tables.
+
+Only the isolated copy then received one open and one resumed heartbeat record
+per site. A second host-copy dump/restore into a new `_health` database preserved
+all rows, including **eight health records: four open, four resumed**. Original
+benchmark rows were checked unchanged. Application/worker/delivery processes
+were never attached, and the fixture database was stopped after the rehearsal.
+Both restored databases, dumps and the private report remain retained.
+
+Dump sizes were 12,199,168 and 12,226,481 bytes. The `pg_restore` commands took
+20.656 and 11.531 seconds respectively; these exclude backup/copy/verification
+and are **not service recovery-time guarantees**. Report:
+`outputs/populated-restore-20261118/shield_restore_20261118t112014z_7793e543.json`,
+SHA256 `5bf9b1f993fee509b71b1282a68dac107b988290f745b092392cecdeec366292`.
+The owner database was untouched. Off-device recovery, application cutover,
+pending-event replay and populated scan/triage-action recovery remain unverified.
+
 ## Repeat safely
+
+For a completed **synthetic** performance fixture, an automated rehearsal is
+available. Stop all of that fixture's containers first, preserve its volumes,
+then run from `detexis-shield`:
+
+```powershell
+python tools/rehearse_fixture_restore.py --project shield-perf-your-run --backup-dir C:\PRIVATE\ShieldRestoreChecks --confirm-disposable
+```
+
+The helper rejects computer hosting, arbitrary projects, missing/duplicate
+database containers and any running fixture container. It starts only the
+fixture database, copies a custom dump to the private host directory, copies it
+back under a different filename and restores into a newly named database.
+Every complete table row is compared through a deterministic SHA256 digest,
+alongside constraints, index definitions, sequence positions and validity checks.
+The original rows are checked again for changes. No row data or authentication
+verifiers are printed. Reports and dumps must remain private.
+
+A second round trip seeds open and resumed heartbeat records **only in the
+isolated restored copy**, then backs up/restores that copy into another new
+database. Application/delivery processes never attach to either restore. The
+fixture database is stopped on exit; databases, dumps and reports are retained.
+Failures are recorded without deleting or replacing the source. This checks
+host-copy recovery, not off-device durability or application failover. Use the
+manual procedure below for real-service recovery planning.
 
 Use the actual database container name shown by `docker compose ps`. These commands
 show the validation project used in the rehearsal. Choose a fresh backup filename
