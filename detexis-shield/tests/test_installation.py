@@ -66,5 +66,7 @@ def test_public_data_guide_renders_without_an_account():
     page = TestClient(app).get("/app/data")
     assert page.status_code == 200
     assert "Data handling" in page.text
-    assert "self-service deletion/export" in page.text
+    assert 'href="/app#delete-account"' in page.text
+    assert "current password and an explicit confirmation" in page.text
+    assert "Export requests and removal from operational logs require the deployment operator" in page.text
     assert page.headers["cache-control"] == "no-store"
