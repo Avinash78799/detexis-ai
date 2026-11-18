@@ -72,7 +72,7 @@ passed in that run. No failed run is represented as a complete pass.
 The local API was updated after a fresh private host-copy backup. All 61 selected
 application/template/static/migration source files in the offline-built candidate
 matched the worktree; existing dependencies were retained. The previous API image
-was preserved. Active API image:
+was preserved. API image at this activation checkpoint:
 `sha256:467683a3c07a3050ac8f9128e6fdb4defca04287d527aa1e1b0949f0099e6413`.
 No schema migration was needed. Existing complete-row table digests matched after
 activation, including both owner accounts. Both workers remained healthy.
