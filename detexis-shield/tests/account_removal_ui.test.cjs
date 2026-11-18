@@ -40,6 +40,7 @@ test('confirmed removal clears secrets and workspace only after server success',
   assert.equal(get('workspace').hidden, true); assert.equal(get('auth').hidden, false);
   for (const id of ['credentials','snippet','recovery-value','owner-email']) assert.equal(get(id).textContent, '');
   assert.equal(get('sites').cleared, true);
+  for (const id of ['auth-form','site-form','recovery-form','password-form','recover-form']) assert.equal(get(id).resetCalled, true);
   assert.equal(get('delete-account-form').resetCalled, true);
   assert.deepEqual(fields.map(x=>x.disabled), [false,true]);
 });

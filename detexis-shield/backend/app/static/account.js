@@ -181,7 +181,8 @@ node('delete-account-form').addEventListener('submit', async event => {
     document.querySelector('.account-shell > h1').textContent = 'Your account was deleted.';
     document.querySelector('.account-shell > .subtitle').textContent = 'Your sensor keys and saved workspace history were removed from the live database.';
     node('message').textContent = 'All sessions were signed out. Backup copies follow the operator’s retention policy.';
-    node('auth-form').reset(); node('auth').querySelector('input').focus();
+    for (const id of ['auth-form', 'site-form', 'recovery-form', 'password-form', 'recover-form']) node(id).reset();
+    node('auth').querySelector('input').focus();
   } catch (error) {node('delete-status').textContent = error.message;}
   finally {
     fields.forEach((field, index) => field.disabled = states[index]);
