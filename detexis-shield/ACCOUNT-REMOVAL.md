@@ -60,3 +60,27 @@ cleanup, failure preserving the workspace, password error messages and uncertain
 server outcomes. These are programmatic DOM tests, not rendered browser or
 assistive-technology acceptance. Actual local activation and production data
 deletion are separate; no real owner account is deleted by these tests.
+
+## Local activation: 18 November 2026
+
+Code commit `9b3f9a18` passed all four jobs in Actions run `44305218115`, including
+the PostgreSQL races and certificate-verified deletion flow. The preceding run
+had one stale data-guide wording assertion; it was updated to check the new
+deletion link and confirmation requirements. The PostgreSQL/TLS checks already
+passed in that run. No failed run is represented as a complete pass.
+
+The local API was updated after a fresh private host-copy backup. All 61 selected
+application/template/static/migration source files in the offline-built candidate
+matched the worktree; existing dependencies were retained. The previous API image
+was preserved. Active API image:
+`sha256:467683a3c07a3050ac8f9128e6fdb4defca04287d527aa1e1b0949f0099e6413`.
+No schema migration was needed. Existing complete-row table digests matched after
+activation, including both owner accounts. Both workers remained healthy.
+
+CA-verified local checks returned 200 for readiness, the workspace containing the
+form and the updated data guide; an unauthenticated owner API returned 401.
+Positive deletion was tested only on disposable CI accounts. No owner account
+was deleted on the computer instance. Private evidence is retained in
+`outputs/account-removal-runtime.json`; the backup is
+`outputs/computer-backups/shield-20261118T123306Z-06665e1a.dump`.
+Rendered signed-in browser/accessibility checks remain unverified.
