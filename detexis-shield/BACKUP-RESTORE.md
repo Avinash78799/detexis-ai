@@ -62,8 +62,10 @@ Dump sizes were 12,199,168 and 12,226,481 bytes. The `pg_restore` commands took
 and are **not service recovery-time guarantees**. Report:
 `outputs/populated-restore-20261118/shield_restore_20261118t112014z_7793e543.json`,
 SHA256 `5bf9b1f993fee509b71b1282a68dac107b988290f745b092392cecdeec366292`.
-The owner database was untouched. Off-device recovery, application cutover,
-pending-event replay and populated scan/triage-action recovery remain unverified.
+The owner database was untouched. Off-device recovery, application cutover and
+populated scan/triage-action recovery remain unverified. A subsequent isolated
+pending-event/duplicate-delivery rehearsal passed; see `QUEUE-RECOVERY.md` for
+its ASGI/RQ scope and Redis-loss limitations.
 
 ## Repeat safely
 
