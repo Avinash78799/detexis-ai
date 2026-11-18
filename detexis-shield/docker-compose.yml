@@ -28,6 +28,7 @@ services:
       context: .
       dockerfile: backend/Dockerfile
     environment:
+      SHIELD_SUPPORT_EMAIL: ${SHIELD_SUPPORT_EMAIL:-}
       DATABASE_URL: postgresql+psycopg2://detexis:${POSTGRES_PASSWORD:-local-dev-only}@db:5432/detexis
       REDIS_URL: redis://redis:6379/0
     ports: ["127.0.0.1:8000:8000"]

@@ -96,6 +96,12 @@ local/private deployment if no suitable stable hostname is available.
 
 ## Check operations and back up
 
+Set `SHIELD_SUPPORT_EMAIL` in the saved `.computer.env` to the public address you
+want displayed in the workspace and data-handling guide, then recreate only the
+API with the reviewed build. This is an optional validated `mailto:` contact for
+support/data requests. It does not configure SMTP, send email, verify mailboxes
+or enable email alerts/recovery. Keep the saved database password unchanged.
+
 ```powershell
 python tools/computer.py status
 python tools/computer.py logs

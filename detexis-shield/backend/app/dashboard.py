@@ -1,5 +1,7 @@
 from pathlib import Path
 import hashlib
+import os
+import re
 from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Request
@@ -14,6 +16,14 @@ from .models import Alert, Event, Incident, Scan
 router = APIRouter()
 basic = HTTPBasic(auto_error=False)
 templates = Jinja2Templates(directory=str(Path(__file__).parent / "templates"))
+def support_contact():
+    address = os.getenv("SHIELD_SUPPORT_EMAIL", "").strip()
+    if len(address) <= 254 and re.fullmatch(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,63}", address):
+        return address
+    return None
+
+
+templates.env.globals["support_contact"] = support_contact
 templates.env.globals["asset_versions"] = {
     name: hashlib.sha256((Path(__file__).parent / "static" / name).read_bytes()).hexdigest()[:12]
     for name in ("dashboard.css", "dashboard.js", "account.css", "api.js", "account.js", "htmx.min.js", "inbox.js", "analyze.js", "analyze.css")

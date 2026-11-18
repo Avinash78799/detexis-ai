@@ -30,6 +30,7 @@ def test_published_installation_examples_run_and_emit_redacted_events(monkeypatc
     page = TestClient(app).get("/app/install")
     assert page.status_code == 200
     assert page.headers["cache-control"] == "no-store"
+
     examples = Examples()
     examples.feed(page.text)
     assert set(examples.snippets) == {"fastapi", "flask"}
@@ -70,3 +71,16 @@ def test_public_data_guide_renders_without_an_account():
     assert "current password and an explicit confirmation" in page.text
     assert "Export requests and removal from operational logs require the deployment operator" in page.text
     assert page.headers["cache-control"] == "no-store"
+
+
+def test_operator_contact_is_optional_validated_and_visible_without_signin(monkeypatch):
+    monkeypatch.setenv("SHIELD_SUPPORT_EMAIL", "shield.org787@gmail.com")
+    with TestClient(app) as client:
+        for path in ["/app", "/app/data"]:
+            assert 'href="mailto:shield.org787@gmail.com"' in client.get(path).text
+        for address in ["", "bad@example.test?subject=injected", 'x@example.test\" onclick="bad()']:
+            monkeypatch.setenv("SHIELD_SUPPORT_EMAIL", address)
+            page = client.get("/app/data")
+            assert 'href="mailto:' not in page.text
+            assert "support contact has not been configured" in page.text
+
