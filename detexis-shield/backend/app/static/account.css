@@ -7,3 +7,4 @@ select,textarea{display:block;width:100%;max-width:600px;margin-top:10px;padding
 
 .health-explainer summary{cursor:pointer;padding:8px 0}.health-explainer p{color:#adbbce;font-size:14px;line-height:1.7}.sensor-health #sensor-signals:focus{outline:2px solid #91e7c6;outline-offset:6px}
 .account-removal{border-color:#78545f}.account-removal summary{cursor:pointer;padding:8px 0;color:#ffbfbd}.account-removal summary:focus-visible{outline:2px solid #baf9e2;outline-offset:3px}.danger{background:#f4b5b5;color:#341719;border-color:#f4b5b5}#delete-status{color:#f2cf91}
+.section-heading{flex-wrap:wrap}.section-heading #refresh-sites{margin:0;font-size:13px}

@@ -25,7 +25,10 @@ async function refreshSites() {
   node('sites-status').textContent = 'Loading websites…';
   let sites;
   try {sites = await api('sites');}
-  catch (error) {node('sites-status').textContent = 'Your websites could not be refreshed. ' + error.message; throw error;}
+  catch (error) {
+    node('sites-status').textContent = 'Your websites could not be refreshed. Any websites shown below may be out of date. ' + error.message + ' Use Refresh websites to try again.';
+    return;
+  }
   node('sites-status').textContent = sites.length ? sites.length + (sites.length === 1 ? ' website in your workspace' : ' websites in your workspace') : '';
   node('sites').replaceChildren();
   if (!sites.length) {
@@ -135,6 +138,11 @@ async function refreshSites() {
     card.append(connection, manage, verify, connectionPanel, panel, verificationPanel); node('sites').append(card);
   }
 }
+node('refresh-sites').addEventListener('click', async () => {
+  node('refresh-sites').disabled = true;
+  try {await refreshSites();}
+  finally {node('refresh-sites').disabled = false;}
+});
 for (const id of ['auth-form','site-form','recover-form','recovery-form','password-form']) node(id).addEventListener('submit', async event => {
   event.preventDefault(); node('message').textContent = '';
   const buttons = [...event.target.querySelectorAll('button')]; buttons.forEach(b => b.disabled = true);

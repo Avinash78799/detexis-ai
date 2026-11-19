@@ -1,4 +1,4 @@
-# Release readiness: 18 November 2026
+# Release readiness: 19 November 2026
 
 The complete product goal is **not achieved**. Implemented code, local tests and
 temporary demonstrations do not prove a continuously operated public service.
@@ -14,7 +14,7 @@ The percentage previously discussed was an effort estimate, not a release gate.
 | Ingest/Redis/RQ, tenant-key boundary, idempotency, migrations | CI PostgreSQL/Redis checks and concurrency/isolation tests | Actual-host acceptance and abuse/load review |
 | Twelve mapped rules, honeytokens, incidents/correlation/baselines | 72 positive/negative rule cases plus pipeline/baseline/triage tests | Representative false-positive review and permissioned traffic |
 | Accounts, owner workspace, key/site management, recovery/removal | Self-service removal passed PostgreSQL race and HTTPS CI, then local backup-first activation preserved both accounts and all table digests (`ACCOUNT-REMOVAL.md`) | Current HTTPS recovery submission, rendered removal/error-state/accessibility acceptance and large-workspace removal performance |
-| Understandable responsive UI | Prior desktop/mobile workspace review; current public-page review | Full keyboard/assistive-technology and authenticated browser checks |
+| Understandable responsive UI | Prior desktop/mobile workspace review; current public-page review; failed website-list loading preserves the signed-in workspace, one-time recovery code and stale cards with an explicit refresh action (JavaScript regression tests) | Full keyboard/assistive-technology and authenticated browser checks, including the new refresh action |
 | In-app alerts | Inbox/evidence/audited decisions verified | Real-site operational use; external delivery intentionally deferred until sender setup |
 | Verified-domain isolated scanner and scheduled rescans | Scanner tests, isolation configuration and local network checks | Permissioned verified-domain scan on final host; no unverified scan is authorized |
 | ML judged by FPR, time/session split and cross-dataset test | Logistic/XGBoost/SHAP checks; calibration; 97,065-request private CSIC representation/rule audit with explicit label/body/feature-collision limits (`ml/CSIC-AUDIT.md`) | Provenance/terms and label review, compatible timestamped request data, real benign traffic, independent evaluation; ML remains disabled |
