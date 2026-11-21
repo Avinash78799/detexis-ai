@@ -1,4 +1,4 @@
-# Release readiness: 19 November 2026
+# Release readiness: 21 November 2026
 
 The complete product goal is **not achieved**. Implemented code, local tests and
 temporary demonstrations do not prove a continuously operated public service.
@@ -17,13 +17,34 @@ The percentage previously discussed was an effort estimate, not a release gate.
 | Understandable responsive UI | Prior desktop/mobile workspace review; current public-page review; failed website-list loading preserves the signed-in workspace, one-time recovery code and stale cards with an explicit refresh action (JavaScript regression tests) | Full keyboard/assistive-technology and authenticated browser checks, including the new refresh action |
 | In-app alerts | Inbox/evidence/audited decisions verified | Real-site operational use; external delivery intentionally deferred until sender setup |
 | Verified-domain isolated scanner and scheduled rescans | Scanner tests, isolation configuration and local network checks | Permissioned verified-domain scan on final host; no unverified scan is authorized |
-| ML judged by FPR, time/session split and cross-dataset test | Logistic/XGBoost/SHAP checks; calibration; 97,065-request private CSIC representation/rule audit with explicit label/body/feature-collision limits (`ml/CSIC-AUDIT.md`) | Provenance/terms and label review, compatible timestamped request data, real benign traffic, independent evaluation; ML remains disabled |
+| ML judged by FPR, time/session split and cross-dataset test | Logistic/XGBoost/SHAP checks; calibration; 97,065-request private CSIC representation/rule audit (`ml/CSIC-AUDIT.md`); owner's CIC download hashes, full capture-structure pass and 2,830,743-row CSV audit (`ml/CIC-DOWNLOAD-AUDIT.md`) | Request reconstruction/label review, compatible timestamped request data, real benign traffic, independent evaluation; ML remains disabled |
 | 500 events/s for ten minutes | Four-site two-worker rules-only run passes at 500.248 events/s, 4.200-second processing p95, 205.093-ms worst owner HTTP p95 and no final backlog. Equivalent single-worker failure retained (`MULTITENANT-PERFORMANCE.md`); single-site evidence in `MIXED-LOAD.md` | Concurrent-browser, broader traffic/abuse and ML-enabled measurements; sequential socket overhead is separate evidence in `SOCKET-OVERHEAD.md` |
 | Durable deployment and operations | Compose/TLS definitions, worker/maintenance health probes; populated host-copy recovery (`BACKUP-RESTORE.md`); 400 committed pending events recovered after queue loss, with duplicate RQ/HTTP delivery preserving counters/outbox (`QUEUE-RECOVERY.md`) | Persistent HTTPS origin, off-host backup restore, live application cutover, prolonged-outage queue growth, populated scans/triage actions, monitoring destination, operator contact/privacy/removal process |
 | Zero cost and no card | Owner chose computer hosting; no cloud account is required; see `COMPUTER-HOSTING.md` | Working Docker engine, stable reachable HTTPS access for remote sensors, availability and backup arrangements |
 | Five to ten real sites and honest resume/demo | Onboarding runbook; synthetic fixtures clearly labeled | Owner permission, installation, observed usage, actual N and demo video |
 
-## Local update checked on 17 November
+## Local workspace update checked on 21 November
+
+Commit `86149bd52fe3f7d515a1d80fe62e50ee95fb6501` passed all four jobs in
+Actions run `44518911644`. Its workspace-list recovery change is now installed
+in local API image `sha256:6fb15266266b704e31e1e64b1ab6c16b28292f7e4c6b6f7953cfad14b81ffd8b`.
+The existing Docker engine/services were stopped when inspected. They were resumed
+using their saved configuration; the API was updated after a fresh private backup
+and a candidate-source comparison. All database table row digests remained equal,
+including both existing accounts. Cached dependencies were retained.
+
+Read-only, CA-verified HTTPS checks passed for readiness and the new refresh
+assets. API, both workers, maintenance, database, Redis and ClamAV became healthy;
+the scanner and local proxy were running. The first HTTPS check encountered an
+expired cached leaf immediately after proxy start. Caddy's logs then confirmed
+renewal under the existing local CA; the subsequent verified check passed without
+bypassing TLS or installing trust. Private evidence:
+`outputs/workspace-refresh-runtime.json` and backup
+`outputs/computer-backups/shield-20261121T043444Z-62d1b687.dump`.
+No owner account/session/key was changed by these activation checks. Rendered
+signed-in refresh/error-state acceptance remains open.
+
+## Earlier local update checked on 17 November
 
 GitHub Actions run `44046751761` passed all four jobs: 346 Python tests,
 JavaScript checks, dependency audit, Windows helpers, local HTTPS account flow

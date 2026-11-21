@@ -10,6 +10,8 @@ collisions. Its anomalous labels are not malicious ground truth, timestamps are
 unestablished, and provenance/terms remain unverified. It is not model-release
 evidence. No training gate was relaxed to make that corpus appear compatible.
 
+The [CIC download audit](CIC-DOWNLOAD-AUDIT.md) records the owner's actual Monday capture and ML CSV schema/count checks. Flow labels are not request labels; compatible labeled-flow metadata and independent review remain required.
+
 Install `ml/requirements.txt` in a dedicated training/ML-worker environment and
 install `sensor-sdk`. Canonical JSONL rows require:
 

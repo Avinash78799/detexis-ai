@@ -90,6 +90,15 @@ this local origin separately from any previous public origin.
 
 ## Persistence, stop and removal
 
+On the 21 November restart after downtime, the first verified HTTPS probe saw an
+expired cached leaf. The running proxy renewed its intermediate/leaf certificates
+under the existing local CA, and the subsequent CA-verified `/ready` check passed.
+The initial failed probe is retained in the activation evidence. If a restart
+shows an expiry warning, allow the proxy to finish renewal and check its logs;
+confirm warning-free `/ready` before entering credentials. Do not replace the CA
+or reinstall trust merely to work around an expired leaf. An unresolved warning
+needs diagnosis rather than a verification bypass.
+
 The local CA persists in `detexis-shield-computer_local_tls_data`; certificate
 renewal needs that volume and a running proxy. `python tools/computer.py start --local-https` explicitly starts the optional
 proxy on later application updates. Plain `start` does not activate an inactive
