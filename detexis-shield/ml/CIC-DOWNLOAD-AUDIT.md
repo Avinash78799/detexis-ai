@@ -76,9 +76,9 @@ multi-request frames and non-ASCII strings needing byte-fidelity review are
 explicit exclusions. The caller must check the analyzer's actual exit status;
 partial output is not a completed run.
 
-The analyzer runs unprivileged with no network, no capture capabilities, a read-only
-input bind and a read-only container filesystem. It reads the existing 10.82 GB
-file without making another capture copy. TCP/HTTP reassembly and out-of-order TCP
+The analyzer runs unprivileged with no network, no capture capabilities and a
+read-only container filesystem. It reads the existing 10.82 GB file without making
+another capture copy. TCP/HTTP reassembly and out-of-order TCP
 reassembly are enabled. No Windows capture driver or system certificate change is
 required.
 
@@ -111,6 +111,42 @@ line, and one query matched the SQL UNION rule. Exactly two requests and one
 matching frame were reported. The body was not turned into another request, and
 query secret/cookie/target strings were absent from the aggregate report. This
 fixture establishes the exercised framing behavior, not corpus quality.
+
+## Completed request-stream result
+
+The final run streamed the read-only Windows source file through local Docker
+stdin instead of repeatedly reading its shared-folder mount. It completed in
+555.266 seconds with a **768 MiB memory limit and two CPU cores**. The packet
+filter, analyzer and container all exited zero; actual container state reports
+no OOM kill. An earlier request-direction run through the shared-folder mount was
+stopped when switching to this validated input method and is retained as
+incomplete. No count is combined across attempts.
+
+| Measure | Result |
+| --- | ---: |
+| Analyzer-recognized HTTP request frames | 54,719 |
+| Unambiguous projected single-request frames | 54,713 |
+| Excluded ambiguous/missing-field frames | 6 |
+| GET / POST / HEAD / OPTIONS | 38,524 / 15,965 / 78 / 146 |
+| Frames matching any stateless rule | 140 |
+| Matching rule | `command_injection` (140) |
+
+These **140 matches need case review** against the source benign-day description.
+They are potential false positives, not confirmed attacks. The approximately
+0.256% matching fraction applies only to the projected plaintext subset and this
+stateless rule release. It is not production FPR: source labeling is not an
+independent request review; encrypted/other-port traffic, ambiguous frames,
+response status, bodies and stateful detection are outside the measurement.
+No rule was suppressed and no model was enabled to improve these counts.
+
+The rule source SHA-256 is
+`d39123a7a05e7c29bfd1e29976edd5d22b9eae2710b39159d5e6fdb6fd2bdf80`.
+The HTTP aggregate helper SHA-256 is
+`ca5c3c4516667819ba301762437189d90f306ccebf5a81058e40322fad12c477`.
+Private full-run evidence: `outputs/ml-datasets/monday-http-streamed-audit-20261121.json`.
+Its finalized report SHA-256 is
+`88939ca140a42ef5a87fcf1498773ae5dba87c4604231e9c36337fc3d39f66c9`.
+The local app's CA-verified readiness check still passed afterward.
 
 [Wireshark's reassembly documentation](https://www.wireshark.org/docs/wsug_html_chunked/ChAdvReassemblySection.html)
 explains why missing segments, capture boundaries and reassembly timing matter.
