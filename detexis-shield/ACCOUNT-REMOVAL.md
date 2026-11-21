@@ -84,3 +84,44 @@ was deleted on the computer instance. Private evidence is retained in
 `outputs/account-removal-runtime.json`; the backup is
 `outputs/computer-backups/shield-20261118T123306Z-06665e1a.dump`.
 Rendered signed-in browser/accessibility checks remain unverified.
+
+## Populated restored-copy measurement: 21 November 2026
+
+`tools/check_restored_removal.py` refuses the live database name, non-fixture
+database hosts/options, shared Redis and non-synthetic owner/site inventories.
+The rehearsal restored a new copy of the stopped four-tenant load-test database
+and verified all original rows before adding synthetic review, scan and health
+history. The original source database was fingerprinted before and afterward;
+its complete rows were unchanged. Dedicated Redis and the runner published no
+host ports and used an internal network. They and the fixture database were
+stopped after the check; the restored database remains isolated for inspection.
+
+One authenticated ASGI deletion returned 204 in **0.218991 seconds**, including
+current-password verification and the actual PostgreSQL transaction. It removed:
+
+| Owned history | Rows |
+| --- | ---: |
+| Request events | 75,001 |
+| Incidents / alerts | 384 / 384 |
+| Incident review actions | 3,840 |
+| Scan results | 50 |
+| Sensor-health records | 51 |
+| Sensor-key verifiers / hourly buckets | 2 / 1 |
+
+The owner/site and all owner sessions were removed. The removed session and new
+synthetic sensor key returned 401. Other owners' sessions and keys still worked;
+complete-row hashes matched for their account/session/site and every related
+history table, including 225,003 remaining events and 11,520 review actions.
+
+This is **one warm restored-copy measurement**, not a latency percentile or a
+general account-size guarantee. Restoration, seeding and complete-row hashing
+warmed storage before timing. It excludes external HTTPS, browser rendering,
+concurrent requests, workers and maintenance. Existing concurrent-lock/race tests
+are separate evidence. The deletion gate required completion below ten seconds;
+seven guard tests verify target refusal. No production owner was deleted.
+
+Private report: `outputs/account-removal-benchmark-73de8c2be7be/report.json`,
+SHA-256 `75ed4e5445c2de555d0b188124ef193a0ff1ab7ea1d0c6b85dbed337619a064d`.
+Runner SHA-256: `d4d3d4ca647ad5fc8f93d21074ad590e5a413342987214020a2e1eeb6d6ddc34`.
+The measured application image was
+`sha256:6fb15266266b704e31e1e64b1ab6c16b28292f7e4c6b6f7953cfad14b81ffd8b`.
