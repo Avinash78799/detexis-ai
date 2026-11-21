@@ -121,6 +121,76 @@ load was sent into the owner's account database. Increasing replicas permits dif
 process concurrently; the existing per-site database lock still serializes
 incident/baseline transactions within each site.
 
+## Current rule release: two-worker failure on 21 November
+
+The version 3 application image
+`sha256:0429c84028226462eb9af3c67aff0e0dba81bd4b49d1c931e5ac6b6537595ac9`
+accepted all **300,000** load events over 599.734 seconds (**500.222 events/s**),
+but **failed** the unchanged ten-second processing-p95 gate. Per-site processing
+p95 was **33.055–33.119 seconds**. Worst ingest p95 was **421.451 ms** and worst
+owner-read p95 **267.641 ms** across 4,052 owner HTTP reads. The final snapshot
+contained all 300,004 rows with correct rule fingerprints and zero pending,
+queued, started or failed jobs. Eventual draining does not make this a pass.
+
+The runner stopped at the first processing-latency assertion; subsequent final
+isolation/worker-health assertions did not all execute. Both workers had zero
+restart counts when inspected afterward. The isolated fixture was stopped;
+its database volumes and original failure report remain retained.
+
+Private report: `outputs/shield-perf-v3-20261121/benchmark.json`.
+SHA256: `51a8ce031fe7ce11567f638b22377c109b61d7a14e12b50f6c76bcb57f99080d`.
+The runner hash matches the earlier successful version 2 comparison. This result
+supersedes any inference that version 2's passing capacity transfers to the
+current release. At this failure checkpoint, computer hosting still ran two
+workers and its current capacity target was unproven.
+
+An alternating same-host rule-only replay of the exact ten-event mixed profile
+measured median cost of 0.01123 ms/event for version 2 and 0.01129 ms/event for
+version 3. It excludes database work, queue waiting and RQ child-process overhead.
+Retained job logs showed median execution time increasing from 0.1204 to 0.1345
+seconds, and p95 from 0.2186 to 0.2932 seconds. These observations do not identify
+a unique cause: co-resident host load was uncontrolled and the failed run did
+not capture resource samples during load. A fresh three-worker comparison with
+queue/resource observation was the next experiment; latency gates stayed fixed.
+
+## Current rule release: three-worker pass on 21 November
+
+The fresh three-worker instance **passed all unchanged gates** using the same
+version 3 image, four tenants, payload profile and 500 events/s target. It accepted
+**300,000** events over 600.187 seconds (**499.844 events/s**). All 300,004 stored
+rows were processed with correct rule fingerprints. Worst processing p95 was
+**5.654360 seconds**, worst tenant owner-read p95 **314.106 ms** across **3,928**
+reads, and worst ingest p95 **505.908 ms**. No HTTP errors or final pending,
+queued, started or failed jobs remained. Duplicate-event/foreign-tenant checks
+passed; all three normal RQ workers finished healthy with zero restarts.
+
+Maximum ingest latency was **2,417.997 ms**, despite passing the p95 gate. This
+is measured bounded-workload capacity, not flawless latency or capacity for
+arbitrary tenants, traffic, ML/scanner activity or browser rendering. The private
+harness sampled fixture container resources and queue lengths roughly every
+15 seconds; sampling itself adds overhead. Other host activity was uncontrolled,
+so the comparison supports this configuration without proving a unique cause
+for the earlier two-worker slowdown.
+
+Private report: `outputs/shield-perf-v3-three-20261121/benchmark.json`.
+SHA256: `b360c10cd73b257dd41e4e5a5aa0ef1dd76cd5637ebc20593e06ece0bc3bb557`.
+Resource samples: `outputs/shield-perf-v3-three-20261121/resources.jsonl`.
+The fixture is stopped and its volumes/evidence retained. The failed two-worker
+fixture's configurations and timestamped logs were archived privately before
+removing only its stopped containers and three empty networks; all four volumes
+and the unchanged original failure report remain retained. No global prune ran.
+
+Computer hosting now declares **three workers**. After a fresh private backup,
+only the third worker was added; the two existing worker containers, all service
+environment values, application image and full database table digests remained
+unchanged. All three workers were healthy and CA-verified readiness passed.
+The existing two workers each had five historical restarts; the new worker had
+zero. Retained logs identify five warm shutdowns after unhealthy registration
+checks on each existing worker, matching the recovery mechanism documented in
+`WORKER-RECOVERY.md`. Why those registrations became unhealthy is not established;
+the isolated fixture's zero-restart result must not be substituted for host history.
+Private activation evidence: `outputs/three-worker-runtime-20261121.json`.
+
 ## Reproduce on a fresh disposable instance
 
 Prepare a private environment file outside source control, choose a fresh

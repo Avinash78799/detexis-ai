@@ -1,4 +1,37 @@
-# Authenticated analysis browser acceptance — 14 November 2026
+# Authenticated analysis browser acceptance
+
+## Local version 3 recheck — 21 November 2026
+
+The existing embedded-browser tab at `https://localhost:8443/app` rendered the
+sign-in page without a security interstitial. Using the owner's explicit local
+synthetic-account approval, the browser created one test-only `example.test`
+account and opened its signed-in empty workspace. No real-owner session was
+changed, and no website, sensor key or file upload was created. Account recovery
+secrets and passwords are excluded from this report.
+
+The Detection coverage link rendered release **2026.11.21.1**, twelve rule
+families, monitor-only mode, the disabled optional classifier, and the detection
+limits. The Threat analysis link then completed three real form submissions:
+
+- An ordinary search query returned **No pattern detected**.
+- An inert UNION SELECT query returned **Suspicious pattern detected**, high
+  severity, `sqli_union`, CWE-89 and A05:2025, with a review recommendation.
+- The benign assignment-boundary query `q=ordinary&&id=42` returned **No pattern
+  detected**, replacing the previous SQL finding rather than retaining it.
+
+The file-scanner status changed from loading to ready and displayed definitions
+dated 20 November. No local file upload was performed. The rendered result card
+and its limitations were visually inspected in the existing narrow browser view;
+this was not a measured responsive-layout or accessibility audit.
+
+Chrome's native window inventory exposed Download history rather than the
+owner-reported Incognito tab. This embedded-browser check therefore does **not**
+close Chrome-specific acceptance. Authenticated refresh/error states, recovery,
+removal, complete keyboard navigation and wider viewport checks remain open.
+The synthetic account remains signed in; no password manager was used. These
+three samples establish UI behavior, not representative detection quality.
+
+## Earlier temporary-origin review — 14 November 2026
 
 A real in-app browser used the restored computer-hosted HTTPS service. The owner
 explicitly approved a synthetic test account and a generated harmless text upload

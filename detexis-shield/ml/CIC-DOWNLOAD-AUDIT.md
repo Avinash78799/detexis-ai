@@ -184,3 +184,44 @@ explains why missing segments, capture boundaries and reassembly timing matter.
 Encrypted HTTPS is outside this audit. Recognized plaintext HTTP is a selected
 subset of network traffic; stateless rule counts on that subset are not a claim
 of production false-positive rate, ML quality or modern-attack coverage.
+
+## Generated-label archive found and audited on 21 November
+
+The supplied Downloads folder also contains `GeneratedLabelledFlows.zip`
+(283,876,488 bytes). Its MD5 matches the supplied manifest,
+`5ca3f8f69e3514950681615824149973`; this checks transfer consistency, not source
+authenticity. SHA256:
+`7bdbef286f8893f31c6db12105fa097fa5c2dcc6733179037a08129d150ea27a`.
+
+All eight CSV members were read directly without extraction, with complete CRC
+checks, schema/row-width checks and bounded label vocabularies. They contain
+**2,830,743 labeled rows**, each with 85 columns including flow ID, timestamp,
+source/destination addresses and Label. Thursday morning has 170,366 labeled
+rows: 168,186 BENIGN, 1,507 source brute-force labels, 652 XSS and 21 SQL injection.
+Unlike the earlier MachineLearningCSV archive, joining metadata is present.
+Timestamp interpretation, flow/request alignment, ambiguity and label quality
+still need validation; column presence alone establishes none of these.
+
+The default strict UTF-8 audit stopped on byte `0x96`. Explicit `cp1252` decoding
+reads the archive without replacement characters; source labels still include
+mojibake and are not silently normalized or treated as authoritative attack
+ground truth. This explicit, reversible decoding is an audit choice, not proof
+of a single intended encoding for every member. The next strict attempt rejected
+an entirely blank record after the Thursday-morning labeled rows. A reviewed
+opt-in now counts blank records separately while continuing to reject partially
+populated unlabeled rows. The completed run excluded **288,602 entirely blank
+records**, all in the Thursday-morning member; these are not labeled examples.
+Both preliminary failures remain recorded rather than supplying partial totals.
+
+`audit_cic_downloads.py` defaults remain strict; `--csv-encoding cp1252` and
+`--exclude-blank-records` explicitly select these audit policies. Unit tests cover
+default refusal, exact legacy-label decoding, counted blank exclusions and
+continued rejection of nonblank unlabeled rows. The complete generated-label
+audit took 34.485 seconds. Private report:
+`outputs/ml-datasets/generated-flows-full-audit-20261121.json`.
+SHA256: `21d0d6712adb271abf7a0a64ad7f434b70f46d30704274330c7535c900bc246f`.
+
+`Thursday-WorkingHours.pcap` was absent at the expected path when checked. No
+attack request was extracted, flow label joined, timestamp invented or model
+trained/enabled. Independent benign traffic and cross-dataset ML evaluation
+remain separate release requirements.

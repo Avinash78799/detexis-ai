@@ -10,7 +10,7 @@ services:
   worker:
     restart: unless-stopped
     deploy:
-      replicas: 2
+      replicas: 3
   maintenance:
     restart: unless-stopped
     environment:

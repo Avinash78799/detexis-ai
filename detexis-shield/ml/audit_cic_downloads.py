@@ -22,8 +22,12 @@ def digest_file(path):
     return {'bytes':path.stat().st_size, 'sha256':sha256.hexdigest(), 'md5':md5.hexdigest()}, header
 
 
-def audit_csv_zip(path, manifest=None):
+def audit_csv_zip(path, manifest=None, encoding='utf-8-sig', exclude_blank_records=False):
+    if encoding not in {'utf-8-sig', 'cp1252'}:
+        raise ValueError('Unsupported explicit CSV encoding')
     result, _ = digest_file(path)
+    result['csv_encoding'] = encoding
+    result['exclude_blank_records'] = exclude_blank_records
     if manifest:
         # MD5 is a transfer-corruption check, not proof of authenticity.
         if manifest.stat().st_size > 4096:
@@ -42,13 +46,16 @@ def audit_csv_zip(path, manifest=None):
             raise ValueError('Unexpected CSV archive size or member count')
         for info in members:
             with archive.open(info) as raw:
-                rows = csv.reader(io.TextIOWrapper(raw, encoding='utf-8-sig', errors='strict'))
+                rows = csv.reader(io.TextIOWrapper(raw, encoding=encoding, errors='strict'))
                 columns = [value.strip().lower() for value in next(rows)]
                 if columns.count('label') != 1:
                     raise ValueError('Expected exactly one Label column')
                 label_index = columns.index('label')
-                labels, count = Counter(), 0
+                labels, count, blank_count = Counter(), 0, 0
                 for row in rows:
+                    if exclude_blank_records and not any(value.strip() for value in row):
+                        blank_count += 1
+                        continue
                     if len(row) != len(columns):
                         raise ValueError('CSV row width differs from header')
                     label = row[label_index].strip()
@@ -57,7 +64,8 @@ def audit_csv_zip(path, manifest=None):
                     labels[label] += 1
                     count += 1
             entries.append({'member':info.filename, 'bytes':info.file_size,
-                            'rows':count, 'labels':dict(labels), 'columns':len(columns),
+                            'rows':count, 'excluded_blank_records':blank_count,
+                            'labels':dict(labels), 'columns':len(columns),
                             'duplicate_columns':[name for name, number in Counter(columns).items() if number > 1],
                             'has_timestamp':'timestamp' in columns,
                             'has_flow_id':'flow id' in columns,
@@ -65,6 +73,7 @@ def audit_csv_zip(path, manifest=None):
                             'has_destination_ip':'destination ip' in columns})
     result['members'] = entries
     result['total_rows'] = sum(entry['rows'] for entry in entries)
+    result['excluded_blank_records'] = sum(entry['excluded_blank_records'] for entry in entries)
     result['missing_request_join_metadata'] = any(not entry['has_timestamp'] or not entry['has_source_ip']
                                                 or not entry['has_destination_ip'] for entry in entries)
     return result
@@ -87,13 +96,17 @@ def main():
     parser.add_argument('--capture', type=Path, required=True)
     parser.add_argument('--csv-zip', type=Path, required=True)
     parser.add_argument('--csv-md5', type=Path)
+    parser.add_argument('--csv-encoding', choices=['utf-8-sig', 'cp1252'], default='utf-8-sig',
+                        help='Explicit source encoding; malformed bytes are never replaced or guessed')
+    parser.add_argument('--exclude-blank-records', action='store_true',
+                        help='Count entirely blank records separately; nonblank unlabeled records still fail')
     parser.add_argument('--report', type=Path, required=True)
     args = parser.parse_args()
     if args.report.exists():
         parser.error('Refusing to overwrite an existing report')
     result = {'release_evidence':False, 'model_trained':False,
               'scope':'Transfer hashes and CSV schema/counts only. No packet reassembly, request labels, FPR or recall claim.',
-              'csv_zip':audit_csv_zip(args.csv_zip, args.csv_md5)}
+              'csv_zip':audit_csv_zip(args.csv_zip, args.csv_md5, args.csv_encoding, args.exclude_blank_records)}
     print('CSV archive checked; streaming capture hashes without copying the capture.', flush=True)
     result['capture'] = audit_capture(args.capture)
     with args.report.open('x', encoding='utf-8') as output:

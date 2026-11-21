@@ -1,3 +1,12 @@
+21 November: computer hosting declares and runs three healthy normal RQ workers.
+The current release passed an isolated four-site, ten-minute capacity comparison
+at 499.844 accepted events/s with processing p95 5.654 seconds. The earlier
+two-worker failure remains retained. Only the third local worker was added after
+a fresh backup; existing workers, credentials and all table digests were preserved.
+See `MULTITENANT-PERFORMANCE.md` for scope and limits. Embedded-browser registration,
+coverage navigation and three request-inspector submissions passed; full Chrome,
+accessibility and recovery/error-state acceptance remain open.
+
 15 November: the owner chose local-only operation, without a new public tunnel.
 The previous temporary hostname expired. Existing computer-instance services were
 resumed with their saved volumes/credentials and API/worker readiness verified.

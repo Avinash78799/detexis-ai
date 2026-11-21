@@ -36,6 +36,30 @@ def test_duplicate_numeric_feature_names_are_reported_without_guessing_their_mea
     assert result['members'][0]['labels'] == {'BENIGN':1}
 
 
+def test_legacy_label_encoding_requires_explicit_choice_and_preserves_label(tmp_path):
+    path = archive(tmp_path, b'Label\nWeb Attack \x96 XSS\n')
+    with pytest.raises(UnicodeDecodeError):
+        audit.audit_csv_zip(path)
+    result = audit.audit_csv_zip(path, encoding='cp1252')
+    assert result['csv_encoding'] == 'cp1252'
+    assert result['members'][0]['labels'] == {'Web Attack \u2013 XSS':1}
+    with pytest.raises(ValueError, match='explicit CSV encoding'):
+        audit.audit_csv_zip(path, encoding='latin-1')
+
+
+def test_blank_records_need_explicit_exclusion_and_remain_counted(tmp_path):
+    path = archive(tmp_path, 'Port,Label\n80,BENIGN\n,\n \n')
+    with pytest.raises(ValueError):
+        audit.audit_csv_zip(path)
+    result = audit.audit_csv_zip(path, exclude_blank_records=True)
+    assert result['total_rows'] == 1
+    assert result['excluded_blank_records'] == 2
+    assert result['members'][0]['excluded_blank_records'] == 2
+    assert result['members'][0]['labels'] == {'BENIGN':1}
+    with pytest.raises(ValueError, match='label vocabulary'):
+        audit.audit_csv_zip(archive(tmp_path, 'Port,Label\n80,\n'), exclude_blank_records=True)
+
+
 @pytest.mark.parametrize('content', ['Label,Label\nBENIGN,BENIGN\n', 'Port,Label\n80\n', 'Port,Other\n80,BENIGN\n'])
 def test_bad_schema_or_row_is_not_silently_skipped(tmp_path, content):
     with pytest.raises(ValueError):
