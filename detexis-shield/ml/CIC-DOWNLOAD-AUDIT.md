@@ -148,6 +148,37 @@ Its finalized report SHA-256 is
 `88939ca140a42ef5a87fcf1498773ae5dba87c4604231e9c36337fc3d39f66c9`.
 The local app's CA-verified readiness check still passed afterward.
 
+## Assignment-boundary correction
+
+Masked review of the first five matching frames found `;cat` in path parameters
+and `&&id` in query inputs, immediately followed by assignment `=` characters.
+The report retained trigger words, numeric frame/stream/time references and
+masked nearby syntax, not raw targets, queries or cookies. This identified the
+old command regex's word-boundary error. A fixed Bash assignment fixture and
+independent executable-command regressions check the intended distinction.
+
+Version 3 (`2026.11.21.1`) was then evaluated alongside the hash-verified old
+source in **one complete replay** of the same request-direction stream. The old
+implementation again matched 140 frames, while the corrected implementation
+matched **zero**; projected/excluded counts and method counts stayed identical.
+Both the filter and analyzer exited zero; the container completed without OOM.
+The paired run took 737.125 seconds with the same 768 MiB/two-core limits.
+
+This corpus informed the change, so the result is **regression evidence on a
+development corpus**, not independent validation, general attack recall or a
+production zero-FPR claim. No labels were rewritten, no request history was
+reprocessed and ML remains disabled. Source hashes distinguish the comparisons:
+
+- Previous rule source: `d39123a7a05e7c29bfd1e29976edd5d22b9eae2710b39159d5e6fdb6fd2bdf80`.
+- Corrected source: `3ff122d2223ebc19229a0d307d2bace1571d75a7b1ac9be4db9406bf1ddc7f84`.
+- Private paired report: `outputs/ml-datasets/monday-http-candidate-v3-audit-20261121.json`.
+- Report SHA-256: `885cff9aeda2789edb0b24da89bd51e5d3eebcab82ea61f3628eff4b79c5fded`.
+
+The corrected release is now activated locally; `RULE-RELEASES.md` records
+backup/source/role consistency and the unchanged owner-data checks. Compatible
+Thursday attack/request labels, independent real benign traffic and actual ML
+evaluation are still required.
+
 [Wireshark's reassembly documentation](https://www.wireshark.org/docs/wsug_html_chunked/ChAdvReassemblySection.html)
 explains why missing segments, capture boundaries and reassembly timing matter.
 Encrypted HTTPS is outside this audit. Recognized plaintext HTTP is a selected

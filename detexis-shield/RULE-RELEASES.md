@@ -4,7 +4,7 @@ Release `2026.11.14.1` is the first source-fingerprinted release record, with
 `rules_version=2`. The preceding bundled detector advertised version 1. These
 versions identify installed code; they do not establish complete threat coverage.
 
-## Assignment-boundary candidate: 2026.11.21.1
+## Assignment-boundary release: 2026.11.21.1
 
 Version 3 corrects command-rule matches on standalone assignment words. Masked
 review of the first five matching CIC Monday frames found `;cat` followed by `=`
@@ -37,10 +37,13 @@ source-anomalous matches, including 93 command matches. The earlier provenance,
 anomaly-label and body-visibility limits in `ml/CSIC-AUDIT.md` still apply. These
 are corpus comparisons, not malicious recall or production FPR.
 
-The full paired Monday replay is required before activation. It must reproduce
-the previous source-hashed detector's 140 matches on the same 54,713 projected
-frames before candidate counts are accepted. The local application still uses
-version 2 until activation is separately verified.
+The full paired Monday replay completed: it reproduced the previous source-hashed
+detector's **140** command matches on the same **54,713** projected frames, while
+version 3 produced **zero** matches and no added rule matches. Both analyzers used
+the same redaction/projection and unknown response status. Six ambiguous frames
+were excluded in both runs. The source corpus was used to find and correct this
+boundary problem, so it is a development regression corpus, not independent
+held-out evaluation or a production FPR result. See `ml/CIC-DOWNLOAD-AUDIT.md`.
 
 The candidate's synthetic in-process CPU run used 2,000 samples per profile.
 Assignment-prefix, unterminated-assignment-quote and repeated matrix-parameter
@@ -50,6 +53,26 @@ This is evaluation/serialization cost on this computer, with an offline capture
 analysis also running; it excludes SDK/HTTP/DB/queue cost and establishes no
 end-to-end throughput or latency guarantee. Private evidence:
 `outputs/rule-cpu-v3-20261121.json`.
+
+### Local activation
+
+Code commit `d1de27cf` passed all four jobs in Actions run `44872371743`.
+A fresh private backup preceded activation; all 65 candidate application/migration
+files matched the worktree. API, both workers and maintenance now use image
+`sha256:0429c84028226462eb9af3c67aff0e0dba81bd4b49d1c931e5ac6b6537595ac9`
+and verified manifests with source SHA-256
+`3ff122d2223ebc19229a0d307d2bace1571d75a7b1ac9be4db9406bf1ddc7f84`.
+All four roles became healthy, trusted HTTPS readiness passed, existing service
+environments were preserved, and every live database table's row digest remained
+unchanged, including both existing accounts. The activation was restricted to the
+currently empty-site local instance; no owner/key/session mutation was used.
+
+Previous role images/configuration were retained for rollback. Dependencies were
+reused from the cached image; no package refresh or new CA trust was installed.
+The former 500-events/s result belongs to version 2's tested workload. Current
+release load and broader abuse/browser measurements remain separate gates.
+Private evidence: `outputs/rules-v3-runtime.json`; backup
+`outputs/computer-backups/shield-20261121T055356Z-bbb432ed.dump`.
 
 ## Detection change and regressions
 
