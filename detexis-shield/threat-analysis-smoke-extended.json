@@ -1,0 +1,77 @@
+{
+  "checked_at": "2026-11-14T04:55:03.857809+00:00",
+  "passed": true,
+  "ready_before": {
+    "ok": true
+  },
+  "ready_after": {
+    "ok": true
+  },
+  "results": [
+    {
+      "sample": "benign_text",
+      "sha256": "6032255efba305db392d8228e248a1e6f01c55c4b50c6cb14e7f7e1302377f63",
+      "bytes": 47,
+      "elapsed_ms": 10.677135000150884,
+      "verdict": "no_signature_detected",
+      "signature": null,
+      "engine": "ClamAV 1.4.6/28182/Fri Nov 13 06:24:28 2026",
+      "signatures_updated_at": "2026-11-13T06:24:28+00:00"
+    },
+    {
+      "sample": "harmless_eicar_test",
+      "sha256": "275a021bbfb6489e54d471899f7db9d1663fc695ec2fe2a2c4538aabf651fd0f",
+      "bytes": 68,
+      "elapsed_ms": 6.343853000089439,
+      "verdict": "signature_detected",
+      "signature": "Eicar-Test-Signature",
+      "engine": "ClamAV 1.4.6/28182/Fri Nov 13 06:24:28 2026",
+      "signatures_updated_at": "2026-11-13T06:24:28+00:00"
+    },
+    {
+      "sample": "benign_zip",
+      "sha256": "fac9d7e9180d519ff78c751e95d465101e0a57909009b96ffe95494334060ad2",
+      "bytes": 142,
+      "elapsed_ms": 1.8918539999503992,
+      "verdict": "no_signature_detected",
+      "signature": null,
+      "engine": "ClamAV 1.4.6/28182/Fri Nov 13 06:24:28 2026",
+      "signatures_updated_at": "2026-11-13T06:24:28+00:00"
+    },
+    {
+      "sample": "harmless_eicar_zip",
+      "sha256": "ae41d85c8fc14ac18147f329999ad40e30f1fc4ee7d6704737ab3d7a577c80aa",
+      "bytes": 188,
+      "elapsed_ms": 4.695131000062247,
+      "verdict": "signature_detected",
+      "signature": "Eicar-Test-Signature",
+      "engine": "ClamAV 1.4.6/28182/Fri Nov 13 06:24:28 2026",
+      "signatures_updated_at": "2026-11-13T06:24:28+00:00"
+    },
+    {
+      "sample": "archive_member_over_transport_limit",
+      "sha256": "be1c8f49ca38fc81f89c4d4ebb4ba3b46f3fcddfa80e6b50f4115e1cef3c92bd",
+      "bytes": 1151,
+      "elapsed_ms": 1.8866529999286286,
+      "verdict": "no_signature_detected",
+      "signature": null,
+      "engine": "ClamAV 1.4.6/28182/Fri Nov 13 06:24:28 2026",
+      "signatures_updated_at": "2026-11-13T06:24:28+00:00"
+    },
+    {
+      "sample": "archive_exceeds_unpacked_scan_limit",
+      "sha256": "fa7e2df176bd2be3975cffaf072f3017520823e6f39935e23476e4671de9adfb",
+      "bytes": 8275,
+      "elapsed_ms": 27.371780000066792,
+      "verdict": "needs_review",
+      "signature": "Heuristics.Limits.Exceeded.MaxScanSize",
+      "engine": "ClamAV 1.4.6/28182/Fri Nov 13 06:24:28 2026",
+      "signatures_updated_at": "2026-11-13T06:24:28+00:00"
+    }
+  ],
+  "source_sha256": {
+    "malware.py": "8ddfd1c79f39f55a9f7a7101e2a467dbe0ecdd9be9f5687e3a2fcea10b595764",
+    "threat_analysis.py": "fb46046fb3561a4cd066744e5701d987d1608daaae73b683301788e5f32478b0"
+  },
+  "scope": "Real engine wiring with benign text, harmless EICAR, ZIP wrappers, a 1 MiB+1 member and a bounded 8 MiB+1 unpacked-limit fixture. Not real-malware accuracy, broad file coverage, concurrent load or browser validation."
+}

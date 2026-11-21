@@ -1,0 +1,48 @@
+{
+  "scope": "paired Flask test-client; real sender; unavailable loopback backend; no production sockets",
+  "benchmark_sha256": "b520934b82b7643fa5551c594ec7fc4c39c8787821164649940f5a500103bc73",
+  "wsgi_source_sha256": "71cacff1160dfdd3bbb908e42404c542dd5a7911de95af59a2a56a7610be39b3",
+  "versions": {
+    "Flask": "3.1.3",
+    "Werkzeug": "3.1.9",
+    "httpx": "0.28.1",
+    "detexis-shield": "0.1.0"
+  },
+  "warmups_per_profile": 100,
+  "profiles": {
+    "normal_query": {
+      "samples": 1000,
+      "baseline": {
+        "median_ms": 0.30425000295508653,
+        "p95_ms": 0.8020999957807362
+      },
+      "with_sensor": {
+        "median_ms": 0.41635000161477365,
+        "p95_ms": 1.112599995394703
+      },
+      "paired_added_latency": {
+        "median_ms": 0.08974999946076423,
+        "p95_ms": 0.4923999949824065
+      },
+      "target_passed": true
+    },
+    "large_query": {
+      "samples": 1000,
+      "baseline": {
+        "median_ms": 2.135950002411846,
+        "p95_ms": 4.074199998285621
+      },
+      "with_sensor": {
+        "median_ms": 2.93134999810718,
+        "p95_ms": 5.70529999822611
+      },
+      "paired_added_latency": {
+        "median_ms": 0.74894999852404,
+        "p95_ms": 2.4103999967337586
+      },
+      "target_passed": true
+    }
+  },
+  "acceptance_passed": true,
+  "note": "Paired differences are not clamped; negative samples remain. All responses completed; telemetry may drop by design."
+}

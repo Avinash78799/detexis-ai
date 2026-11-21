@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Install your sensor · Detexis Shield</title><link rel="stylesheet" href="/static/dashboard.css?v={{ asset_versions['dashboard.css'] }}"><link rel="stylesheet" href="/static/account.css?v={{ asset_versions['account.css'] }}"></head>
+<body><main><a href="/app" class="brand">◈ DETEXIS <strong>SHIELD</strong></a><p class="eyebrow">CONNECT YOUR APPLICATION</p><h1>From requests to visibility.</h1><p class="subtitle">Install once in your Python application. Send redacted request events to your Shield workspace.</p><p><a href="/app">← Your workspace</a></p>
+<nav aria-label="Installation steps"><a href="#prepare">1. Prepare</a> · <a href="#framework">2. Add middleware</a> · <a href="#confirm">3. Confirm connection</a></nav>
+<section id="prepare" class="account-card"><h2>1. Prepare your application</h2><p>You need a persistent Python 3.10+ application using FastAPI, Starlette or Flask, and outbound HTTPS access to your Shield service. This SDK does not support short-lived Vercel/serverless functions, Django or Node/Express yet.</p><p>In your workspace, add the exact website hostname you own or have permission to monitor. Save the sensor key and site salt displayed once. Sensor monitoring is separate from domain verification, which is required for scans.</p><p>Install the pinned SDK source using Git and pip in your application's virtual environment. This version is available from the repository; a public PyPI release is not claimed.</p>
+<pre><code>python -m pip install "detexis-shield @ git+https://github.com/Avinash78799/detexis-ai.git@0369c1239ffc1d5b015179c6b36c7ba28ab37426#subdirectory=detexis-shield/sensor-sdk"</code></pre>
+<p>Set these values using your hosting provider's secret/environment settings. Restart the application after changing them.</p><dl><dt><code>SHIELD_URL</code></dt><dd>Your Shield workspace's HTTPS origin, without <code>/app</code> or a trailing path. A temporary tunnel URL changes when restarted; use a stable service URL for real monitoring.</dd><dt><code>SHIELD_API_KEY</code></dt><dd>The <code>dxs_…</code> key for this website. Keep it on the server and out of Git, browser JavaScript and support messages.</dd><dt><code>SHIELD_SALT</code></dt><dd>The stable private salt saved at website creation. Use the same value across this website's processes. To replace a lost salt, generate a new value with <code>python -c "import secrets; print(secrets.token_urlsafe(32))"</code> and save it in your secret settings. Replacing it changes IP correlation identities.</dd></dl>
+<p>The snippets read environment variables. They do not load a <code>.env</code> file automatically. Do not paste credentials into these source files.</p></section>
+<section id="framework" class="account-card"><h2>2. Add the middleware</h2><p>Choose the example for your framework. Add the middleware once in an existing app, or save one complete example below as <code>app.py</code>.</p>
+<h3>FastAPI / Starlette</h3><pre data-python="fastapi"><code>import os
+from fastapi import FastAPI
+from detexis_shield import ShieldMiddleware
+
+app = FastAPI()
+app.add_middleware(
+    ShieldMiddleware,
+    api_url=os.environ["SHIELD_URL"],
+    api_key=os.environ["SHIELD_API_KEY"],
+    site_salt=os.environ["SHIELD_SALT"],
+)
+
+@app.get("/")
+def home():
+    return {"ok": True}
+</code></pre><p>For this complete example, install <code>fastapi uvicorn</code>, then run <code>python -m uvicorn app:app --port 9000</code>. In an existing Starlette app, use the same <code>app.add_middleware(...)</code> call.</p>
+<h3>Flask / WSGI</h3><pre data-python="flask"><code>import os
+from flask import Flask
+from detexis_shield import ShieldWSGIMiddleware
+
+app = Flask(__name__)
+app.wsgi_app = ShieldWSGIMiddleware(
+    app.wsgi_app,
+    api_url=os.environ["SHIELD_URL"],
+    api_key=os.environ["SHIELD_API_KEY"],
+    site_salt=os.environ["SHIELD_SALT"],
+)
+
+@app.get("/")
+def home():
+    return {"ok": True}
+</code></pre><p>For this complete example, install <code>flask</code>, then run <code>python -m flask --app app run --port 9000</code> for local development. Use a production WSGI server when hosting real traffic. Create the wrapper inside each worker process; do not use Gunicorn <code>--preload</code> with this SDK's background thread. Flask's development reloader can start extra sender threads.</p></section>
+<section id="confirm" class="account-card"><h2>3. Confirm the connection</h2><ol class="connection-checks"><li>Start or restart your application, then open a normal page on that application.</li><li>Return to your Shield workspace and choose <strong>Check sensor connection</strong> beside this website. Batches normally flush after three seconds; the first heartbeat takes about one minute.</li><li>Check the website dashboard for request activity. Normal traffic may produce no incident. A heartbeat proves connectivity, not continuous delivery of every request.</li></ol><p>If events are missing, check the HTTPS URL, key, environment settings and outbound network access. A revoked key must be replaced. Request processing delays may require the Shield operator to check workers and Redis.</p><h3>Know what is collected</h3><p>The sensor sends method, path, named-secret-redacted query, user agent, status, latency, flags, derived features and a per-site daily salted IP hash. It does not capture request bodies, cookies or authorization headers. Paths, user agents and unrecognized query fields can still contain personal data; review your application's URLs and privacy needs before connecting real users.</p><p>Monitoring never blocks requests. When Shield is unavailable or the bounded buffer fills, events can be dropped and your site keeps serving. Default event retention is 30 days; ask your Shield operator about its configured retention and backups.</p></section>
+</main></body></html>

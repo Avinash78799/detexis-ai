@@ -1,0 +1,15 @@
+{
+  "release_id": "2026.11.21.1",
+  "rules_version": 3,
+  "released_on": "2026-11-21",
+  "rules_source_sha256": "3ff122d2223ebc19229a0d307d2bace1571d75a7b1ac9be4db9406bf1ddc7f84",
+  "changes": [
+    "Exclude standalone known-name assignment words such as path matrix cat= and nested-query id= from command matches.",
+    "Preserve known-command detection after up to four bounded leading assignments, for common executable paths, redirects and dollar/backtick substitutions.",
+    "Derive assignment-boundary negative fixtures from masked CIC Monday trigger review while retaining independent command-execution and evasion fixtures."
+  ],
+  "references": [
+    "https://www.gnu.org/software/bash/manual/html_node/Simple-Command-Expansion.html",
+    "https://www.gnu.org/software/bash/manual/html_node/Command-Substitution.html"
+  ]
+}

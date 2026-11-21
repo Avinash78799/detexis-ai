@@ -1,0 +1,108 @@
+{
+  "target_rate": 500,
+  "duration_seconds": 600,
+  "events": 300000,
+  "accepted": 300000,
+  "failed": 0,
+  "elapsed_seconds": 599.9060000000027,
+  "accepted_per_second": 500.07834560747625,
+  "batch_latency_median_ms": 62.99109999963548,
+  "batch_latency_p95_ms": 137.45350000681356,
+  "http_responses": {
+    "202": 3000
+  },
+  "transport_errors": {},
+  "note": "Ingest acceptance only. Check pending events, RQ failures and processing lag separately.",
+  "backlog_samples_each_minute": [
+    {
+      "total": 30403,
+      "pending": 0
+    },
+    {
+      "total": 61103,
+      "pending": 100
+    },
+    {
+      "total": 92503,
+      "pending": 1100
+    },
+    {
+      "total": 123403,
+      "pending": 0
+    },
+    {
+      "total": 154303,
+      "pending": 100
+    },
+    {
+      "total": 185003,
+      "pending": 100
+    },
+    {
+      "total": 215603,
+      "pending": 100
+    },
+    {
+      "total": 246303,
+      "pending": 100
+    },
+    {
+      "total": 276903,
+      "pending": 100
+    }
+  ],
+  "database_at_load_end": {
+    "total": 300003,
+    "pending": 3000
+  },
+  "database_after_drain": {
+    "total": 300003,
+    "pending": 0
+  },
+  "processing_drain_seconds": 8.952999999994063,
+  "processing": {
+    "lag_median_seconds": 0.106118,
+    "lag_p95_seconds": 2.1981717,
+    "failed_jobs": 0,
+    "queued_jobs": 0
+  },
+  "functional_checks": {
+    "ingest_idempotency": true,
+    "rq_incident": true,
+    "dashboard_auth": true,
+    "real_backend_outage_fail_open": true
+  },
+  "environment": "Dedicated local Docker validation stack; see runtime_details",
+  "runtime_details": {
+    "python": "3.12.16",
+    "visible_cpus": 8,
+    "packages": {
+      "fastapi": "0.115.6",
+      "uvicorn": "0.34.0",
+      "starlette": "0.41.3",
+      "pydantic": "2.10.4",
+      "httpx": "0.28.1",
+      "sqlalchemy": "2.0.36",
+      "rq": "2.1.0",
+      "psycopg2-binary": "2.9.10"
+    },
+    "postgresql": "16.15 (Debian 16.15-1.pgdg12+2)",
+    "redis": "7.4.10",
+    "postgresql_settings": {
+      "shared_buffers": "512MB",
+      "wal_compression": "pglz",
+      "bgwriter_lru_maxpages": "1000",
+      "checkpoint_timeout": "5min",
+      "fsync": "on",
+      "synchronous_commit": "on"
+    },
+    "migration": "0008",
+    "model_enabled": false,
+    "worker_source_sha256": "893aeb200cff591e9577aab11faaf617c4fdd12d89fc054917fa286a3cda6a8f"
+  },
+  "compose_override": true,
+  "capacity_passed": true,
+  "max_processing_p95_seconds": 10.0,
+  "latency_target_passed": true,
+  "acceptance_passed": true
+}

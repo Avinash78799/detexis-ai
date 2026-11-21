@@ -1,0 +1,9 @@
+# Local synthetic validation only. Compose 2.24.4+ supports !override.
+# Separate project/volume; no datastore ports; never layer on computer hosting.
+services:
+  api:
+    ports: !override ["127.0.0.1:18000:8000"]
+  db:
+    ports: !reset []
+  redis:
+    ports: !reset []

@@ -1,0 +1,19 @@
+# Disposable loopback performance instance only. Never layer on computer hosting.
+# Use a fresh project named shield-perf-* and --no-build; retain its evidence.
+services:
+  db:
+    ports: !reset []
+  redis:
+    ports: !reset []
+  api:
+    image: ${SHIELD_PERF_IMAGE:?Set SHIELD_PERF_IMAGE to the verified application image}
+    pull_policy: never
+    ports: !reset []
+  worker:
+    image: ${SHIELD_PERF_IMAGE:?Set SHIELD_PERF_IMAGE to the verified application image}
+    pull_policy: never
+  maintenance:
+    image: ${SHIELD_PERF_IMAGE:?Set SHIELD_PERF_IMAGE to the verified application image}
+    pull_policy: never
+  localproxy:
+    ports: !override ["127.0.0.1:18443:8443", "[::1]:18443:8443"]
