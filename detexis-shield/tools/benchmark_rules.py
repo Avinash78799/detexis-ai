@@ -20,6 +20,9 @@ PROFILES = {
     "maximum_query_fields": ("/search", "&".join("p"+str(n)+"="+"x"*30 for n in range(50)), "browser"),
     "bounded_unterminated_comments": ("/"+"/*"*1023, "q="+"/*"*10000, "x"*512),
     "bounded_separator_flood": ("/search", "&"*10000, "x"*512),
+    "bounded_assignment_prefixes": ("/search", urlencode({"q":";" + ("a=" + "x"*128 + " ")*4 + "id"}), "browser"),
+    "unterminated_assignment_quote": ("/search", urlencode({"q":';cat="' + "x"*2048}), "browser"),
+    "assignment_separator_path": ("/" + ";cat="*400, "", "browser"),
 }
 
 

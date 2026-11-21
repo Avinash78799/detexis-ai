@@ -4,9 +4,9 @@ import re
 from dataclasses import asdict, dataclass
 from urllib.parse import parse_qsl, unquote, urlsplit
 
-RULESET_VERSION = 2
-RULESET_RELEASE = "2026.11.14.1"
-RULESET_DATE = "2026-11-14"
+RULESET_VERSION = 3
+RULESET_RELEASE = "2026.11.21.1"
+RULESET_DATE = "2026-11-21"
 MAX_PATH = 2048
 MAX_QUERY = 2048
 MAX_FIELDS = 50
@@ -40,13 +40,22 @@ RULES = {
     "request_flood": ("medium", "CWE-400", "A06:2025", "Request rate exceeds the site's configured threshold"),
 }
 
+# A standalone name=value word does not execute the command named "name".
+# Keep bounded leading assignments so ";cat=x id" still finds the actual id
+# command. Substitutions are searched independently, including inside values.
+# This is a heuristic: at most four simple assignment words, not a shell parser.
+SHELL_ASSIGNMENT = r"""[A-Za-z_][A-Za-z0-9_]{0,63}=(?:[^\s;|&$`()<>\\'\"]{0,128}|"[^"\r\n]{0,128}"|'[^'\r\n]{0,128}')\s+"""
+COMMAND_PATTERN = re.compile(
+    r"(?:;|\|\||&&|\$\(|`)\s*(?:" + SHELL_ASSIGNMENT + r"){0,4}"
+    r"(?:/(?:usr/)?(?:local/)?s?bin/)?(?:id|whoami|cat|curl|wget|bash|sh)\b(?!=)", re.I)
+
 PATTERNS = {
     "sqli_boolean": re.compile(r"\b(?:or|and)\s+(?:(\d{1,6})\s*=\s*\1\b|'([^']{1,20})'\s*=\s*'\2')", re.I),
     "sqli_union": re.compile(r"\bunion\s+(?:all\s+)?select\b", re.I),
     "sqli_time": re.compile(r"\b(?:sleep|pg_sleep|benchmark)\s*\(\s*\d|\bwaitfor\s+delay\s+'", re.I),
     "xss": re.compile(r"<\s*script\b|<\s*(?:svg|img)\b[^>]{0,300}\bon(?:load|error)\s*=|\bjavascript\s*:", re.I),
     "path_traversal": re.compile(r"\.\.[\\/]"),
-    "command_injection": re.compile(r"(?:;|\|\||&&|\$\()\s*(?:id|whoami|cat|curl|wget|bash|sh)\b", re.I),
+    "command_injection": COMMAND_PATTERN,
 }
 URL_FIELDS = {"url", "uri", "target", "redirect", "callback", "webhook", "dest", "host"}
 LOGIN_PATHS = {"/login", "/signin", "/auth/login", "/api/login"}

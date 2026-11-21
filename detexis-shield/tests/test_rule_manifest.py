@@ -61,7 +61,7 @@ def test_release_gate_rejects_rewriting_a_published_record_or_unversioned_source
     current, record = manifest(), release_record()
     gate.verify(current, record, old_source="RULESET_VERSION = 1\n")
     with pytest.raises(ValueError, match="higher rules_version"):
-        gate.verify(current, record, old_source="RULESET_VERSION = 2\n# different detector\n")
+        gate.verify(current, record, old_source=f"RULESET_VERSION = {RULESET_VERSION}\n# different detector\n")
     previous_record = copy.deepcopy(record)
     previous_record["changes"] = ["different historical release record"]
     with pytest.raises(ValueError, match="immutable"):

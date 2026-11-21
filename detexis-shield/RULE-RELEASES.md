@@ -4,6 +4,53 @@ Release `2026.11.14.1` is the first source-fingerprinted release record, with
 `rules_version=2`. The preceding bundled detector advertised version 1. These
 versions identify installed code; they do not establish complete threat coverage.
 
+## Assignment-boundary candidate: 2026.11.21.1
+
+Version 3 corrects command-rule matches on standalone assignment words. Masked
+review of the first five matching CIC Monday frames found `;cat` followed by `=`
+in path matrix parameters and `&&id` followed by `=` in decoded query inputs.
+Those words are assignments rather than executions of the named command; the
+previous command regex stopped at a word boundary before `=` and matched them.
+
+The candidate rejects an immediate assignment `=` after a known command name.
+It also recognizes up to four leading assignment words before the actual known
+command, common executable paths and backtick substitutions, so nearby attacks
+such as `;cat=x id`, `;cat=$(id)`, an assignment containing backtick substitution,
+and `;id >/dev/null` retain
+coverage. Nineteen boundary/attack regression cases pass, along with the original
+mapped rules, evasion, manifest and pipeline checks: 127 tests in that focused run.
+The release gate verifies the new integer version and canonical source hash;
+the previous JSON record is unchanged.
+
+Assignment names/values are bounded at 64/128 characters. Complex quoting,
+expansions, more than four leading assignments and unknown command names remain
+outside this heuristic's complete coverage. It does not parse or execute a shell.
+The source references are the GNU Bash manual's
+[simple-command expansion](https://www.gnu.org/software/bash/manual/html_node/Simple-Command-Expansion.html)
+and [command substitution](https://www.gnu.org/software/bash/manual/html_node/Command-Substitution.html)
+sections. A fixed harmless local Bash fixture independently confirmed assignment
+behavior; no corpus request was executed.
+
+A complete candidate CSIC rerun projected all 97,065 records, retained zero
+matches in both 36,000-record source-normal files and reproduced all 1,009
+source-anomalous matches, including 93 command matches. The earlier provenance,
+anomaly-label and body-visibility limits in `ml/CSIC-AUDIT.md` still apply. These
+are corpus comparisons, not malicious recall or production FPR.
+
+The full paired Monday replay is required before activation. It must reproduce
+the previous source-hashed detector's 140 matches on the same 54,713 projected
+frames before candidate counts are accepted. The local application still uses
+version 2 until activation is separately verified.
+
+The candidate's synthetic in-process CPU run used 2,000 samples per profile.
+Assignment-prefix, unterminated-assignment-quote and repeated matrix-parameter
+profiles had p95 costs of 0.228, 0.600 and 1.130 ms. Across all nine profiles,
+the largest observed p95 was 2.179 ms (the existing unterminated-comment case).
+This is evaluation/serialization cost on this computer, with an offline capture
+analysis also running; it excludes SDK/HTTP/DB/queue cost and establishes no
+end-to-end throughput or latency guarantee. Private evidence:
+`outputs/rule-cpu-v3-20261121.json`.
+
 ## Detection change and regressions
 
 The update recognizes the tested block-comment-separated SQL patterns and MySQL
