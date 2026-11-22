@@ -8,9 +8,20 @@ failure and an older failure arriving after a newer success. Confirmed account
 removal also invalidates pending list responses and clears list status, so a
 late response cannot restore cleared list content or an obsolete error. Existing
 stale cards and recovery secrets remain preserved when the latest refresh fails.
-All twenty JavaScript tests pass. These are interaction regressions; the new
-change still requires CI, local activation and rendered acceptance. They do not
-establish complete keyboard or assistive-technology acceptance.
+All twenty JavaScript tests pass. Commit `0bd8f883d298c12e13bbe34ea31409a5ffd2c857`
+passed all four CI jobs in run `44993557821`. The fix is active locally in API
+image `sha256:76934e65907417b2962d682f2bad03ff5e6631636c2c0a366d436f75505f4933`.
+All 65 application/migration files matched source. A fresh backup preceded the
+API-only update; service environment values and complete database row digests
+stayed unchanged, and existing workers/maintenance were not recreated.
+CA-verified readiness and the served JavaScript source hash passed. Private
+evidence: `outputs/refresh-race-runtime-20261122.json`.
+
+Rendered acceptance remains open. The embedded browser had a cached connection
+error page; binding that tab was blocked by browser URL policy for its internal
+error-page URL. No warning/policy bypass or alternate browser was used. The owner
+was asked to reopen the local page manually. These interaction regressions do
+not establish complete keyboard or assistive-technology acceptance.
 
 ## Local version 3 recheck — 21 November 2026
 
