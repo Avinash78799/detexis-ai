@@ -1,5 +1,22 @@
 # Authenticated analysis browser acceptance
 
+## Incident triage outcome and selection races — 22 November 2026
+
+The inbox now distinguishes a saved review decision from a later failed detail
+or list refresh. A successful status mutation followed by failed reads reports
+that the decision was saved and asks the user to refresh; it never automatically
+retries the mutation. Rejected/uncertain mutations preserve the draft and the API
+helper's outcome warning. Review fields are disabled during saving, the incident
+identity is captured before the request, and pending older detail responses or
+failures cannot replace the active decision. Opening another incident during a
+save explains that the user needs to wait.
+
+Five new interaction regressions cover detail/list refresh failures after commit,
+uncertain mutations, obsolete detail failures and pending-selection/save races.
+All 28 JavaScript tests pass. These checks use synthetic in-memory API responses;
+no real incident was changed. CI, local activation and rendered fault-state
+acceptance of the triage update remain pending.
+
 ## Status/help/focus source review — 22 November 2026
 
 The general empty status region is now visually clipped rather than removed
