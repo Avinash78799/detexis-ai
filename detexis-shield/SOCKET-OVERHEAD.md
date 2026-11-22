@@ -146,3 +146,52 @@ The previous failure remains retained. New private report:
 SHA256: `eb221ea45eded650009d6bf0e544d65f0c93bf74269efd5de56485b4ca3784f9`.
 Further performance work and repeatable acceptance remain required. No installed
 external sensor or published package was automatically updated by this experiment.
+
+## Thread headroom and in-worker diagnostics
+
+The harness now records configurable Waitress thread count (`--wsgi-threads`,
+1–64, default four). Parameter validation and forwarding/reporting have fast
+regressions; all four benchmark checks passed. ASGI-only runs no longer require
+an unused Werkzeug import. These are measurement changes, not SDK changes.
+
+An eight-thread/four-client Windows comparison retained the same 200 samples per
+client, two profiles, real sender and latency gates. It **failed**: large-query
+worst-client p95 was **16.618 ms online** and **19.637 ms refused**; ordinary-query
+profiles passed. Both online delivery and offline loss accounting matched all
+1,760 expected events. Increasing threads alone did not establish acceptance;
+the four-thread recommendation has not been replaced by an eight-thread claim.
+Private report: `outputs/sensor-concurrent-eight-threads-20261122.json`.
+SHA256: `676c71e214bad4f1d686d27aaf7bfbe71d0e0661f17ac6ba8e63deadc1d2acf2`.
+
+A separate instrumented four-thread Windows run timed `_record` during four-client
+socket traffic (100 measured pairs plus 20 warmup pairs per client/profile).
+Across 480 recordings per profile/case, large-query recording wall p95 was
+**1.096 ms online** and **0.878 ms refused**. Added timing instrumentation and
+warmup calls are included. Thread CPU medians/p95 were zero at this scale, so
+those timer fields are not useful CPU evidence. This diagnostic shows a gap
+between measured recording work and socket tails; it does not replace the
+end-to-end overhead gate or identify a unique scheduling/network cause.
+Private report: `outputs/sensor-record-diagnostic-20261122.json`.
+SHA256: `a0e8206912340c3f89f3746de8caa921c7feb89ffb852a0dc416bb12c4a68244`.
+
+## Linux ASGI concurrent comparison: also incomplete
+
+The same SDK/harness sources ran inside a Linux Docker container with two CPUs,
+512 MiB memory, read-only filesystem, temporary `/tmp`, and no external network
+or published port. Four clients used loopback inside that container; this is not
+a cross-container network benchmark. Python was 3.12.16. Only ASGI ran because
+the cached image lacked the optional WSGI servers; no dependencies were fetched.
+
+Normal-query worst-client p95 passed at **4.783 ms online / 4.785 ms refused**.
+Large-query worst-client p95 **failed** at **14.159 ms / 16.329 ms**. All 1,760
+online events arrived without seeded-secret occurrences; all refused-case events
+were counted dropped after close. The two-CPU cap, shared Docker host and Python
+version differ from Windows, so neither a Windows-only cause nor universal Linux
+performance can be inferred. No smaller sample, pooled-only percentile or relaxed
+threshold is substituted for this failure. The temporary container exited.
+Private report: `outputs/sensor-concurrent-linux-asgi-20261122.json`.
+SHA256: `37f3c325c596a2ebe1118ddf666e87bc9ddd78ef664eda57b10b6d8578b1ed74`.
+
+Further controlled performance work remains required before claiming the
+concurrent large-query latency target. Existing default thread count and installed
+owner services were not changed by these comparisons.

@@ -20,7 +20,6 @@ import time
 
 import httpx
 import uvicorn
-from werkzeug.serving import make_server, WSGIRequestHandler
 from detexis_shield import ShieldMiddleware, ShieldWSGIMiddleware
 
 
@@ -85,7 +84,7 @@ def collector(online):
 
 
 @contextmanager
-def host(framework, sensor, wsgi_server="werkzeug"):
+def host(framework, sensor, wsgi_server="werkzeug", wsgi_threads=4):
     if framework == "asgi":
         async def app(scope, receive, send):
             await send({"type":"http.response.start","status":200,"headers":[(b"content-length",b"2")]})
@@ -116,7 +115,7 @@ def host(framework, sensor, wsgi_server="werkzeug"):
             return (observed if environ["PATH_INFO"] == "/observed" else app)(environ, start_response)
         if wsgi_server == "waitress":
             from waitress import create_server
-            server = create_server(dispatch, host="127.0.0.1", port=0, threads=4,
+            server = create_server(dispatch, host="127.0.0.1", port=0, threads=wsgi_threads,
                                    map={}, asyncore_loop_timeout=.1)
             port = server.socket.getsockname()[1]
             thread = threading.Thread(target=server.run, daemon=True)
@@ -130,6 +129,7 @@ def host(framework, sensor, wsgi_server="werkzeug"):
                 if thread.is_alive():
                     raise RuntimeError("Benchmark WSGI server did not stop")
         else:
+            from werkzeug.serving import make_server, WSGIRequestHandler
             class QuietHandler(WSGIRequestHandler):
                 def log(self, *args, **kwargs):
                     pass
@@ -181,14 +181,14 @@ def paired_clients(origin, query, samples, concurrency):
     return clients
 
 
-def measure(framework, online, samples, wsgi_server="werkzeug", concurrency=1):
+def measure(framework, online, samples, wsgi_server="werkzeug", concurrency=1, wsgi_threads=4):
     cls = ShieldMiddleware if framework == "asgi" else ShieldWSGIMiddleware
     profiles = {"normal":"q=notebook&password=synthetic-secret", "large":"q="+"%3C%3E%27%22"*512+"&password=synthetic-secret"}
     with collector(online) as (backend, counts):
         def wrap(app):
             return cls(app, backend, "synthetic-benchmark-key", "synthetic-benchmark-salt", flush_interval=.2)
         results = {}
-        with host(framework, wrap, wsgi_server) as (origin, observed):
+        with host(framework, wrap, wsgi_server, wsgi_threads) as (origin, observed):
             for name, query in profiles.items():
                 clients = paired_clients(origin, query, samples, concurrency)
                 before, after, added = [[value for client in clients for value in client[i]] for i in range(3)]
@@ -208,7 +208,9 @@ def measure(framework, online, samples, wsgi_server="werkzeug", concurrency=1):
             if online and (counts["events"] != expected or counts["redaction_failures"]):
                 raise RuntimeError("Online telemetry completion or redaction check failed")
         sender["dropped_after_close"] = observed.client.dropped
-    return {"framework":framework,"host_server":"uvicorn" if framework == "asgi" else wsgi_server,"concurrent_clients":concurrency,"collector":"online" if online else "connection_refused", "profiles":results,"sender":sender}
+    return {"framework":framework,"host_server":"uvicorn" if framework == "asgi" else wsgi_server,
+            "wsgi_threads":wsgi_threads if framework == "wsgi" and wsgi_server == "waitress" else None,
+            "concurrent_clients":concurrency,"collector":"online" if online else "connection_refused", "profiles":results,"sender":sender}
 
 
 def main():
@@ -218,20 +220,23 @@ def main():
     parser.add_argument("--output", type=Path, default=Path("sensor-socket-benchmark.json"))
     parser.add_argument("--framework", choices=["both","asgi","wsgi"], default="both")
     parser.add_argument("--wsgi-server", choices=["werkzeug","waitress"], default="werkzeug")
+    parser.add_argument("--wsgi-threads", type=int, default=4, help="Waitress worker threads; recorded in each Waitress case")
     args = parser.parse_args()
     if not 100 <= args.samples <= 1000:
         parser.error("samples must be between 100 and 1000")
     if not 1 <= args.concurrency <= 16:
         parser.error("concurrency must be between 1 and 16")
+    if not 1 <= args.wsgi_threads <= 64:
+        parser.error("wsgi-threads must be between 1 and 64")
     if args.output.exists():
         parser.error("Refusing to overwrite an existing report")
     frameworks = ("asgi","wsgi") if args.framework == "both" else (args.framework,)
-    cases = [measure(framework, online, args.samples, args.wsgi_server, args.concurrency) for framework in frameworks for online in (True,False)]
+    cases = [measure(framework, online, args.samples, args.wsgi_server, args.concurrency, args.wsgi_threads) for framework in frameworks for online in (True,False)]
     root = Path(__file__).resolve().parents[1]
     report = {"checked_at":datetime.now(timezone.utc).isoformat(),"python":platform.python_version(),
               "source_sha256":{str(p.relative_to(root)):hashlib.sha256(p.read_bytes()).hexdigest() for p in [Path(__file__).resolve(), *sorted((root/'sensor-sdk/detexis_shield').glob('*.py'))]},
               "cases":cases,"targets_passed":all(p["target_passed"] for c in cases for p in c["profiles"].values()),
-              "scope":"Alternating loopback TCP pairs per independent client, one shared host process and real background sender. Clients start each profile together; shared-host contention can affect both paired paths. Aggregated and every-client latency gates apply. Server choice and concurrency are recorded; Waitress uses four worker threads. Synthetic collector only; no actual ingest/Redis/DB, remote TLS, production capacity or representative traffic claim. Offline telemetry loss is expected and counted."}
+              "scope":"Alternating loopback TCP pairs per independent client, one shared host process and real background sender. Clients start each profile together; shared-host contention can affect both paired paths. Aggregated and every-client latency gates apply. Server choice, Waitress thread count and concurrency are recorded. Synthetic collector only; no actual ingest/Redis/DB, remote TLS, production capacity or representative traffic claim. Offline telemetry loss is expected and counted."}
     args.output.write_text(json.dumps(report,indent=2)+"\n",encoding="utf-8")
     print(json.dumps(report,indent=2))
     if not report["targets_passed"]:

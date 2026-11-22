@@ -3,6 +3,7 @@ from contextlib import contextmanager
 import importlib.util
 from pathlib import Path
 from types import SimpleNamespace
+import pytest
 
 spec = importlib.util.spec_from_file_location('sensor_socket_benchmark', Path(__file__).parents[1] / 'tools/benchmark_sensor_sockets.py')
 benchmark = importlib.util.module_from_spec(spec)
@@ -29,3 +30,29 @@ def test_per_client_tail_failure_is_not_hidden_by_pooled_percentiles(monkeypatch
         assert profile['paired_added_latency']['p95_ms'] == 0
         assert profile['per_client_added_latency'][-1]['p95_ms'] == 11
         assert profile['target_passed'] is False
+
+
+def test_waitress_thread_setting_reaches_host_and_report(monkeypatch):
+    observed = []
+    @contextmanager
+    def collector(online):
+        yield 'synthetic', {'events':240, 'redaction_failures':0}
+    @contextmanager
+    def host(framework, wrap, server, threads):
+        observed.append((framework, server, threads))
+        yield 'synthetic', SimpleNamespace(client=SimpleNamespace(dropped=0, q=SimpleNamespace(qsize=lambda:0)))
+    monkeypatch.setattr(benchmark, 'collector', collector)
+    monkeypatch.setattr(benchmark, 'host', host)
+    monkeypatch.setattr(benchmark, 'paired_clients', lambda *args:[([1]*100,[1]*100,[0]*100)])
+    result = benchmark.measure('wsgi', True, 100, 'waitress', wsgi_threads=8)
+    assert observed == [('wsgi', 'waitress', 8)]
+    assert result['wsgi_threads'] == 8
+
+
+@pytest.mark.parametrize('threads', ['0', '65'])
+def test_invalid_thread_count_stops_before_starting_listeners(monkeypatch, threads):
+    monkeypatch.setattr('sys.argv', ['benchmark', '--wsgi-threads', threads])
+    monkeypatch.setattr(benchmark, 'measure', lambda *args:pytest.fail('must not start a measurement'))
+    with pytest.raises(SystemExit) as error:
+        benchmark.main()
+    assert error.value.code == 2
