@@ -17,11 +17,19 @@ stayed unchanged, and existing workers/maintenance were not recreated.
 CA-verified readiness and the served JavaScript source hash passed. Private
 evidence: `outputs/refresh-race-runtime-20261122.json`.
 
-Rendered acceptance remains open. The embedded browser had a cached connection
-error page; binding that tab was blocked by browser URL policy for its internal
-error-page URL. No warning/policy bypass or alternate browser was used. The owner
-was asked to reopen the local page manually. These interaction regressions do
-not establish complete keyboard or assistive-technology acceptance.
+The first rendered check was blocked: the embedded browser had a cached
+connection-error page, and browser policy refused its internal error-page URL.
+The owner manually reopened the local page. A fresh tab binding then showed the
+existing approved synthetic account still signed in with an empty website list.
+Sending Return to the Refresh websites control re-rendered the empty-state
+heading/description, kept the signed-in workspace and left the refresh control
+enabled. No site, key, upload, password change or account removal was performed.
+No warning/policy bypass or alternate browser was used.
+
+This passes the focused rendered keyboard-activation/refresh check. Out-of-order
+network responses and deletion races have JavaScript regression evidence, not
+rendered fault-injection acceptance. Full keyboard navigation, focus behavior,
+screen-reader announcements and responsive/error-state acceptance remain open.
 
 ## Local version 3 recheck — 21 November 2026
 
