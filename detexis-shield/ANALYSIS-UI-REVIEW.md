@@ -17,6 +17,13 @@ All 28 JavaScript tests pass. These checks use synthetic in-memory API responses
 no real incident was changed. CI, local activation and rendered fault-state
 acceptance of the triage update remain pending.
 
+CI run `45045313252` caught a UTF-8 punctuation conversion introduced while
+normalizing the script's line endings. Two exact title assertions failed; HTTPS,
+Windows-helper and ML-smoke jobs passed. The update was not activated. Explicit
+UTF-8 read/write restored the original punctuation, and all 28 JavaScript tests
+passed again without weakening assertions. Replacement CI must pass before
+local activation; the failed run remains part of the validation record.
+
 ## Status/help/focus source review — 22 November 2026
 
 The general empty status region is now visually clipped rather than removed
