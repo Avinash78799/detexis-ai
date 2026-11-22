@@ -231,3 +231,45 @@ Its `sensor_acceptance` remained null, sample totals were checked, and a repeat
 command targeting the same file was refused without altering the report.
 Private report: `outputs/sensor-calibration-tool-20261122.json`.
 SHA256: `58aa6cf3480bc49c5bb9f16864fe18b6020e4e7207d9bbb2042b538d581a7d56`.
+
+## Measurement version 2: prepared requests and repeated concurrent passes
+
+The earlier timed `client.get(path)` also rebuilt/normalized the large URL in
+the Python load generator on every call. Version 2 builds the same two bodyless
+GET requests once per client **before timing and the start barrier**, then times
+`client.send` through complete response-body read and content validation. It
+still includes HTTP transport, host scheduling, middleware and shared-process
+contention. It excludes load-generator URL/header construction. This is an
+explicit measurement-interval change, not a relaxation of the 5/10-ms gates or
+a like-for-like SDK speedup claim. Prior version-1 results remain retained.
+
+Both benchmark and calibration reports record `measurement_version: 2` and the
+request-preparation boundary. A regression verifies that construction occurs
+only twice per client and outside every timed pair; all five benchmark checks
+passed. Payloads, 20-pair warmup, alternating request order, four clients, 200
+measured pairs per client, four Waitress threads, real sender and per-client
+gates remain unchanged.
+
+The matching no-sensor calibration's large-query worst-client p95 was **0.617 ms
+ASGI / 1.593 ms Waitress**. Two subsequent sensor runs **passed all pooled and
+every-client gates** for normal/large profiles and online/refused collectors.
+Worst-client p95 across all cases was **2.888 ms** in the first and **3.245 ms**
+in the repeat. Each online case received all 1,760 expected events with no seeded
+secret occurrences or drops; each refused case counted all events as dropped
+after sender shutdown. SDK and harness source hashes matched between repeats.
+
+The complete aggregate reports and calibration are reviewable in
+[concurrent-sensor-check.json](concurrent-sensor-check.json). Private raw runs:
+`outputs/sensor-prepared-concurrent-20261122.json` (SHA256
+`f4d71081f5b7f6c24f6bf05867259fc72a9247b118b9143e7b3dced03fc4385e`)
+and `outputs/sensor-prepared-concurrent-repeat-20261122.json` (SHA256
+`90f4ce6ebac2e6b038f74628d01db468dffb9607feabfb9094c7be45596ebd7d`).
+Calibration SHA256:
+`a6620c67bad6cc703a3d9b20292fa125b9510606936f5015185b391f91c0e82b`.
+
+This provides calibrated concurrent Windows socket evidence for this synthetic
+workload and measurement interval. It does not prove remote/TLS deployment,
+arbitrary workload capacity, Linux version-2 behavior, long-lived operation or
+absence of all performance faults. ASGI telemetry may still finish after the
+client receives the response; delivery totals were checked separately. No real
+application or installed sensor was automatically updated by these tests.

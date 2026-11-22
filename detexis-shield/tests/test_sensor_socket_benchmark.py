@@ -32,6 +32,32 @@ def test_per_client_tail_failure_is_not_hidden_by_pooled_percentiles(monkeypatch
         assert profile['target_passed'] is False
 
 
+def test_request_preparation_is_outside_all_measured_pairs(monkeypatch):
+    events = []
+    class Client:
+        def __init__(self, **kwargs):pass
+        def __enter__(self):return self
+        def __exit__(self, *args):pass
+        def build_request(self, method, path):
+            assert method == 'GET'
+            events.append('build')
+            return object()
+        def send(self, prepared):
+            events.append('send')
+            return SimpleNamespace(status_code=200, content=b'ok')
+    def clock():
+        events.append('clock')
+        return len(events)*1000000
+    monkeypatch.setattr(benchmark.httpx, 'Client', Client)
+    monkeypatch.setattr(benchmark.time, 'perf_counter_ns', clock)
+    clients = benchmark.paired_clients('synthetic','q=fixture',100,1)
+    assert events[:2] == ['build','build']
+    assert events.count('build') == 2
+    assert events.count('send') == 240
+    assert all(len(values) == 100 for values in clients[0])
+    assert events[2:5] == ['clock','send','clock']
+
+
 def test_waitress_thread_setting_reaches_host_and_report(monkeypatch):
     observed = []
     @contextmanager

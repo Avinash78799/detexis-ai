@@ -10,7 +10,7 @@ import json
 from pathlib import Path
 from types import SimpleNamespace
 
-from benchmark_sensor_sockets import host, paired_clients, summary
+from benchmark_sensor_sockets import host, paired_clients, summary, MEASUREMENT_VERSION
 
 
 def calibrate(framework, samples, concurrency, threads):
@@ -47,6 +47,8 @@ def main():
         parser.error('Refusing to overwrite an existing report')
     frameworks = ['asgi','wsgi'] if args.framework == 'both' else [args.framework]
     report = {'kind':'no_sensor_calibration', 'sensor_acceptance':None,
+              'measurement_version':MEASUREMENT_VERSION,
+              'request_preparation':'GET construction excluded; send through complete body read timed',
               'checked_at':datetime.now(timezone.utc).isoformat(),
               'scope':'Identical no-sensor apps on both loopback paths. No sender, collector, accounts or real traffic. Shared host scheduling and request parsing remain. This does not prove sensor latency acceptance.',
               'cases':[calibrate(f,args.samples,args.concurrency,args.wsgi_threads) for f in frameworks]}

@@ -22,6 +22,8 @@ import httpx
 import uvicorn
 from detexis_shield import ShieldMiddleware, ShieldWSGIMiddleware
 
+MEASUREMENT_VERSION = 2
+
 
 def summary(values):
     ordered = sorted(values)
@@ -162,17 +164,19 @@ def paired_clients(origin, query, samples, concurrency):
     def run_client(_):
         before, after, added = [], [], []
         with httpx.Client(base_url=origin, timeout=5, trust_env=False) as client:
-            def request(path):
+            # URL parsing in the load generator is not host-side SDK work.
+            # Prepare equivalent immutable GETs before timing or synchronization.
+            requests = [client.build_request('GET', path+'?'+query) for path in ['/plain','/observed']]
+            def request(prepared):
                 started = time.perf_counter_ns()
-                response = client.get(path)
+                response = client.send(prepared)
                 if response.status_code != 200 or response.content != b"ok":
                     raise RuntimeError("Host response changed")
                 return (time.perf_counter_ns()-started)/1_000_000
             barrier.wait(timeout=10)
             for n in range(samples+20):
-                paths = ["/plain?"+query, "/observed?"+query]
                 order = [0,1] if n%2 == 0 else [1,0]
-                pair = {i:request(paths[i]) for i in order}
+                pair = {i:request(requests[i]) for i in order}
                 if n >= 20:
                     before.append(pair[0]); after.append(pair[1]); added.append(pair[1]-pair[0])
         return before, after, added
@@ -233,7 +237,9 @@ def main():
     frameworks = ("asgi","wsgi") if args.framework == "both" else (args.framework,)
     cases = [measure(framework, online, args.samples, args.wsgi_server, args.concurrency, args.wsgi_threads) for framework in frameworks for online in (True,False)]
     root = Path(__file__).resolve().parents[1]
-    report = {"checked_at":datetime.now(timezone.utc).isoformat(),"python":platform.python_version(),
+    report = {"measurement_version":MEASUREMENT_VERSION,
+              "request_preparation":"GET URLs/headers built once per client/path before timing; send through complete body read is timed",
+              "checked_at":datetime.now(timezone.utc).isoformat(),"python":platform.python_version(),
               "source_sha256":{str(p.relative_to(root)):hashlib.sha256(p.read_bytes()).hexdigest() for p in [Path(__file__).resolve(), *sorted((root/'sensor-sdk/detexis_shield').glob('*.py'))]},
               "cases":cases,"targets_passed":all(p["target_passed"] for c in cases for p in c["profiles"].values()),
               "scope":"Alternating loopback TCP pairs per independent client, one shared host process and real background sender. Clients start each profile together; shared-host contention can affect both paired paths. Aggregated and every-client latency gates apply. Server choice, Waitress thread count and concurrency are recorded. Synthetic collector only; no actual ingest/Redis/DB, remote TLS, production capacity or representative traffic claim. Offline telemetry loss is expected and counted."}
