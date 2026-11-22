@@ -195,3 +195,39 @@ SHA256: `37f3c325c596a2ebe1118ddf666e87bc9ddd78ef664eda57b10b6d8578b1ed74`.
 Further controlled performance work remains required before claiming the
 concurrent large-query latency target. Existing default thread count and installed
 owner services were not changed by these comparisons.
+
+## No-sensor calibration: do not attribute all socket tails to the SDK
+
+The next diagnostic dispatched both `/plain` and `/observed` to the **identical
+application with no sensor**, no sender and no collector. It retained four
+Windows clients, 200 measured pairs, 20 warmup pairs, alternating order and the
+same query profiles. Large-query worst-client p95 path differences were
+**8.561 ms for ASGI** and **13.322 ms for four-thread Waitress**. Ordinary-query
+differences were at most 0.894 and 2.065 ms respectively. With no sensor present,
+these are benchmark/host/request-processing differences, not measured SDK cost.
+Private report: `outputs/sensor-socket-zero-calibration-20261122.json`.
+SHA256: `4462d2a6d263c204d65d09f50edb07b359b9da53e7504db57f21c8c99e99362d`.
+
+The prior sensor runs still missed their numerical acceptance gates and remain
+retained. However, a causal claim that the SDK itself added their full 14–28 ms
+tails is unsupported by this calibration. The measured `_record` wall time is
+separate diagnostic evidence, not a substitute passing result. Do not subtract
+percentiles across runs or promote a near-threshold result as established
+overhead acceptance. A stable measurement setup and repeated calibrated results
+are still needed. No production performance guarantee is made.
+
+The calibration is now reproducible with a dedicated tool. Its report explicitly
+sets `sensor_acceptance` to null; exit zero means the diagnostic completed only.
+It records both signed path deltas and absolute differences, rejects overwriting
+reports, and uses bounded client/sample/thread settings:
+
+```powershell
+python tools/calibrate_sensor_sockets.py --framework both --samples 200 --concurrency 4 --output C:\PRIVATE\new-calibration.json
+```
+
+The reusable tool's separate four-client/four-thread Waitress verification also
+completed, with large-query worst-client signed path-delta p95 **17.560 ms**.
+Its `sensor_acceptance` remained null, sample totals were checked, and a repeat
+command targeting the same file was refused without altering the report.
+Private report: `outputs/sensor-calibration-tool-20261122.json`.
+SHA256: `58aa6cf3480bc49c5bb9f16864fe18b6020e4e7207d9bbb2042b538d581a7d56`.
