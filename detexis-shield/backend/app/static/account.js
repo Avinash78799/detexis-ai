@@ -1,5 +1,6 @@
 "use strict";
 let csrf = "";
+let sitesRequest = 0;
 const node = id => document.getElementById(id);
 async function api(path, body) {
   return window.shieldApi(path, body, csrf);
@@ -22,13 +23,16 @@ async function showWorkspace(data) {
   }
 }
 async function refreshSites() {
+  const request = ++sitesRequest;
   node('sites-status').textContent = 'Loading websites…';
   let sites;
   try {sites = await api('sites');}
   catch (error) {
+    if (request !== sitesRequest) return;
     node('sites-status').textContent = 'Your websites could not be refreshed. Any websites shown below may be out of date. ' + error.message + ' Use Refresh websites to try again.';
     return;
   }
+  if (request !== sitesRequest) return;
   node('sites-status').textContent = sites.length ? sites.length + (sites.length === 1 ? ' website in your workspace' : ' websites in your workspace') : '';
   node('sites').replaceChildren();
   if (!sites.length) {
@@ -180,10 +184,12 @@ node('delete-account-form').addEventListener('submit', async event => {
   node('delete-status').textContent = 'Removing your account and monitoring history…';
   try {
     await api('account/delete', body);
+    ++sitesRequest;
     csrf = '';
     node('workspace').hidden = true; node('auth').hidden = false;
     for (const id of ['credentials', 'snippet', 'recovery-value', 'owner-email']) node(id).textContent = '';
     node('sites').replaceChildren();
+    node('sites-status').textContent = '';
     node('recovery-secret').hidden = true; node('installation').hidden = true;
     document.querySelector('.account-shell').classList.remove('signed-in');
     document.querySelector('.account-shell > h1').textContent = 'Your account was deleted.';

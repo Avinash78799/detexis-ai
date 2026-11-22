@@ -4,7 +4,9 @@ const {readFileSync} = require('node:fs');
 const {runInNewContext} = require('node:vm');
 const {join} = require('node:path');
 
-async function runDeletion(failure) {
+async function runDeletion(failure, pendingRefresh = false) {
+  let rejectSites;
+  const sitesPromise = pendingRefresh ? new Promise((resolve, reject) => {rejectSites = reject;}) : null;
   const nodes = new Map(), fields = [{disabled:false}, {disabled:true}], calls = [];
   const get = id => {
     if (!nodes.has(id)) nodes.set(id, {hidden:false, textContent:'private fixture', handlers:{},
@@ -14,7 +16,7 @@ async function runDeletion(failure) {
       classList:{remove(){}}});
     return nodes.get(id);
   };
-  runInNewContext(readFileSync(join(__dirname, '../backend/app/static/account.js'), 'utf8'), {
+  const context = {
     document:{getElementById:get, querySelector:get}, location:{protocol:'https:'},
     FormData: class {
       constructor() {assert.equal(fields[0].disabled, false, 'read credentials before disabling inputs');}
@@ -22,15 +24,25 @@ async function runDeletion(failure) {
     },
     window:{shieldApi:async (path, body)=>{
       if (path === 'session') throw Object.assign(new Error('signed out'), {status:401});
+      if (path === 'sites') return sitesPromise;
       calls.push({path, body});
       if (failure) throw new Error('Password is incorrect');
       return {};
     }},
-  });
+  };
+  runInNewContext(readFileSync(join(__dirname, '../backend/app/static/account.js'), 'utf8'), context);
   await Promise.resolve(); await Promise.resolve();
+  const refresh = pendingRefresh ? runInNewContext('refreshSites()', context) : null;
   await get('delete-account-form').handlers.submit({preventDefault(){}, target:get('delete-account-form')});
+  if (pendingRefresh) {rejectSites(new Error('Obsolete request failure')); await refresh;}
   return {get, fields, calls};
 }
+
+test('a late website refresh cannot restore status after confirmed account removal', async () => {
+  const {get} = await runDeletion(false, true);
+  assert.equal(get('sites-status').textContent, '');
+  assert.equal(get('workspace').hidden, true);
+});
 
 test('confirmed removal clears secrets and workspace only after server success', async () => {
   const {get, fields, calls} = await runDeletion(false);

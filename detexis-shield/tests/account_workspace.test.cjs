@@ -4,7 +4,7 @@ const {readFileSync} = require('node:fs');
 const {runInNewContext} = require('node:vm');
 const {join} = require('node:path');
 
-function workspace({signedIn = true} = {}) {
+function workspace({signedIn = true, sitesHandler} = {}) {
   const nodes = new Map(), calls = [];
   let failSites = true;
   const get = id => {
@@ -25,6 +25,7 @@ function workspace({signedIn = true} = {}) {
       calls.push(path);
       if (path === 'session' && !signedIn) throw Object.assign(new Error('signed out'), {status:401});
       if (path === 'sites') {
+        if (sitesHandler) return sitesHandler();
         if (failSites) throw new Error('Service temporarily unavailable');
         return [];
       }
@@ -36,6 +37,43 @@ function workspace({signedIn = true} = {}) {
 
 // Let the session -> workspace -> sites -> catch promise chain settle.
 const settled = () => new Promise(resolve => setImmediate(resolve));
+
+const deferred = () => {
+  let resolve, reject;
+  const promise = new Promise((yes, no) => {resolve = yes; reject = no;});
+  return {promise, resolve, reject};
+};
+
+test('an older successful list cannot erase a newer refresh failure or stale cards', async () => {
+  const older = deferred(), newer = deferred();
+  const requests = [older, newer];
+  const app = workspace({sitesHandler:() => requests.shift().promise});
+  await settled();
+  app.get('sites').children.push('existing card');
+  const refresh = app.get('refresh-sites').handlers.click();
+  newer.reject(new Error('Latest refresh unavailable'));
+  await refresh;
+  older.resolve([]);
+  await settled();
+  assert.deepEqual(app.get('sites').children, ['existing card']);
+  assert.match(app.get('sites-status').textContent, /Latest refresh unavailable/);
+  assert.equal(app.get('refresh-sites').disabled, false);
+});
+
+test('an older list failure cannot overwrite the latest successful empty workspace', async () => {
+  const older = deferred(), newer = deferred();
+  const requests = [older, newer];
+  const app = workspace({sitesHandler:() => requests.shift().promise});
+  await settled();
+  const refresh = app.get('refresh-sites').handlers.click();
+  newer.resolve([]);
+  await refresh;
+  older.reject(new Error('Obsolete failure'));
+  await settled();
+  assert.equal(app.get('sites').children.length, 1);
+  assert.equal(app.get('sites-status').textContent, '');
+  assert.equal(app.get('refresh-sites').disabled, false);
+});
 
 test('site-list outage preserves the authenticated workspace and allows an explicit retry', async () => {
   const app = workspace();

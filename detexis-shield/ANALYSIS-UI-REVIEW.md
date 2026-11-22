@@ -1,5 +1,17 @@
 # Authenticated analysis browser acceptance
 
+## Website refresh race regressions — 22 November 2026
+
+The account workspace now renders only the latest requested website list.
+Controlled out-of-order tests cover an older success arriving after a newer
+failure and an older failure arriving after a newer success. Confirmed account
+removal also invalidates pending list responses and clears list status, so a
+late response cannot restore cleared list content or an obsolete error. Existing
+stale cards and recovery secrets remain preserved when the latest refresh fails.
+All twenty JavaScript tests pass. These are interaction regressions; the new
+change still requires CI, local activation and rendered acceptance. They do not
+establish complete keyboard or assistive-technology acceptance.
+
 ## Local version 3 recheck — 21 November 2026
 
 The existing embedded-browser tab at `https://localhost:8443/app` rendered the
