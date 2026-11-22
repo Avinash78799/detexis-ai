@@ -10,8 +10,22 @@ Key-list loading/count/error feedback names the site in a polite status region;
 the private issued key is rendered in a separate region without live announcements.
 Three interaction regressions use two synthetic sites to check control targeting,
 connection loading/failure/retry, key-list recovery and private-key separation
-from announcements. All 23 JavaScript tests pass. CI, local activation and
-rendered multi-site/screen-reader acceptance for this change remain pending.
+from announcements. All 23 JavaScript tests pass. Commit
+`ca6061039cd530d8ccb5cc2db3f27294d48f4a24` passed all four CI jobs in run
+`44994620632` and is active locally in API image
+`sha256:6c02608c4c2f989ac6b111c1940ce5e585b5070e2eb4a5caf31eca3fafb4673e`.
+All 65 application/migration files matched source. A fresh backup preceded the
+API update; full table digests and environment values remained unchanged, and
+workers/maintenance were not recreated. CA-verified readiness and the served
+JavaScript source hash passed. Private evidence:
+`outputs/site-controls-runtime-20261122.json`.
+
+Rendered multi-site/screen-reader acceptance remains pending. The existing
+synthetic session opened the updated workspace. A reserved test hostname was
+entered, but site creation was not submitted: the browser access rule requires
+confirmation for its automatically issued persistent sensor key. Two synthetic
+sites/keys were proposed together for this check; no actual domain scan is part
+of the proposed test. No real-owner account is involved.
 
 ## Website refresh race regressions — 22 November 2026
 
