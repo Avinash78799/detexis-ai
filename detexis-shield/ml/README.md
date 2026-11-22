@@ -77,3 +77,9 @@ artifact and add `-f docker-compose.ml.yml` to the Compose invocation. It builds
 the worker with the pinned ML dependencies and mounts the artifact read-only;
 the normal API and scanner images do not need ML packages. This override is
 optional and is not enabled by default.
+# Smaller evaluation route
+
+Additional full-day packet downloads are no longer required from the owner.
+See [SMALL-DATA-ROUTE.md](SMALL-DATA-ROUTE.md) for the retained data, candidate
+compact sources and unchanged ML evidence gates. ML remains disabled.
+

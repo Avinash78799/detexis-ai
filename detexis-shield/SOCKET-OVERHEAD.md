@@ -119,3 +119,30 @@ python tools/benchmark_sensor_sockets.py --framework both --wsgi-server waitress
 ```
 
 Do not substitute the earlier sequential passes for this failed concurrent gate.
+
+## Percent-decoding optimization: target still missed
+
+Profiling 3,000 large-query redaction/feature calls identified percent-decoding
+as the largest measured CPU cost. An ASCII-only fast path batches contiguous
+valid escape runs through native hex decoding, splitting field separators before
+decoding. Ordinary/Unicode input retains the standard parser. Invalid escapes,
+UTF-8 replacement behavior, plus signs, blank/duplicate fields and secret masking
+are preserved by differential checks, including 1,000 seeded mixed-encoding cases.
+Twenty-eight targeted decoder/feature/ingest tests passed. No feature-schema or
+input-size limit was changed. This is a maintained compatibility-sensitive helper;
+future Python decoding changes require continued equivalence checks.
+
+The isolated 2,000-call decoding comparison took 1.109 seconds for the standard
+parser and 0.315 seconds for the candidate. This is not a socket-latency result.
+The subsequent unchanged four-client socket workload **still failed overall**:
+large-query worst-client p95 was 9.987 ms (ASGI online), 10.694 ms (ASGI refused),
+14.819 ms (Waitress online) and 16.364 ms (Waitress refused). Normal profiles
+passed. All expected online events arrived without seeded-secret occurrences;
+offline losses were fully counted after shutdown. Uncontrolled host scheduling
+means these two runs do not prove an exact causal reduction in socket tails.
+
+The previous failure remains retained. New private report:
+`outputs/sensor-concurrent-fastdecode-20261122.json`.
+SHA256: `eb221ea45eded650009d6bf0e544d65f0c93bf74269efd5de56485b4ca3784f9`.
+Further performance work and repeatable acceptance remain required. No installed
+external sensor or published package was automatically updated by this experiment.
