@@ -1,5 +1,18 @@
 # Authenticated analysis browser acceptance
 
+## Per-website action semantics — 22 November 2026
+
+Dashboard links, connection checks, key management, key revocation/replacement
+and verification/scan entry controls now include the website in their accessible
+names. Connection controls identify a distinct named results region, expose its
+expanded/busy state, show loading feedback and remain retryable after failure.
+Key-list loading/count/error feedback names the site in a polite status region;
+the private issued key is rendered in a separate region without live announcements.
+Three interaction regressions use two synthetic sites to check control targeting,
+connection loading/failure/retry, key-list recovery and private-key separation
+from announcements. All 23 JavaScript tests pass. CI, local activation and
+rendered multi-site/screen-reader acceptance for this change remain pending.
+
 ## Website refresh race regressions — 22 November 2026
 
 The account workspace now renders only the latest requested website list.

@@ -44,6 +44,7 @@ async function refreshSites() {
   for (const site of sites) {
     const link = document.createElement('a'); link.className = 'site-link';
     link.href = '/app/sites/' + encodeURIComponent(site.id); link.textContent = 'Open dashboard →';
+    link.setAttribute('aria-label', 'Open dashboard for ' + site.domain);
     const card = document.createElement('section'); card.className = 'account-card site-card';
     const title = document.createElement('h3'); title.textContent = site.domain;
     const header = document.createElement('div'); header.className = 'site-card-header'; header.append(title, link);
@@ -52,8 +53,19 @@ async function refreshSites() {
     card.append(header, state);
     const connection = document.createElement('button'); connection.className = 'secondary'; connection.textContent = 'Check sensor connection';
     const connectionPanel = document.createElement('section'); connectionPanel.setAttribute('aria-live', 'polite');
+    connection.setAttribute('aria-label', 'Check sensor connection for ' + site.domain);
+    connectionPanel.id = 'connection-' + site.id;
+    connectionPanel.hidden = true;
+    connectionPanel.setAttribute('role', 'region');
+    connectionPanel.setAttribute('aria-label', 'Sensor connection for ' + site.domain);
+    connection.setAttribute('aria-controls', connectionPanel.id);
+    connection.setAttribute('aria-expanded', 'false');
     connection.addEventListener('click', async () => {
       connection.disabled = true;
+      connection.setAttribute('aria-expanded', 'true');
+      connectionPanel.hidden = false;
+      connectionPanel.setAttribute('aria-busy', 'true');
+      connectionPanel.textContent = 'Checking sensor connection…';
       try {
         const status = await api('sites/' + encodeURIComponent(site.id) + '/connection');
         connectionPanel.replaceChildren();
@@ -77,19 +89,29 @@ async function refreshSites() {
         const help = document.createElement('p'); help.textContent = 'If events are missing, confirm SHIELD_URL, SHIELD_API_KEY and your stable private SHIELD_SALT, restart the application, and allow outbound HTTPS. This SDK needs a persistent Python process; short-lived serverless functions are not supported. Quiet traffic alone does not prove the sensor is offline.';
         connectionPanel.append(title, steps, stamp, help);
       } catch (error) {connectionPanel.textContent = error.message;}
-      finally {connection.disabled = false;}
+      finally {connection.disabled = false; connectionPanel.setAttribute('aria-busy', 'false');}
     });
     const manage = document.createElement('button'); manage.className = 'secondary'; manage.textContent = 'Manage sensor keys';
     const panel = document.createElement('div');
+    manage.setAttribute('aria-label', 'Manage sensor keys for ' + site.domain);
+    panel.id = 'keys-' + site.id;
+    panel.setAttribute('role', 'region');
+    panel.setAttribute('aria-label', 'Sensor keys for ' + site.domain);
+    manage.setAttribute('aria-controls', panel.id);
+    const keyStatus = document.createElement('p'); keyStatus.setAttribute('role', 'status');
+    keyStatus.setAttribute('aria-live', 'polite');
     manage.addEventListener('click', async () => {
       manage.disabled = true;
+      keyStatus.textContent = 'Loading sensor keys for ' + site.domain + '…';
       try {
         const path = 'sites/' + encodeURIComponent(site.id) + '/keys';
         const keys = await api(path); panel.replaceChildren();
+        keyStatus.textContent = keys.length + (keys.length === 1 ? ' sensor key' : ' sensor keys') + ' for ' + site.domain;
         for (const key of keys) {
           const row = document.createElement('p'); row.textContent = 'dxs_' + key.prefix + '_… · ' + (key.revoked ? 'Revoked' : 'Active');
           if (!key.revoked) {
             const revoke = document.createElement('button'); revoke.className = 'secondary'; revoke.textContent = 'Revoke';
+            revoke.setAttribute('aria-label', 'Revoke key dxs_' + key.prefix + '_… for ' + site.domain);
             revoke.addEventListener('click', async () => {
               if (!confirm('Revoke this sensor key? Update any application using it with a replacement key first.')) return;
               try {await api(path + '/' + key.id + '/revoke', {}); manage.click();}
@@ -99,18 +121,21 @@ async function refreshSites() {
           panel.append(row);
         }
         const create = document.createElement('button'); create.textContent = 'Create replacement key';
+        create.setAttribute('aria-label', 'Create replacement key for ' + site.domain);
         create.addEventListener('click', async () => {
           create.disabled = true;
           try {
             const issued = await api(path, {}); const secret = document.createElement('pre');
             secret.textContent = 'Save this key now; it is shown once:\n' + issued.api_key;
             panel.append(secret); create.remove();
+            keyStatus.textContent = 'Replacement key created. Save the private key shown below; it is displayed once.';
           } catch (error) {node('message').textContent = error.message; create.disabled = false;}
         }); panel.append(create);
-      } catch (error) {node('message').textContent = error.message;}
+      } catch (error) {keyStatus.textContent = 'Sensor keys could not be loaded for ' + site.domain + '. ' + error.message;}
       finally {manage.disabled = false;}
     });
     const verify = document.createElement('button'); verify.className = 'secondary'; verify.textContent = site.verified ? 'Run security scan' : 'Verify domain & scan';
+    verify.setAttribute('aria-label', verify.textContent + ' for ' + site.domain);
     const verificationPanel = document.createElement('div');
     verify.addEventListener('click', async () => {
       verify.disabled = true;
@@ -139,7 +164,7 @@ async function refreshSites() {
       } catch (error) {node('message').textContent = error.message;}
       finally {verify.disabled = false;}
     });
-    card.append(connection, manage, verify, connectionPanel, panel, verificationPanel); node('sites').append(card);
+    card.append(connection, manage, verify, connectionPanel, keyStatus, panel, verificationPanel); node('sites').append(card);
   }
 }
 node('refresh-sites').addEventListener('click', async () => {
