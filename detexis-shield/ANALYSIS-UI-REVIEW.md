@@ -15,8 +15,19 @@ All 23 JavaScript interaction tests passed. Generated Jinja HTML validation foun
 atomic static status regions. These are source/structure checks only. Browser
 inventory failed twice before execution because automatic approval review timed
 out; no UI input, fallback automation or security-warning bypass was performed.
-CI, local activation and actual keyboard/screen-reader review of this update
-remain pending. No WCAG-conformance claim is made.
+Commit `9ea9c81b2df7297d35ce4c46cb978e1809532896` passed CI workflow
+`45041111397`. The update is active locally in API image
+`sha256:168a9e5747ddcc30a554c9e072e2acb5b7b10cf6047505255eb146296a2d35d4`.
+All 65 application/migration files matched source. A fresh backup preceded the
+API-only update; full table digests and service environment values stayed
+unchanged. Workers/maintenance were not recreated. CA-verified readiness,
+served CSS/JavaScript hashes, three atomic status regions and generated field
+help associations passed. Private evidence:
+`outputs/accessibility-runtime-20261122.json`.
+
+A subsequent browser inventory attempt also timed out in approval review before
+execution. Actual keyboard/screen-reader acceptance remains open; the activation
+and HTTP checks cannot establish it. No WCAG-conformance claim is made.
 
 ## Per-website action semantics — 22 November 2026
 
