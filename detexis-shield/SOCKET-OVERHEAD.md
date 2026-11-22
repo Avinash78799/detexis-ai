@@ -72,3 +72,50 @@ development requirements for this benchmark, not added to the sensor package.
 TLS, process supervision and actual workload sizing remain deployment work.
 
 Primary server reference: [Waitress documentation](https://docs.pylonsproject.org/projects/waitress/en/stable/).
+
+## Four-client concurrent check — 22 November
+
+The harness now accepts `--concurrency` (1–16, default 1). Each independent
+HTTP client alternates baseline/observed requests, reverses pair order, warms up
+20 pairs and records the requested samples per profile. A barrier starts clients
+together for each profile. Both pooled and **every-client** median/p95 targets
+must pass; a fast client's samples cannot hide a slower client's tail. A focused
+regression checks precisely that case. Existing reports cannot be overwritten.
+
+The first four-client, 200-pair-per-client Windows run **failed overall**:
+
+| Host / collector | Normal worst client p95 added | Large-query worst client p95 added | Large-query pooled p95 added |
+| --- | ---: | ---: | ---: |
+| ASGI / online | 1.741 ms | **10.696 ms** | 9.128 ms |
+| ASGI / refused | 1.749 ms | 9.222 ms | 7.864 ms |
+| Waitress / online | 2.543 ms | **20.770 ms** | 18.744 ms |
+| Waitress / refused | 2.745 ms | **27.728 ms** | 22.398 ms |
+
+All pooled medians stayed below 5 ms. Ordinary-query profiles passed every
+client gate, but large queries missed the unchanged 10 ms tail target in three
+cases. ASGI online would misleadingly pass if only the pooled p95 were used.
+Each online case received all **1,760** expected synthetic events, with zero
+seeded-secret occurrences or drops. Each refused-connection case completed host
+responses and counted all 1,760 events as dropped after sender close. The SDK
+source was unchanged; this is newly measured incomplete performance evidence,
+not a fix or a passing concurrency claim.
+
+The host and benchmark clients share one Windows machine, and both paired paths
+can experience server scheduling/contention. Waitress used four worker threads
+and reported small task queues. This does not identify a unique SDK bottleneck;
+CPU profiling and controlled comparisons remain necessary before optimization.
+ASGI measurement still ends at client response completion, before telemetry may
+finish. The synthetic collector is not the actual ingest/Redis/worker pipeline.
+
+Private report: `outputs/sensor-concurrent-four-20261122.json`.
+Report SHA256: `fa17189a6f69ca26622fe1c056a544c56c623db45cba895de3f93d85e32af61f`.
+Harness SHA256: `75cadeedcd938fa402a389684d1c5c7ef02adbd4ca373c0f281fded05b6264a7`.
+The report includes all SDK hashes, per-client/pooled distributions, expected and
+delivered/dropped event counts. No public listener, real account key or domain
+scan was used.
+
+```powershell
+python tools/benchmark_sensor_sockets.py --framework both --wsgi-server waitress --samples 200 --concurrency 4 --output C:\PRIVATE\new-concurrent-report.json
+```
+
+Do not substitute the earlier sequential passes for this failed concurrent gate.

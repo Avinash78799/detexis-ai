@@ -5,6 +5,7 @@ it is not Shield ingest and does not exercise its database or worker pipeline.
 """
 import argparse
 from contextlib import contextmanager
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
 import hashlib
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -156,7 +157,31 @@ def host(framework, sensor, wsgi_server="werkzeug"):
         observed.client.close()
 
 
-def measure(framework, online, samples, wsgi_server="werkzeug"):
+def paired_clients(origin, query, samples, concurrency):
+    barrier = threading.Barrier(concurrency)
+    def run_client(_):
+        before, after, added = [], [], []
+        with httpx.Client(base_url=origin, timeout=5, trust_env=False) as client:
+            def request(path):
+                started = time.perf_counter_ns()
+                response = client.get(path)
+                if response.status_code != 200 or response.content != b"ok":
+                    raise RuntimeError("Host response changed")
+                return (time.perf_counter_ns()-started)/1_000_000
+            barrier.wait(timeout=10)
+            for n in range(samples+20):
+                paths = ["/plain?"+query, "/observed?"+query]
+                order = [0,1] if n%2 == 0 else [1,0]
+                pair = {i:request(paths[i]) for i in order}
+                if n >= 20:
+                    before.append(pair[0]); after.append(pair[1]); added.append(pair[1]-pair[0])
+        return before, after, added
+    with ThreadPoolExecutor(max_workers=concurrency) as pool:
+        clients = list(pool.map(run_client, range(concurrency)))
+    return clients
+
+
+def measure(framework, online, samples, wsgi_server="werkzeug", concurrency=1):
     cls = ShieldMiddleware if framework == "asgi" else ShieldWSGIMiddleware
     profiles = {"normal":"q=notebook&password=synthetic-secret", "large":"q="+"%3C%3E%27%22"*512+"&password=synthetic-secret"}
     with collector(online) as (backend, counts):
@@ -164,27 +189,16 @@ def measure(framework, online, samples, wsgi_server="werkzeug"):
             return cls(app, backend, "synthetic-benchmark-key", "synthetic-benchmark-salt", flush_interval=.2)
         results = {}
         with host(framework, wrap, wsgi_server) as (origin, observed):
-            with httpx.Client(base_url=origin, timeout=5, trust_env=False) as client:
-                def request(path):
-                    started = time.perf_counter_ns()
-                    response = client.get(path)
-                    if response.status_code != 200 or response.content != b"ok":
-                        raise RuntimeError("Host response changed")
-                    return (time.perf_counter_ns()-started)/1_000_000
-                for name, query in profiles.items():
-                    before, after, added = [], [], []
-                    for n in range(samples+20):
-                        paths = ["/plain?"+query, "/observed?"+query]
-                        order = [0,1] if n%2 == 0 else [1,0]
-                        pair = {}
-                        for i in order:
-                            pair[i] = request(paths[i])
-                        if n >= 20:
-                            before.append(pair[0]); after.append(pair[1]); added.append(pair[1]-pair[0])
-                    delta = summary(added)
-                    results[name] = {"samples":samples,"baseline":summary(before),"with_sensor":summary(after),
-                                     "paired_added_latency":delta,"target_passed":delta["median_ms"] < 5 and delta["p95_ms"] < 10}
-            expected = (samples+20)*len(profiles)
+            for name, query in profiles.items():
+                clients = paired_clients(origin, query, samples, concurrency)
+                before, after, added = [[value for client in clients for value in client[i]] for i in range(3)]
+                delta = summary(added)
+                per_client = [summary(client[2]) for client in clients]
+                results[name] = {"samples":samples*concurrency,"samples_per_client":samples,
+                                 "baseline":summary(before),"with_sensor":summary(after),
+                                 "paired_added_latency":delta,"per_client_added_latency":per_client,
+                                 "target_passed":all(p["median_ms"] < 5 and p["p95_ms"] < 10 for p in [delta,*per_client])}
+            expected = (samples+20)*len(profiles)*concurrency
             if online:
                 deadline = time.monotonic()+5
                 while counts["events"] < expected and time.monotonic() < deadline:
@@ -194,25 +208,30 @@ def measure(framework, online, samples, wsgi_server="werkzeug"):
             if online and (counts["events"] != expected or counts["redaction_failures"]):
                 raise RuntimeError("Online telemetry completion or redaction check failed")
         sender["dropped_after_close"] = observed.client.dropped
-    return {"framework":framework,"host_server":"uvicorn" if framework == "asgi" else wsgi_server,"collector":"online" if online else "connection_refused", "profiles":results,"sender":sender}
+    return {"framework":framework,"host_server":"uvicorn" if framework == "asgi" else wsgi_server,"concurrent_clients":concurrency,"collector":"online" if online else "connection_refused", "profiles":results,"sender":sender}
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--samples", type=int, default=400)
+    parser.add_argument("--concurrency", type=int, default=1, help="Independent paired clients; samples apply per client")
     parser.add_argument("--output", type=Path, default=Path("sensor-socket-benchmark.json"))
     parser.add_argument("--framework", choices=["both","asgi","wsgi"], default="both")
     parser.add_argument("--wsgi-server", choices=["werkzeug","waitress"], default="werkzeug")
     args = parser.parse_args()
     if not 100 <= args.samples <= 1000:
         parser.error("samples must be between 100 and 1000")
+    if not 1 <= args.concurrency <= 16:
+        parser.error("concurrency must be between 1 and 16")
+    if args.output.exists():
+        parser.error("Refusing to overwrite an existing report")
     frameworks = ("asgi","wsgi") if args.framework == "both" else (args.framework,)
-    cases = [measure(framework, online, args.samples, args.wsgi_server) for framework in frameworks for online in (True,False)]
+    cases = [measure(framework, online, args.samples, args.wsgi_server, args.concurrency) for framework in frameworks for online in (True,False)]
     root = Path(__file__).resolve().parents[1]
     report = {"checked_at":datetime.now(timezone.utc).isoformat(),"python":platform.python_version(),
               "source_sha256":{str(p.relative_to(root)):hashlib.sha256(p.read_bytes()).hexdigest() for p in [Path(__file__).resolve(), *sorted((root/'sensor-sdk/detexis_shield').glob('*.py'))]},
               "cases":cases,"targets_passed":all(p["target_passed"] for c in cases for p in c["profiles"].values()),
-              "scope":"Alternating sequential loopback TCP pairs, one host process and real background sender. Server choice is recorded per case; Waitress uses four worker threads. Collector acknowledges synthetic events only; no actual ingest/Redis/DB, remote TLS, concurrency, production-server capacity or representative traffic claim. Offline telemetry loss is expected and explicitly counted."}
+              "scope":"Alternating loopback TCP pairs per independent client, one shared host process and real background sender. Clients start each profile together; shared-host contention can affect both paired paths. Aggregated and every-client latency gates apply. Server choice and concurrency are recorded; Waitress uses four worker threads. Synthetic collector only; no actual ingest/Redis/DB, remote TLS, production capacity or representative traffic claim. Offline telemetry loss is expected and counted."}
     args.output.write_text(json.dumps(report,indent=2)+"\n",encoding="utf-8")
     print(json.dumps(report,indent=2))
     if not report["targets_passed"]:
