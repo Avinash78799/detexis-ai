@@ -82,4 +82,3 @@ optional and is not enabled by default.
 Additional full-day packet downloads are no longer required from the owner.
 See [SMALL-DATA-ROUTE.md](SMALL-DATA-ROUTE.md) for the retained data, candidate
 compact sources and unchanged ML evidence gates. ML remains disabled.
-
