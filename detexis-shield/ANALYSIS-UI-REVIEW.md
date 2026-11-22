@@ -1,5 +1,23 @@
 # Authenticated analysis browser acceptance
 
+## Status/help/focus source review — 22 November 2026
+
+The general empty status region is now visually clipped rather than removed
+with `display:none`. Static workspace messages and dynamic key-list feedback
+explicitly use `aria-atomic="true"` so contextual messages are presented together.
+Password, recovery-code and website-hostname fields reference their explanatory
+text, and all account disclosure controls share a visible focus outline.
+This follows the [W3C status-message technique](https://www.w3.org/WAI/WCAG22/Techniques/aria/ARIA22),
+including its recommendation for explicit atomic status messages.
+
+All 23 JavaScript interaction tests passed. Generated Jinja HTML validation found
+26 unique IDs, seven resolved accessibility references and three explicitly
+atomic static status regions. These are source/structure checks only. Browser
+inventory failed twice before execution because automatic approval review timed
+out; no UI input, fallback automation or security-warning bypass was performed.
+CI, local activation and actual keyboard/screen-reader review of this update
+remain pending. No WCAG-conformance claim is made.
+
 ## Per-website action semantics — 22 November 2026
 
 Dashboard links, connection checks, key management, key revocation/replacement

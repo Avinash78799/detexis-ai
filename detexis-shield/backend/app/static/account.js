@@ -98,7 +98,7 @@ async function refreshSites() {
     panel.setAttribute('role', 'region');
     panel.setAttribute('aria-label', 'Sensor keys for ' + site.domain);
     manage.setAttribute('aria-controls', panel.id);
-    const keyStatus = document.createElement('p'); keyStatus.setAttribute('role', 'status');
+    const keyStatus = document.createElement('p'); keyStatus.setAttribute('role', 'status'); keyStatus.setAttribute('aria-atomic', 'true');
     keyStatus.setAttribute('aria-live', 'polite');
     manage.addEventListener('click', async () => {
       manage.disabled = true;
