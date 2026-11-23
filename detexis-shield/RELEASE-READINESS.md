@@ -4,7 +4,28 @@ The complete product goal is **not achieved**. Implemented code, local tests and
 temporary demonstrations do not prove a continuously operated public service.
 The percentage previously discussed was an effort estimate, not a release gate.
 
-## Latest maintenance correction: 23 November
+## Onboarding activation: 23 November
+
+Commit `1498c1a8c31e113817e753c94a90593bbe8bbaa9` passed all four jobs in
+[Actions run 45117433756](https://github.com/Avinash78799/detexis-ai/actions/runs/45117433756).
+The installation guide now pins the tested SDK source, including the query-decoder
+optimization, and explains Python's local CA bundle configuration. Ten focused
+installation/decoder tests passed. A credential-free HTTPX request to local HTTPS
+readiness passed using public roots plus the reviewed local root; the initial
+connection refusal occurred while Docker's engine was stopped and remains a
+failed check, followed by the successful check after engine restart.
+
+After backup `outputs/computer-backups/shield-20261123T052449Z-f19bd2ee.dump`, only
+the API was replaced with image
+`sha256:118e368573dce3ce54e79f94719728573ac4bfd04c889a0ee8ab01c7078abe24`.
+All 65 source files matched; environment and database row digests were unchanged.
+Worker/maintenance containers were preserved. CA-verified readiness and the served
+installation pin/CA guidance passed. Private evidence:
+`outputs/onboarding-tls-runtime-20261123.json`. Cached dependencies remain; this
+does not automatically upgrade already installed customer SDKs or prove a new
+signed-in browser flow. The complete product goal remains open.
+
+## Maintenance correction: 23 November
 
 Seven-day cleanup previously removed the seventh same-hour aggregate during the
 current hour, making the anomaly baseline unavailable despite complete history.
