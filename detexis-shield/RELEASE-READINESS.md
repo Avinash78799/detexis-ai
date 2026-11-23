@@ -49,6 +49,17 @@ full-day packet downloads are required from the owner.
 
 ## Release gates
 
+Retention graph/rollback validation on 23 November: commit
+`b118cd6c74352f4f29768f1b31ee7e1255d5aed2` passed 20 focused local tests and all
+four jobs in [Actions run 45174447772](https://github.com/Avinash78799/detexis-ai/actions/runs/45174447772).
+The main job reported 431 passing Python tests with no skips. The new PostgreSQL
+check exercises expiry of incidents and their alert/review children, preservation
+of recent records for two sites, repeated cleanup, and complete transaction
+rollback when interrupted after child deletion. Redis request-window behavior is
+simulated in this focused PostgreSQL test. It does not prove concurrent cleanup,
+large-history performance or outage behavior. These are test-only changes; no
+production service or existing owner data was changed.
+
 | Requirement | Current evidence | Remaining proof |
 | --- | --- | --- |
 | Keep pace with changing threats | ClamAV signature updates/stale-definition refusal; locally active rule release 2026.11.21.1, owner coverage inventory, source fingerprints, CI release gate, SQL/evasion and assignment-boundary regressions; see `RULE-RELEASES.md` | Activate/observe dependency updates; advisory relevance checks, independent FPR evaluation, rendered coverage-page review and traffic/job rollback scenarios |
