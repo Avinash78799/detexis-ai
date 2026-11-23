@@ -49,6 +49,18 @@ full-day packet downloads are required from the owner.
 
 ## Release gates
 
+Cleanup locking correction under review, 23 November: an isolated PostgreSQL 16
+rehearsal reproduced `Cleanup erased a busy site` against the previous source.
+Cleanup now obtains the worker/triage Site NO KEY UPDATE lock with SKIP LOCKED,
+then deletes each site's expired graph in one transaction. Busy sites are retried
+on a subsequent pass; idle sites can still make progress. Completed sites remain
+committed if a later site's cleanup fails. Browser-session expiry is independent.
+All 21 focused checks passed after the correction; the final eventual-retry
+assertion also passed against the isolated database. This is not a busy-tenant
+starvation bound or large-history performance result. The local maintenance image
+has not yet been updated with this correction; CI and backup-first activation
+remain required. Its prior activation record above still describes the live image.
+
 Retention graph/rollback validation on 23 November: commit
 `b118cd6c74352f4f29768f1b31ee7e1255d5aed2` passed 20 focused local tests and all
 four jobs in [Actions run 45174447772](https://github.com/Avinash78799/detexis-ai/actions/runs/45174447772).
