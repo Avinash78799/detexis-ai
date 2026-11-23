@@ -9,8 +9,8 @@ without an assistant. No more multi-gigabyte dataset downloads are required.
 
 Repository: https://github.com/Avinash78799/detexis-ai
 Branch: `codex/shield-sensor-foundation`; existing PR 1 remains unmerged.
-Last application commit: `0b0d7dd570e1a869a4bdd9114fb4f7bc61fc802e`.
-Its four CI jobs passed in run `45179094796`. Consult Git history for later
+Last application commit: `01f23dd4e0b82528523e0bb1f0245058e1a8d8b0`.
+Its four CI jobs passed in run `45180186334`. Consult Git history for later
 documentation-only checkpoints.
 
 Local address: https://localhost:8443/app
@@ -30,6 +30,8 @@ The active API image is
 `sha256:66f8412327bbfb667757a5b5853bafeba91ec941355e29311446da221fffa4bb`.
 Maintenance retains
 `sha256:317b5a92a5406702af6a670b8295ac52b69ac66aae5b8f2603811119d18de563`.
+The isolated scanner now runs
+`sha256:3b1d266a2a15f153c0ca399a93958cdd79bfbf14c138ce0dddd6c30ef6fbb7a6`.
 Workers retain their compatible earlier image. Do not publish local images:
 cached image configuration can contain private environment values.
 
@@ -58,22 +60,25 @@ Do not blindly replace the saved configuration or use destructive volume command
 - The local TLS CA volume and the reviewed public root certificate. Keep the
   private key private; a public certificate alone cannot restore the CA.
 - The workspace's private `outputs` folder, particularly `computer-backups`,
-  activation reports and `compose.issued-key-ui-active.private.json` with its
+  activation reports and `compose.scanner-policy-active.private.json` with its
   corresponding rollback file. These files are outside the Git checkout.
 - The owner's recovery code, site salts and sensor keys in their own private
   storage. Do not add them to this document, source control or screenshots.
 
-Latest activation backup: `shield-20261123T125836Z-33aafb97.dump` in the private
+Latest activation backup: `shield-20261123T130655Z-22d1bd88.dump` in the private
 `outputs/computer-backups` directory. It has local activation evidence, not an
 off-device disaster recovery claim. Read `BACKUP-RESTORE.md` before restoring.
 
 ## Remaining work, in order
 
-Latest source change awaiting CI/activation: the scanner now explicitly refuses
+Latest scanner hardening is activated: the scanner explicitly refuses
 Azure's `168.63.129.16` platform destination and its mapped IPv6 form, and rejects
 explicit port zero instead of defaulting it. Forty-six focused checks passed
-using mocked transport/DNS only. Activate the isolated scanner after CI; the
-running-service image checkpoint above does not yet include this change.
+using mocked transport/DNS only; all four CI jobs and scanner-only activation
+passed. Installed policy and internal-API checks passed without target fetches.
+The old scanner image metadata was missing; a snapshot of its running read-only
+container is retained as rollback image
+`sha256:019e19bff217ee88dbbfedef9a3d7694bd892e8379ac4b97dea8de75ae4e49ec`.
 
 1. Complete signed-in multi-site browser acceptance: key creation/revocation,
    refresh races, incident decisions, recovery/removal, errors, keyboard and

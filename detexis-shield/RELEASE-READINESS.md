@@ -49,7 +49,7 @@ full-day packet downloads are required from the owner.
 
 ## Release gates
 
-Scanner destination hardening under review, 23 November: mocked regressions
+Scanner destination hardening activated, 23 November: mocked regressions
 reproduced acceptance of Azure's `168.63.129.16` platform service address (also
 through mapped IPv6), and explicit URL port zero being treated as the default.
 The fetch policy now rejects that platform destination before connection and
@@ -60,7 +60,24 @@ contacted by these tests. Microsoft documents this special host-node destination
 and its port-80 WireServer role in its
 [platform IP overview](https://learn.microsoft.com/azure/virtual-network/what-is-ip-address-168-63-129-16).
 The restriction is in the scanner's HTTP target policy, not an OS firewall change.
-CI and isolated-scanner activation are pending; this is not a complete SSRF audit.
+This is not a complete SSRF audit.
+
+Commit `01f23dd4e0b82528523e0bb1f0245058e1a8d8b0` passed all four jobs in
+[Actions run 45180186334](https://github.com/Avinash78799/detexis-ai/actions/runs/45180186334).
+The first deployment attempt stopped before replacement because Docker could not
+find the running scanner's original image metadata. Its read-only container was
+preserved as local rollback image
+`sha256:019e19bff217ee88dbbfedef9a3d7694bd892e8379ac4b97dea8de75ae4e49ec`.
+After backup `outputs/computer-backups/shield-20261123T130655Z-22d1bd88.dump`,
+only the scanner was replaced with image
+`sha256:3b1d266a2a15f153c0ca399a93958cdd79bfbf14c138ce0dddd6c30ef6fbb7a6`.
+All four scanner source files matched. Its environment, UID, command, read-only
+filesystem, memory/CPU/PID limits, capabilities, security options, mounts, port
+bindings and network memberships were preserved. Installed IP/port policy checks,
+the internal scanner API and CA-verified local HTTPS readiness passed without a target
+fetch. All table row digests and API/worker/maintenance identities were unchanged.
+Cached dependencies were retained. No firewall change, migration or account
+mutation occurred. Private evidence: `outputs/scanner-policy-runtime-20261123.json`.
 
 Replacement-key refresh correction activated, 23 November: the previous UI
 appended a one-time secret to a website card that could already have been removed
