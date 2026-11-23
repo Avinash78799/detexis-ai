@@ -9,8 +9,8 @@ without an assistant. No more multi-gigabyte dataset downloads are required.
 
 Repository: https://github.com/Avinash78799/detexis-ai
 Branch: `codex/shield-sensor-foundation`; existing PR 1 remains unmerged.
-Last activated application change: `01f23dd4e0b82528523e0bb1f0245058e1a8d8b0`.
-Its four CI jobs passed in run `45180186334`. Consult Git history for later
+Last activated application change: `c52b9787c1afefe20196a2882613c44984dd23fc`.
+Its four CI jobs passed in run `45181432928`. Consult Git history for later
 documentation-only checkpoints.
 
 Local address: https://localhost:8443/app
@@ -27,7 +27,7 @@ ML remains disabled pending valid evaluation. External email is unconfigured by
 owner choice. Support contact: shield.org787@gmail.com.
 
 The active API image is
-`sha256:66f8412327bbfb667757a5b5853bafeba91ec941355e29311446da221fffa4bb`.
+`sha256:1488283264fd9e9aff72eb5dad40600125d0d135ec638b36c3a3d0aad723fde5`.
 Maintenance retains
 `sha256:317b5a92a5406702af6a670b8295ac52b69ac66aae5b8f2603811119d18de563`.
 The isolated scanner now runs
@@ -60,21 +60,23 @@ Do not blindly replace the saved configuration or use destructive volume command
 - The local TLS CA volume and the reviewed public root certificate. Keep the
   private key private; a public certificate alone cannot restore the CA.
 - The workspace's private `outputs` folder, particularly `computer-backups`,
-  activation reports and `compose.scanner-policy-active.private.json` with its
+  activation reports and `compose.logout-race-active.private.json` with its
   corresponding rollback file. These files are outside the Git checkout.
 - The owner's recovery code, site salts and sensor keys in their own private
   storage. Do not add them to this document, source control or screenshots.
 
-Latest activation backup: `shield-20261123T130655Z-22d1bd88.dump` in the private
+Latest activation backup: `shield-20261123T131307Z-f1719007.dump` in the private
 `outputs/computer-backups` directory. It has local activation evidence, not an
 off-device disaster recovery claim. Read `BACKUP-RESTORE.md` before restoring.
 
 ## Remaining work, in order
 
-Pending source fix: logout now tolerates its session row disappearing after
+Activated logout fix: logout tolerates its session row disappearing after
 authentication. A deterministic regression reproduced HTTP 500 before the fix;
 focused tests now pass, preserving CSRF refusal and another device's session.
-CI and API-only activation remain pending. This is not full session-race coverage.
+All four CI jobs and backup-first API-only activation passed. Verified HTTPS
+readiness and unauthenticated session refusal passed. This is not full session-race
+coverage or rendered sign-out acceptance.
 
 Latest scanner hardening is activated: the scanner explicitly refuses
 Azure's `168.63.129.16` platform destination and its mapped IPv6 form, and rejects

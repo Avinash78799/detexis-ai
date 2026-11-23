@@ -49,15 +49,29 @@ full-day packet downloads are required from the owner.
 
 ## Release gates
 
-Logout invalidation-race correction under review, 23 November: a deterministic
+Logout invalidation-race correction activated, 23 November: a deterministic
 test reproduced HTTP 500 if a valid session was removed after authentication but
 before logout's second session lookup. Logout now deletes by token hash without
 requiring a row to remain, then clears the cookie. Authentication/origin/CSRF
 dependencies remain in place. Seven focused account/logout/removal checks passed;
 the strengthened final regression also verifies invalid CSRF refusal and another
 device's continued access. It models invalidation at the authentication/handler
-boundary rather than claiming a threaded PostgreSQL race test. CI and API-only
-activation remain pending. No real account or session was changed.
+boundary rather than claiming a threaded PostgreSQL race test. No real account
+or session was changed by these tests or activation.
+
+Commit `c52b9787c1afefe20196a2882613c44984dd23fc` passed all four jobs in
+[Actions run 45181432928](https://github.com/Avinash78799/detexis-ai/actions/runs/45181432928).
+After backup `outputs/computer-backups/shield-20261123T131307Z-f1719007.dump`,
+the API alone was updated to image
+`sha256:1488283264fd9e9aff72eb5dad40600125d0d135ec638b36c3a3d0aad723fde5`.
+All 65 source files matched the tested source; environment and every table row
+digest were unchanged. Worker, maintenance and scanner identities were preserved.
+API health, CA-verified HTTPS readiness, served UI hashes and unauthenticated
+session refusal passed. Cached dependencies were retained; no migration occurred.
+Previous-image rollback configuration is saved, and the activation helper now
+automatically restores the previous API if post-update verification fails.
+Private evidence: `outputs/logout-race-runtime-20261123.json`. Signed-in rendered
+logout/recovery acceptance and broader session concurrency remain open.
 
 Scanner destination hardening activated, 23 November: mocked regressions
 reproduced acceptance of Azure's `168.63.129.16` platform service address (also
