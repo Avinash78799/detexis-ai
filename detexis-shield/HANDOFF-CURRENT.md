@@ -9,9 +9,9 @@ without an assistant. No more multi-gigabyte dataset downloads are required.
 
 Repository: https://github.com/Avinash78799/detexis-ai
 Branch: `codex/shield-sensor-foundation`; existing PR 1 remains unmerged.
-Last application commit: `702152764dd51c3509ac6e6be6a6ad80ded39734`.
-Its four CI jobs passed in run `45176930314`. The later documentation checkpoint
-was `b8bd03ebb2077210415fc21ecdca40c45e8d100a`.
+Last application commit: `0b0d7dd570e1a869a4bdd9114fb4f7bc61fc802e`.
+Its four CI jobs passed in run `45179094796`. Consult Git history for later
+documentation-only checkpoints.
 
 Local address: https://localhost:8443/app
 Docker project: `detexis-shield-computer`. The API, PostgreSQL, Redis, three
@@ -26,7 +26,9 @@ and limits rather than treating this feature list as production certification.
 ML remains disabled pending valid evaluation. External email is unconfigured by
 owner choice. Support contact: shield.org787@gmail.com.
 
-The active API/maintenance image at this checkpoint is
+The active API image is
+`sha256:66f8412327bbfb667757a5b5853bafeba91ec941355e29311446da221fffa4bb`.
+Maintenance retains
 `sha256:317b5a92a5406702af6a670b8295ac52b69ac66aae5b8f2603811119d18de563`.
 Workers retain their compatible earlier image. Do not publish local images:
 cached image configuration can contain private environment values.
@@ -56,12 +58,12 @@ Do not blindly replace the saved configuration or use destructive volume command
 - The local TLS CA volume and the reviewed public root certificate. Keep the
   private key private; a public certificate alone cannot restore the CA.
 - The workspace's private `outputs` folder, particularly `computer-backups`,
-  activation reports and `compose.scan-scheduling-active.private.json` with its
+  activation reports and `compose.issued-key-ui-active.private.json` with its
   corresponding rollback file. These files are outside the Git checkout.
 - The owner's recovery code, site salts and sensor keys in their own private
   storage. Do not add them to this document, source control or screenshots.
 
-Latest activation backup: `shield-20261123T124438Z-0940f166.dump` in the private
+Latest activation backup: `shield-20261123T125836Z-33aafb97.dump` in the private
 `outputs/computer-backups` directory. It has local activation evidence, not an
 off-device disaster recovery claim. Read `BACKUP-RESTORE.md` before restoring.
 
@@ -72,8 +74,8 @@ off-device disaster recovery claim. Read `BACKUP-RESTORE.md` before restoring.
    assistive-technology behavior. The replacement-key refresh race was reproduced
    and corrected in source with a stable, site-labelled credential area; tests
    cover refresh during issuance, multiple sites and a late response after account
-   deletion. CI, local activation and signed-in rendered acceptance are pending
-   for that latest change. Browser confirmation for
+   deletion. CI and backup-first local activation passed; signed-in rendered
+   acceptance remains pending for that change. Browser confirmation for
    creating two synthetic sites/keys is still unanswered; generic continuation
    is not that approval. Do not alter the owner's credentials or use their account.
 2. Extend operational validation: partial Redis corruption, dispatcher crash and

@@ -49,7 +49,7 @@ full-day packet downloads are required from the owner.
 
 ## Release gates
 
-Replacement-key refresh correction under review, 23 November: the previous UI
+Replacement-key refresh correction activated, 23 November: the previous UI
 appended a one-time secret to a website card that could already have been removed
 by a refresh. A synthetic regression reproduced the failure. Issued keys now
 appear in a stable, hostname-labelled area outside the replaceable website list,
@@ -57,9 +57,21 @@ without browser storage or secret-bearing live announcements. Confirmed account
 deletion clears the area; an issuance response from an obsolete session cannot
 restore it. Thirty frontend tests and five focused Python account/installation
 tests passed, followed by nine focused key/deletion checks including the new
-late-response case. Full CI, local activation and signed-in rendered acceptance
-remain pending. Browser account/key creation still requires its existing specific
+late-response case. Signed-in rendered acceptance remains pending.
+Browser account/key creation still requires its existing specific
 approval; no real account, key or browser session was changed by these tests.
+
+Commit `0b0d7dd570e1a869a4bdd9114fb4f7bc61fc802e` passed all four jobs in
+[Actions run 45179094796](https://github.com/Avinash78799/detexis-ai/actions/runs/45179094796).
+After backup `outputs/computer-backups/shield-20261123T125836Z-33aafb97.dump`,
+the API alone was updated to image
+`sha256:66f8412327bbfb667757a5b5853bafeba91ec941355e29311446da221fffa4bb`.
+All 65 application/migration files matched source, and the served account script
+matched its source hash. The served page includes the stable issued-key area.
+Environment and every table row digest were unchanged; worker and maintenance
+containers were preserved. API health and CA-verified HTTPS readiness passed.
+Cached dependencies were retained; no migration or account mutation occurred.
+Private evidence: `outputs/issued-key-ui-runtime-20261123.json`.
 
 Scan scheduling correction activated, 23 November: the prior scheduler
 reproduced replacement of an old pending scan and duplicate queue publication.
