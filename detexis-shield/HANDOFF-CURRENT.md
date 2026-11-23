@@ -69,6 +69,12 @@ off-device disaster recovery claim. Read `BACKUP-RESTORE.md` before restoring.
 
 ## Remaining work, in order
 
+Latest source change awaiting CI/activation: the scanner now explicitly refuses
+Azure's `168.63.129.16` platform destination and its mapped IPv6 form, and rejects
+explicit port zero instead of defaulting it. Forty-six focused checks passed
+using mocked transport/DNS only. Activate the isolated scanner after CI; the
+running-service image checkpoint above does not yet include this change.
+
 1. Complete signed-in multi-site browser acceptance: key creation/revocation,
    refresh races, incident decisions, recovery/removal, errors, keyboard and
    assistive-technology behavior. The replacement-key refresh race was reproduced

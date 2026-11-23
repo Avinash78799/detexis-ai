@@ -49,6 +49,19 @@ full-day packet downloads are required from the owner.
 
 ## Release gates
 
+Scanner destination hardening under review, 23 November: mocked regressions
+reproduced acceptance of Azure's `168.63.129.16` platform service address (also
+through mapped IPv6), and explicit URL port zero being treated as the default.
+The fetch policy now rejects that platform destination before connection and
+distinguishes a missing port from zero. Direct/mixed DNS answers and redirect
+re-resolution are covered, with public-target/80/443 positive controls. Forty-six
+focused scanner/scheduling checks passed. No cloud endpoint or real site was
+contacted by these tests. Microsoft documents this special host-node destination
+and its port-80 WireServer role in its
+[platform IP overview](https://learn.microsoft.com/azure/virtual-network/what-is-ip-address-168-63-129-16).
+The restriction is in the scanner's HTTP target policy, not an OS firewall change.
+CI and isolated-scanner activation are pending; this is not a complete SSRF audit.
+
 Replacement-key refresh correction activated, 23 November: the previous UI
 appended a one-time secret to a website card that could already have been removed
 by a refresh. A synthetic regression reproduced the failure. Issued keys now

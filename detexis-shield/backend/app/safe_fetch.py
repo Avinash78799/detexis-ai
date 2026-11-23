@@ -13,6 +13,9 @@ import dns.resolver
 MAX_RESPONSE = 512 * 1024
 MAX_BODY = 256 * 1024
 BLOCKED_V6 = [ipaddress.ip_network(n) for n in ("64:ff9b::/96", "64:ff9b:1::/48", "2002::/16", "2001::/32")]
+# Globally classified addresses can still reach host-platform services.
+# https://learn.microsoft.com/azure/virtual-network/what-is-ip-address-168-63-129-16
+CLOUD_PLATFORM_IPS = frozenset({ipaddress.ip_address("168.63.129.16")})
 
 
 class UnsafeTarget(ValueError):
@@ -37,6 +40,9 @@ def domain_name(value):
 
 def public_ip(value):
     address = ipaddress.ip_address(value)
+    destination = address.ipv4_mapped if address.version == 6 and address.ipv4_mapped else address
+    if destination in CLOUD_PLATFORM_IPS:
+        return False
     if not address.is_global or address.is_multicast or address.is_reserved or address.is_unspecified:
         return False
     if address.version == 6:
@@ -64,7 +70,9 @@ def resolve_public(host):
 def validate_url(url, verified_domain):
     parsed = urlsplit(url)
     try:
-        port = parsed.port or (443 if parsed.scheme == "https" else 80)
+        port = parsed.port
+        if port is None:
+            port = 443 if parsed.scheme == "https" else 80
     except ValueError:
         raise UnsafeTarget("invalid port")
     if parsed.scheme not in {"http", "https"} or port not in {80, 443} or parsed.username is not None or parsed.password is not None:

@@ -12,14 +12,16 @@ from test_smoke import make_site
 
 @pytest.mark.parametrize("ip", ["127.0.0.1", "10.1.2.3", "169.254.169.254", "0.0.0.0", "192.168.0.1",
                               "172.16.0.1", "::1", "fe80::1", "fc00::1", "::ffff:127.0.0.1",
-                              "64:ff9b::7f00:1", "2002:7f00:1::", "224.0.0.1"])
+                              "64:ff9b::7f00:1", "2002:7f00:1::", "224.0.0.1",
+                              "168.63.129.16", "::ffff:168.63.129.16"])
 def test_nonpublic_and_tunneled_ips_rejected(ip):
     assert not public_ip(ip)
 
 
 @pytest.mark.parametrize("url", ["file:///etc/passwd", "http://example.com:8080/", "http://user@example.com/",
                                 "http://127.0.0.1/", "http://example.com.evil.test/", "http://example.com/#fragment",
-                                "http://example.com/\r\nx", "http://example.com\\@evil.test/"])
+                                "http://example.com/\r\nx", "http://example.com\\@evil.test/",
+                                "http://example.com:0/", "https://example.com:0/"])
 def test_unsafe_urls_never_reach_transport(url):
     transport = Mock()
     with pytest.raises((UnsafeTarget, ValueError)):
@@ -42,6 +44,31 @@ def test_mixed_dns_answers_refused_before_connection():
     with pytest.raises(UnsafeTarget):
         fetch("https://example.com/", "example.com", resolver=lambda host: ["8.8.8.8", "10.0.0.1"], transport=transport)
     transport.assert_not_called()
+
+
+@pytest.mark.parametrize("answers", [["168.63.129.16"], ["8.8.8.8", "168.63.129.16"]])
+def test_cloud_platform_dns_answer_never_reaches_transport(answers):
+    transport = Mock()
+    with pytest.raises(UnsafeTarget):
+        fetch("http://example.com/", "example.com", resolver=lambda host: answers, transport=transport)
+    transport.assert_not_called()
+
+
+def test_cloud_platform_address_rejected_after_redirect_dns_change():
+    resolver = Mock(side_effect=[["8.8.8.8"], ["168.63.129.16"]])
+    transport = Mock(return_value={"status":302, "headers":[("Location", "/next")]})
+    with pytest.raises(UnsafeTarget):
+        fetch("http://example.com/", "example.com", resolver=resolver, transport=transport)
+    assert transport.call_count == 1
+
+
+@pytest.mark.parametrize("url,port", [("http://example.com/", 80), ("https://example.com/", 443),
+                                      ("http://example.com:80/", 80), ("https://example.com:443/", 443)])
+def test_allowed_ports_and_public_destination_remain_usable(url, port):
+    transport = Mock(return_value={"status":200, "headers":[], "body":b"", "tls":None})
+    assert fetch(url, "example.com", resolver=lambda host:["8.8.8.8"], transport=transport)["status"] == 200
+    assert transport.call_args.args[1:3] == (port, "8.8.8.8")
+    assert public_ip("168.63.129.17")
 
 
 def test_cross_domain_and_https_downgrade_redirects_refused():
