@@ -49,6 +49,19 @@ full-day packet downloads are required from the owner.
 
 ## Release gates
 
+SDK 0.1.1 performance revalidation, 23 November: two four-client Windows loopback
+runs passed every-client and pooled median <5 ms/p95 <10 ms for normal, large and
+nested-secret profiles, online and refused collectors. Worst-client median/p95
+was 0.901/6.948 ms, then 0.715/5.705 ms. Each online case received 2,640 events
+with no seeded-secret matches/drops; refused cases accounted for all drops on
+shutdown. Actual loaded package version and six SDK hashes matched the verified
+wheel across both runs. The harness now refuses loaded-source mismatch before
+measurement. Eight harness tests passed. Complete reports, diagnostic calibration
+and hashes are in `sdk-011-socket-check.json`; scope is in `SOCKET-OVERHEAD.md`.
+Tool CI remains pending. Remote/TLS, Linux, representative traffic and prolonged
+operation remain open; the earlier backend capacity result is not a new
+post-SDK-upgrade capacity measurement.
+
 SDK nested-query privacy update activated, 23 November: ten synthetic cases
 reproduced unmasked values under names such as `credentials[password]`,
 `auth.token` and `users[0][passwd]`. Source package version 0.1.1 now recognizes

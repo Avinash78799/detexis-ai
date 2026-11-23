@@ -5,7 +5,9 @@ as `credentials[password]` and `auth.token`. The installation guide pins its
 CI-tested source. Existing sensors must upgrade and restart; the local API, three workers
 and maintenance now have the verified 0.1.1 package installed. Built-wheel installation
 evidence is in `sdk-wheel-check.json`. Earlier latency reports predate 0.1.1 and
-remain scoped to their recorded version. Named-field masking is not comprehensive
+remain scoped to their recorded version. New attested 0.1.1 four-client Windows
+loopback runs passed the stated gates; see `sdk-011-socket-check.json` and
+`SOCKET-OVERHEAD.md` for measurements and limits. Named-field masking is not comprehensive
 PII detection and does not scrub previously stored telemetry.
 
 The sensor is the core of Shield. It records HTTP request/response metadata in a

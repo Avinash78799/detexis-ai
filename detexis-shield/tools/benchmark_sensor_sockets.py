@@ -8,6 +8,7 @@ from contextlib import contextmanager
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
 import hashlib
+from importlib.metadata import version
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import json
 import math
@@ -20,9 +21,27 @@ import time
 
 import httpx
 import uvicorn
+import detexis_shield
 from detexis_shield import ShieldMiddleware, ShieldWSGIMiddleware
 
 MEASUREMENT_VERSION = 2
+
+
+def request_profiles(include_nested=False):
+    profiles = {"normal":"q=notebook&password=synthetic-secret",
+                "large":"q="+"%3C%3E%27%22"*512+"&password=synthetic-secret"}
+    if include_nested:
+        profiles["nested_secrets"] = "q=notebook&credentials%5Bpassword%5D=synthetic-secret&auth.token=synthetic-secret"
+    return profiles
+
+
+def loaded_sdk_info(root):
+    installed = Path(detexis_shield.__file__).resolve().parent
+    hashes = lambda folder: {p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in folder.glob('*.py')}
+    actual = hashes(installed)
+    if actual != hashes(root/'sensor-sdk/detexis_shield'):
+        raise ValueError("Loaded SDK differs from checkout; install the intended SDK before benchmarking")
+    return {"version":version('detexis-shield'), "loaded_source_sha256":actual, "matches_checkout":True}
 
 
 def summary(values):
@@ -185,9 +204,9 @@ def paired_clients(origin, query, samples, concurrency):
     return clients
 
 
-def measure(framework, online, samples, wsgi_server="werkzeug", concurrency=1, wsgi_threads=4):
+def measure(framework, online, samples, wsgi_server="werkzeug", concurrency=1, wsgi_threads=4, include_nested=False):
     cls = ShieldMiddleware if framework == "asgi" else ShieldWSGIMiddleware
-    profiles = {"normal":"q=notebook&password=synthetic-secret", "large":"q="+"%3C%3E%27%22"*512+"&password=synthetic-secret"}
+    profiles = request_profiles(include_nested)
     with collector(online) as (backend, counts):
         def wrap(app):
             return cls(app, backend, "synthetic-benchmark-key", "synthetic-benchmark-salt", flush_interval=.2)
@@ -225,6 +244,7 @@ def main():
     parser.add_argument("--framework", choices=["both","asgi","wsgi"], default="both")
     parser.add_argument("--wsgi-server", choices=["werkzeug","waitress"], default="werkzeug")
     parser.add_argument("--wsgi-threads", type=int, default=4, help="Waitress worker threads; recorded in each Waitress case")
+    parser.add_argument("--include-nested-profile", action="store_true", help="Also measure bracket/dotted secret fields")
     args = parser.parse_args()
     if not 100 <= args.samples <= 1000:
         parser.error("samples must be between 100 and 1000")
@@ -234,12 +254,13 @@ def main():
         parser.error("wsgi-threads must be between 1 and 64")
     if args.output.exists():
         parser.error("Refusing to overwrite an existing report")
-    frameworks = ("asgi","wsgi") if args.framework == "both" else (args.framework,)
-    cases = [measure(framework, online, args.samples, args.wsgi_server, args.concurrency, args.wsgi_threads) for framework in frameworks for online in (True,False)]
     root = Path(__file__).resolve().parents[1]
+    sdk = loaded_sdk_info(root)  # Check the imported package before opening listeners.
+    frameworks = ("asgi","wsgi") if args.framework == "both" else (args.framework,)
+    cases = [measure(framework, online, args.samples, args.wsgi_server, args.concurrency, args.wsgi_threads, args.include_nested_profile) for framework in frameworks for online in (True,False)]
     report = {"measurement_version":MEASUREMENT_VERSION,
               "request_preparation":"GET URLs/headers built once per client/path before timing; send through complete body read is timed",
-              "checked_at":datetime.now(timezone.utc).isoformat(),"python":platform.python_version(),
+              "checked_at":datetime.now(timezone.utc).isoformat(),"python":platform.python_version(),"sdk":sdk,
               "source_sha256":{str(p.relative_to(root)):hashlib.sha256(p.read_bytes()).hexdigest() for p in [Path(__file__).resolve(), *sorted((root/'sensor-sdk/detexis_shield').glob('*.py'))]},
               "cases":cases,"targets_passed":all(p["target_passed"] for c in cases for p in c["profiles"].values()),
               "scope":"Alternating loopback TCP pairs per independent client, one shared host process and real background sender. Clients start each profile together; shared-host contention can affect both paired paths. Aggregated and every-client latency gates apply. Server choice, Waitress thread count and concurrency are recorded. Synthetic collector only; no actual ingest/Redis/DB, remote TLS, production capacity or representative traffic claim. Offline telemetry loss is expected and counted."}

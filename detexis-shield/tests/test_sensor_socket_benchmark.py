@@ -82,3 +82,47 @@ def test_invalid_thread_count_stops_before_starting_listeners(monkeypatch, threa
     with pytest.raises(SystemExit) as error:
         benchmark.main()
     assert error.value.code == 2
+
+
+def test_loaded_sdk_mismatch_stops_before_measurement(monkeypatch, tmp_path):
+    monkeypatch.setattr('sys.argv', ['benchmark', '--output', str(tmp_path/'report.json')])
+    def mismatch(root):
+        raise ValueError('Loaded SDK differs from checkout')
+    monkeypatch.setattr(benchmark, 'loaded_sdk_info', mismatch)
+    monkeypatch.setattr(benchmark, 'measure', lambda *args:pytest.fail('must not benchmark mismatched code'))
+    with pytest.raises(ValueError, match='Loaded SDK differs'):
+        benchmark.main()
+    assert not (tmp_path/'report.json').exists()
+
+
+def test_loaded_sdk_comparison_detects_changed_bytes_with_same_filenames(tmp_path):
+    destination = tmp_path/'sensor-sdk/detexis_shield'
+    destination.mkdir(parents=True)
+    actual = Path(benchmark.detexis_shield.__file__).resolve().parent
+    for source in actual.glob('*.py'):
+        (destination/source.name).write_bytes(source.read_bytes())
+    assert benchmark.loaded_sdk_info(tmp_path)['matches_checkout'] is True
+    (destination/'redact.py').write_bytes(b'# Different implementation\n')
+    with pytest.raises(ValueError, match='Loaded SDK differs'):
+        benchmark.loaded_sdk_info(tmp_path)
+
+
+def test_optional_nested_profile_keeps_original_profiles_and_counts_all_events(monkeypatch):
+    @contextmanager
+    def collector(online):
+        yield 'synthetic', {'events':360, 'redaction_failures':0}
+    @contextmanager
+    def host(*args):
+        yield 'synthetic', SimpleNamespace(client=SimpleNamespace(dropped=0, q=SimpleNamespace(qsize=lambda:0)))
+    queries = []
+    def pairs(origin, query, samples, concurrency):
+        queries.append(query)
+        return [([1]*100, [1]*100, [0]*100)]
+    monkeypatch.setattr(benchmark, 'collector', collector)
+    monkeypatch.setattr(benchmark, 'host', host)
+    monkeypatch.setattr(benchmark, 'paired_clients', pairs)
+    result = benchmark.measure('asgi', True, 100, include_nested=True)
+    assert list(result['profiles']) == ['normal','large','nested_secrets']
+    assert queries[:2] == list(benchmark.request_profiles().values())
+    assert 'credentials%5Bpassword%5D' in queries[-1] and 'auth.token' in queries[-1]
+    assert result['sender']['expected_synthetic_events'] == 360

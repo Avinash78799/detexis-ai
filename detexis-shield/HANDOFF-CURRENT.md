@@ -68,6 +68,15 @@ off-device disaster recovery claim. Read `BACKUP-RESTORE.md` before restoring.
 
 ## Remaining work, in order
 
+New SDK 0.1.1 performance evidence: two attested four-client Windows loopback
+runs passed every client's median <5 ms/p95 <10 ms for normal, large and nested
+query profiles, online/refused collectors. Worst p95s were 6.948 and 5.705 ms.
+All 2,640 events per online case arrived without seeded-secret matches or drops.
+See `sdk-011-socket-check.json` and `SOCKET-OVERHEAD.md`. The harness checks actual
+loaded package bytes/version; no-sensor calibration is diagnostic only. Tool CI
+is pending. Remote/TLS/Linux/long-lived checks and the post-upgrade backend
+capacity experiment remain open.
+
 Activated SDK privacy change: source package version 0.1.1 recognizes nested secret
 query names (`credentials[password]`, `auth.token`, indexed bracket forms) in
 redaction/shared features. Fifty-seven focused checks passed, including the two

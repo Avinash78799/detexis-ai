@@ -273,3 +273,47 @@ arbitrary workload capacity, Linux version-2 behavior, long-lived operation or
 absence of all performance faults. ASGI telemetry may still finish after the
 client receives the response; delivery totals were checked separately. No real
 application or installed sensor was automatically updated by these tests.
+
+## SDK 0.1.1: loaded-package attestation and nested-field profile
+
+23 November: the development benchmark environment was upgraded from the verified
+0.1.1 wheel without dependency downloads. The harness now compares the **imported
+SDK files** against the checkout before opening listeners and records their hashes
+and installed distribution version. Earlier reports recorded checkout hashes;
+those alone do not establish which package a Python process imported. Those
+historical reports remain retained with their original scope.
+
+An optional `--include-nested-profile` adds bracket/dotted secret fields while
+preserving the original normal/large queries and measurement-version-2 timing
+boundary. The no-sensor calibration uses the same profile selector. Eight harness
+checks passed, including byte-level drift refusal, stopping before measurement,
+per-client gate enforcement, unchanged original profiles and event accounting.
+
+With four clients, 200 measured pairs per client/profile, 20 warmup pairs and four
+Waitress threads, both SDK runs passed all pooled and every-client 5/10-ms gates
+on ASGI and WSGI, with online and refused collectors. The first run's worst-client
+median/p95 was **0.901/6.948 ms**; the repeat was **0.715/5.705 ms**. All three
+profiles passed. Every online case received all **2,640** expected synthetic events
+with zero seeded-secret occurrences and drops; refused cases counted all 2,640 as
+dropped after shutdown. Loaded SDK version 0.1.1, all six package hashes and the
+harness hashes matched across the two runs and the verified wheel.
+
+The separate no-sensor calibration's worst client signed path-delta p95 was
+**5.070 ms**. Its sensor acceptance is null. It is diagnostic noise evidence,
+not a sensor pass or a quantity to subtract from the measured SDK percentiles.
+
+Complete reports and original-file SHA256s are in `sdk-011-socket-check.json`.
+Private raw files are `outputs/sdk-011-calibration-20261123.json`,
+`outputs/sdk-011-concurrent-20261123.json` and
+`outputs/sdk-011-concurrent-repeat-20261123.json`; console/stderr logs are retained.
+These results cover synthetic Windows loopback with the stated interval only.
+They do not establish remote/TLS latency, Linux behavior, representative traffic,
+long-lived reliability, malware/ML quality or backend ingest capacity. The earlier
+500-events/s backend experiment has not been repeated after the SDK upgrade.
+
+Reproduce using the intended installed SDK and new output filenames:
+
+```powershell
+python tools/calibrate_sensor_sockets.py --framework both --samples 200 --concurrency 4 --include-nested-profile --output C:\PRIVATE\sdk011-calibration.json
+python tools/benchmark_sensor_sockets.py --framework both --wsgi-server waitress --samples 200 --concurrency 4 --include-nested-profile --output C:\PRIVATE\sdk011-sockets.json
+```
