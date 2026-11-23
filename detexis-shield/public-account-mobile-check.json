@@ -1,0 +1,36 @@
+{
+  "kind": "public_account_responsive_check",
+  "checked_date": "2026-11-23",
+  "origin": "https://localhost:8443/app",
+  "browser": "Codex embedded browser",
+  "authenticated": false,
+  "viewports": [
+    {
+      "width": 320,
+      "height": 740,
+      "client_width": 305,
+      "document_width": 305,
+      "horizontal_overflow": false,
+      "horizontally_clipped_controls": 0,
+      "recovery_expanded": true,
+      "keyboard_focus": "recovery_code",
+      "focused_field_in_view": true,
+      "focus_outline": "solid",
+      "field_help_resolved": true
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "client_width": 375,
+      "document_width": 375,
+      "horizontal_overflow": false,
+      "horizontally_clipped_controls": 0,
+      "recovery_expanded": true
+    }
+  ],
+  "viewport_override_reset": true,
+  "credentials_entered": false,
+  "forms_submitted": false,
+  "account_data_changed": false,
+  "scope": "Live public sign-in/recovery page only. No signed-in workspace, touch interaction, actual assistive technology, full keyboard traversal or WCAG conformance acceptance."
+}

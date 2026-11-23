@@ -1,5 +1,28 @@
 # Authenticated analysis browser acceptance
 
+
+## Narrow public account layouts — 23 November 2026
+
+The live local HTTPS sign-in/recovery page was checked at **320×740** and
+**390×844** in the embedded browser. At 320 pixels, document/client width was
+305 pixels; at 390 pixels, both were 375 pixels (scrollbars excluded). Neither
+size had horizontal document overflow or visible input/button/summary controls
+extending beyond the horizontal client bounds. The sign-in layout was visually
+inspected at 320 pixels and the expanded recovery form at 390 pixels.
+
+Enter expanded recovery. Two forward Tabs moved through Account email to Saved
+recovery code at 320 pixels. The focused field was in view, had a solid focus
+outline and referenced the recovery instructions. No credential value was entered
+or form submitted. The temporary viewport override was reset afterward.
+The structured observed result is in
+[public-account-mobile-check.json](public-account-mobile-check.json).
+
+This is scoped to the public account page at these sizes. Signed-in multi-site
+layout, other product pages, touch targets/interactions, complete keyboard
+navigation and actual screen-reader announcements remain unverified. No global
+accessibility or WCAG-conformance claim follows from these checks.
+
+
 ## Public keyboard recovery check — 23 November 2026
 
 After the local services resumed, a fresh tab in the same embedded browser opened
