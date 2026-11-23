@@ -131,6 +131,14 @@ worker and maintenance probes test their documented liveness/progress limits.
 An unhealthy status does not automatically repair a running unhealthy process.
 Keep operator contact and outage/recovery instructions available to site owners.
 
+Hourly aggregate counts retain the complete boundary hour (up to one extra hour)
+so cleanup does not erase the seventh same-hour baseline sample during the
+current hour. Raw requests still expire at the exact retention cutoff. The
+23 November regression checks seven- and thirty-day cleanup at three minute
+positions for two sites, preserving their distinct baselines while removing
+older counts and expired requests. This is source-level validation; local image
+activation is recorded separately in `RELEASE-READINESS.md`.
+
 ## Real-user acceptance remains required
 
 Computer hosting resolves the need to obtain a cloud server; it does not supply

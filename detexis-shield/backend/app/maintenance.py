@@ -23,7 +23,10 @@ def purge(days=None):
         db.execute(delete(Alert).where(Alert.incident_id.in_(old)))
         db.execute(delete(Incident).where(Incident.last_seen < cutoff))
         db.execute(delete(Event).where(Event.received_at < cutoff))
-        db.execute(delete(HourBucket).where(HourBucket.hour < cutoff))
+        # Buckets describe a whole UTC hour. Keep the boundary hour until it
+        # expires in full; the seven-day same-hour baseline still needs it.
+        bucket_cutoff = cutoff.replace(minute=0, second=0, microsecond=0)
+        db.execute(delete(HourBucket).where(HourBucket.hour < bucket_cutoff))
         db.execute(delete(Scan).where(Scan.created_at < cutoff))
         db.execute(delete(SensorHealthAlert).where(SensorHealthAlert.resolved_at < cutoff))
         db.commit()
