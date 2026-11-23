@@ -231,7 +231,9 @@ def session_info(request: Request, response: Response, user=Depends(owner), db=D
 
 @router.post("/logout", status_code=204)
 def logout(request: Request, response: Response, user=Depends(owner), db=Depends(get_db)):
-    db.delete(db.get(BrowserSession, digest(request.cookies[COOKIE])))
+    # Recovery or another logout can remove the session after owner() validated
+    # it. A missing row is already signed out; still clear this browser's cookie.
+    db.execute(delete(BrowserSession).where(BrowserSession.token_hash == digest(request.cookies[COOKIE])))
     db.commit()
     response.delete_cookie(COOKIE, path="/", secure=True, httponly=True, samesite="strict")
 

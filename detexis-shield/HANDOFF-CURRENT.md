@@ -9,7 +9,7 @@ without an assistant. No more multi-gigabyte dataset downloads are required.
 
 Repository: https://github.com/Avinash78799/detexis-ai
 Branch: `codex/shield-sensor-foundation`; existing PR 1 remains unmerged.
-Last application commit: `01f23dd4e0b82528523e0bb1f0245058e1a8d8b0`.
+Last activated application change: `01f23dd4e0b82528523e0bb1f0245058e1a8d8b0`.
 Its four CI jobs passed in run `45180186334`. Consult Git history for later
 documentation-only checkpoints.
 
@@ -70,6 +70,11 @@ Latest activation backup: `shield-20261123T130655Z-22d1bd88.dump` in the private
 off-device disaster recovery claim. Read `BACKUP-RESTORE.md` before restoring.
 
 ## Remaining work, in order
+
+Pending source fix: logout now tolerates its session row disappearing after
+authentication. A deterministic regression reproduced HTTP 500 before the fix;
+focused tests now pass, preserving CSRF refusal and another device's session.
+CI and API-only activation remain pending. This is not full session-race coverage.
 
 Latest scanner hardening is activated: the scanner explicitly refuses
 Azure's `168.63.129.16` platform destination and its mapped IPv6 form, and rejects

@@ -49,6 +49,16 @@ full-day packet downloads are required from the owner.
 
 ## Release gates
 
+Logout invalidation-race correction under review, 23 November: a deterministic
+test reproduced HTTP 500 if a valid session was removed after authentication but
+before logout's second session lookup. Logout now deletes by token hash without
+requiring a row to remain, then clears the cookie. Authentication/origin/CSRF
+dependencies remain in place. Seven focused account/logout/removal checks passed;
+the strengthened final regression also verifies invalid CSRF refusal and another
+device's continued access. It models invalidation at the authentication/handler
+boundary rather than claiming a threaded PostgreSQL race test. CI and API-only
+activation remain pending. No real account or session was changed.
+
 Scanner destination hardening activated, 23 November: mocked regressions
 reproduced acceptance of Azure's `168.63.129.16` platform service address (also
 through mapped IPv6), and explicit URL port zero being treated as the default.
