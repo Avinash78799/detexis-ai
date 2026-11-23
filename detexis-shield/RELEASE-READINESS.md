@@ -49,7 +49,7 @@ full-day packet downloads are required from the owner.
 
 ## Release gates
 
-Cleanup locking correction under review, 23 November: an isolated PostgreSQL 16
+Cleanup locking correction activated, 23 November: an isolated PostgreSQL 16
 rehearsal reproduced `Cleanup erased a busy site` against the previous source.
 Cleanup now obtains the worker/triage Site NO KEY UPDATE lock with SKIP LOCKED,
 then deletes each site's expired graph in one transaction. Busy sites are retried
@@ -57,9 +57,19 @@ on a subsequent pass; idle sites can still make progress. Completed sites remain
 committed if a later site's cleanup fails. Browser-session expiry is independent.
 All 21 focused checks passed after the correction; the final eventual-retry
 assertion also passed against the isolated database. This is not a busy-tenant
-starvation bound or large-history performance result. The local maintenance image
-has not yet been updated with this correction; CI and backup-first activation
-remain required. Its prior activation record above still describes the live image.
+starvation bound or large-history performance result.
+
+Commit `95266a80e1edf216f7a93b8784b6bd49018e242a` passed all four jobs in
+[Actions run 45175299409](https://github.com/Avinash78799/detexis-ai/actions/runs/45175299409).
+After fresh backup `outputs/computer-backups/shield-20261123T123422Z-b0d60d64.dump`,
+maintenance alone was replaced with image
+`sha256:a3c52b3dcabcfffe2a75288e3a7683eff96b9f6e127533d4d566d034a9208d50`.
+All 65 source files matched the tested source. Environment, command and all table
+row digests were unchanged; API/worker container identities were preserved.
+Maintenance health and CA-verified HTTPS readiness passed. The prior maintenance
+image remains available for rollback. Cached dependencies were retained; no
+migration or account mutation occurred. Private evidence:
+`outputs/retention-locks-runtime-20261123.json`.
 
 Retention graph/rollback validation on 23 November: commit
 `b118cd6c74352f4f29768f1b31ee7e1255d5aed2` passed 20 focused local tests and all
