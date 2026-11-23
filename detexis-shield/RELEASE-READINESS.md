@@ -1,8 +1,32 @@
-# Release readiness: 22 November 2026
+# Release readiness: 23 November 2026
 
 The complete product goal is **not achieved**. Implemented code, local tests and
 temporary demonstrations do not prove a continuously operated public service.
 The percentage previously discussed was an effort estimate, not a release gate.
+
+## Latest maintenance correction: 23 November
+
+Seven-day cleanup previously removed the seventh same-hour aggregate during the
+current hour, making the anomaly baseline unavailable despite complete history.
+Commit `06e896559964748732ee051f1fef1ca44fa31bd7` preserves the complete boundary
+hour; raw-event expiry retains its exact cutoff. Six boundary regressions cover
+two sites, seven/thirty-day retention and three minute positions. All 18 focused
+retention/pipeline/maintenance tests passed, followed by all four jobs in
+[Actions run 45112459471](https://github.com/Avinash78799/detexis-ai/actions/runs/45112459471).
+
+The maintenance service alone was updated after fresh private backup
+`outputs/computer-backups/shield-20261123T043419Z-a7264fc1.dump`. Its image is
+`sha256:135ca30dcea5dec837f96593bb40062808f7ee722587b4443424ec1fcf5cf6e9`;
+all 65 application/migration files matched source. Environment and command,
+API/worker container identities and all database table row digests were preserved.
+Maintenance health and CA-verified HTTPS readiness passed. Cached dependencies
+were retained; no migration, owner-account change or public deployment occurred.
+Private evidence: `outputs/retention-boundary-runtime-20261123.json`.
+This check does not establish cleanup concurrency, long-outage recovery or ML
+quality. The smaller-data route remains in `ml/SMALL-DATA-ROUTE.md`; no further
+full-day packet downloads are required from the owner.
+
+## Release gates
 
 | Requirement | Current evidence | Remaining proof |
 | --- | --- | --- |
