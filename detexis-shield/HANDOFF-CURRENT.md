@@ -69,9 +69,11 @@ off-device disaster recovery claim. Read `BACKUP-RESTORE.md` before restoring.
 
 1. Complete signed-in multi-site browser acceptance: key creation/revocation,
    refresh races, incident decisions, recovery/removal, errors, keyboard and
-   assistive-technology behavior. A specific source-review concern is whether
-   refreshing website cards during replacement-key creation can hide its one-time
-   result; reproduce this before claiming it is fixed. Browser confirmation for
+   assistive-technology behavior. The replacement-key refresh race was reproduced
+   and corrected in source with a stable, site-labelled credential area; tests
+   cover refresh during issuance, multiple sites and a late response after account
+   deletion. CI, local activation and signed-in rendered acceptance are pending
+   for that latest change. Browser confirmation for
    creating two synthetic sites/keys is still unanswered; generic continuation
    is not that approval. Do not alter the owner's credentials or use their account.
 2. Extend operational validation: partial Redis corruption, dispatcher crash and

@@ -49,6 +49,18 @@ full-day packet downloads are required from the owner.
 
 ## Release gates
 
+Replacement-key refresh correction under review, 23 November: the previous UI
+appended a one-time secret to a website card that could already have been removed
+by a refresh. A synthetic regression reproduced the failure. Issued keys now
+appear in a stable, hostname-labelled area outside the replaceable website list,
+without browser storage or secret-bearing live announcements. Confirmed account
+deletion clears the area; an issuance response from an obsolete session cannot
+restore it. Thirty frontend tests and five focused Python account/installation
+tests passed, followed by nine focused key/deletion checks including the new
+late-response case. Full CI, local activation and signed-in rendered acceptance
+remain pending. Browser account/key creation still requires its existing specific
+approval; no real account, key or browser session was changed by these tests.
+
 Scan scheduling correction activated, 23 November: the prior scheduler
 reproduced replacement of an old pending scan and duplicate queue publication.
 The source now retains pending records, commits new records before publishing,

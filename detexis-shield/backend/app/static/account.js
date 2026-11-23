@@ -124,10 +124,18 @@ async function refreshSites() {
         create.setAttribute('aria-label', 'Create replacement key for ' + site.domain);
         create.addEventListener('click', async () => {
           create.disabled = true;
+          const issuanceCsrf = csrf;
           try {
             const issued = await api(path, {}); const secret = document.createElement('pre');
+            if (csrf !== issuanceCsrf) return;
             secret.textContent = 'Save this key now; it is shown once:\n' + issued.api_key;
-            panel.append(secret); create.remove();
+            const saved = document.createElement('section');
+            const heading = document.createElement('h3'); heading.textContent = site.domain;
+            saved.append(heading, secret); node('issued-keys-list').append(saved);
+            node('issued-keys').hidden = false;
+            node('issued-keys-status').textContent = 'Replacement key created for ' + site.domain + '. Save it before leaving this page.';
+            node('issued-keys').scrollIntoView({block:'start'});
+            create.remove();
             keyStatus.textContent = 'Replacement key created. Save the private key shown below; it is displayed once.';
           } catch (error) {node('message').textContent = error.message; create.disabled = false;}
         }); panel.append(create);
@@ -213,6 +221,8 @@ node('delete-account-form').addEventListener('submit', async event => {
     csrf = '';
     node('workspace').hidden = true; node('auth').hidden = false;
     for (const id of ['credentials', 'snippet', 'recovery-value', 'owner-email']) node(id).textContent = '';
+    node('issued-keys-list').replaceChildren(); node('issued-keys-status').textContent = '';
+    node('issued-keys').hidden = true;
     node('sites').replaceChildren();
     node('sites-status').textContent = '';
     node('recovery-secret').hidden = true; node('installation').hidden = true;
