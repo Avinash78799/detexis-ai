@@ -49,6 +49,27 @@ full-day packet downloads are required from the owner.
 
 ## Release gates
 
+Alert outbox priority corrected on 23 November: tests first reproduced older
+unconfigured rows consuming the entire delivery batch. Configured sites now take
+priority; destination-free alerts are marked once and reconsidered when their
+site receives configuration. Regressions cover backlog fairness, later channel
+configuration and retrying only a failed channel after partial delivery. All
+delivery calls in these checks are mocked; no messages were sent. The related
+22-test local run and three final outbox checks passed. Commit
+`767d80959b19bd87a06d707725e943baed6c96be` passed all four jobs in
+[Actions run 45176054278](https://github.com/Avinash78799/detexis-ai/actions/runs/45176054278),
+including PostgreSQL execution of the new outbox cases. This does not prove
+external provider delivery, broad tenant scheduling fairness or exactly-once
+delivery across a process crash after a provider accepts a message.
+
+Maintenance alone was updated after backup
+`outputs/computer-backups/shield-20261123T123908Z-76548dd7.dump` to image
+`sha256:64fc8f05000f2e84fc3daf5986321440c89b335bcfd2dcc4171d2d1cfb522655`.
+All 65 source files matched. Environment/command, all database row digests and
+API/worker identities were unchanged; maintenance health and verified HTTPS
+readiness passed. Cached dependencies and existing notification settings remain.
+Private evidence: `outputs/outbox-priority-runtime-20261123.json`.
+
 Cleanup locking correction activated, 23 November: an isolated PostgreSQL 16
 rehearsal reproduced `Cleanup erased a busy site` against the previous source.
 Cleanup now obtains the worker/triage Site NO KEY UPDATE lock with SKIP LOCKED,
