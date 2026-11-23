@@ -49,7 +49,7 @@ full-day packet downloads are required from the owner.
 
 ## Release gates
 
-Scan scheduling correction under review, 23 November: the prior scheduler
+Scan scheduling correction activated, 23 November: the prior scheduler
 reproduced replacement of an old pending scan and duplicate queue publication.
 The source now retains pending records, commits new records before publishing,
 and serializes deterministic RQ job publication under the site's processing lock.
@@ -57,11 +57,23 @@ Active queued/started/deferred/scheduled jobs are retained; terminal jobs can be
 replaced while the database scan remains pending. API requests use the same
 publisher. Thirty-seven focused checks passed, covering pending-record retention,
 repeat publication, complete synthetic Redis loss, scanner gates and maintenance.
-A PostgreSQL simultaneous-publisher check is added for CI. No target scan or
+A PostgreSQL simultaneous-publisher check passed in CI. No target scan or
 external request was made by these scheduling tests. Partial Redis corruption
 (a queued job hash surviving without its queue entry) and crash/timeout recovery
-of an active dispatcher remain separate cases. The running API/maintenance images
-have not yet received this correction; CI and backup-first activation are pending.
+of an active dispatcher remain separate cases.
+
+Commit `702152764dd51c3509ac6e6be6a6ad80ded39734` passed all four jobs in
+[Actions run 45176930314](https://github.com/Avinash78799/detexis-ai/actions/runs/45176930314).
+Following backup `outputs/computer-backups/shield-20261123T124438Z-0940f166.dump`,
+API and maintenance were updated to image
+`sha256:317b5a92a5406702af6a670b8295ac52b69ac66aae5b8f2603811119d18de563`.
+Both services' 65 application/migration files matched the tested source;
+environment/command and every table row digest were unchanged. Workers were
+preserved: their dispatcher body and job arguments remain compatible. API and
+maintenance health and CA-verified HTTPS readiness passed. Previous role images
+remain available for rollback. Cached dependencies were retained. No migration,
+account mutation or target scan occurred. Private evidence:
+`outputs/scan-scheduling-runtime-20261123.json`.
 
 Alert outbox priority corrected on 23 November: tests first reproduced older
 unconfigured rows consuming the entire delivery batch. Configured sites now take
