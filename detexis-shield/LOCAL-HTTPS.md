@@ -88,6 +88,32 @@ certificate warning. Open `/app`, create your own account and privately save its
 one-use recovery code. Synthetic account/browser testing requires approval for
 this local origin separately from any previous public origin.
 
+## Python sensor certificate trust
+
+Browser trust does not establish Python/HTTPX trust. For an application running
+directly on this computer, use `SHIELD_URL=https://localhost:8443` and a PEM bundle
+that includes both the normal public roots and this instance's reviewed public
+root. For example, in the application's virtual environment:
+
+```python
+from pathlib import Path
+import certifi
+
+root = Path("path/to/reviewed-shield-local-root.crt")
+bundle = Path("shield-ca-bundle.pem").resolve()
+bundle.write_bytes(Path(certifi.where()).read_bytes() + b"\n" + root.read_bytes())
+print(bundle)
+```
+
+Set `SSL_CERT_FILE` to that absolute bundle path in the application's environment
+before starting it. The SDK's HTTPX client honors this setting with certificate
+and hostname verification enabled. It affects other HTTPX clients in the same
+process too; retaining the normal public roots avoids replacing their existing
+public trust with only the local root. Do not include the CA private key, commit
+the bundle as an application default, or disable verification. Remote sensors
+and containers need their own reachable origin and certificate configuration;
+their `localhost` refers to themselves.
+
 ## Persistence, stop and removal
 
 On the 21 November restart after downtime, the first verified HTTPS probe saw an
