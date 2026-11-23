@@ -1,5 +1,23 @@
 # Authenticated analysis browser acceptance
 
+## Public keyboard recovery check — 23 November 2026
+
+After the local services resumed, a fresh tab in the same embedded browser opened
+`https://localhost:8443/app` without a security interstitial. The prior synthetic
+session was signed out. Enter on Recover your account expanded the disclosure;
+Tab moved to Account email and the next Tab to Saved recovery code. Read-only
+DOM inspection confirmed the focused recovery field's explanatory text, a solid
+focus outline, and the empty general status region remaining `display:block`
+with `aria-atomic="true"`. At the current 1280-pixel viewport, document width was
+1265 pixels: no horizontal document overflow was observed at that desktop size.
+
+No credentials were entered, account created, password changed, site/key issued,
+file uploaded, incident triaged or domain scanned. This closes only the focused
+public keyboard/help/status-rendering check. Signed-in navigation, other viewport
+sizes, actual screen-reader announcements and triage fault states remain open.
+The old tab's cached connection failure was left untouched; the new tab used the
+normal verified local HTTPS address without changing security settings.
+
 ## Incident triage outcome and selection races — 22 November 2026
 
 The inbox now distinguishes a saved review decision from a later failed detail
@@ -14,14 +32,21 @@ save explains that the user needs to wait.
 Five new interaction regressions cover detail/list refresh failures after commit,
 uncertain mutations, obsolete detail failures and pending-selection/save races.
 All 28 JavaScript tests pass. These checks use synthetic in-memory API responses;
-no real incident was changed. CI, local activation and rendered fault-state
-acceptance of the triage update remain pending.
+no real incident was changed. Replacement commit
+`4523bc74e5d9ffcebf9e4afa354c8d02a5a28f5e` passed all four jobs in CI run
+`45045572419` and is active locally in API image
+`sha256:f3bfa834547f63212a232e984ee57a9eee7c4023d7fd944d0a496b6bf877b856`.
+All 65 application/migration files matched source; fresh backup and unchanged
+table digests/environment checks passed. Workers/maintenance were not recreated.
+Verified HTTPS readiness and the served inbox JavaScript hash passed. Private
+proof: `outputs/triage-corrected-runtime-20261123.json`.
+Rendered signed-in triage/fault-state acceptance remains open.
 
 CI run `45045313252` caught a UTF-8 punctuation conversion introduced while
 normalizing the script's line endings. Two exact title assertions failed; HTTPS,
 Windows-helper and ML-smoke jobs passed. The update was not activated. Explicit
 UTF-8 read/write restored the original punctuation, and all 28 JavaScript tests
-passed again without weakening assertions. Replacement CI must pass before
+passed again without weakening assertions. Replacement CI passed before
 local activation; the failed run remains part of the validation record.
 
 ## Status/help/focus source review — 22 November 2026
