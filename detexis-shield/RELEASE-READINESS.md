@@ -59,10 +59,23 @@ both runnable middleware installation examples, repeated/encoded fields, decoder
 equivalence and feature consistency after masking. This remains named-field
 redaction, not comprehensive personal-data removal. Paths, user agents, field
 names and unrecognized fields can still contain private data. No historical
-telemetry was altered. CI, the pinned installation-command update, installed SDK
-verification and runtime activation remain pending. Existing deployments do not
+telemetry was altered. Runtime activation remains pending. Existing deployments do not
 gain this protection until upgraded. No public PyPI release is claimed; ML remains
 disabled pending evaluation with the matching preprocessing representation.
+
+Source commit `0a64d7c9d05c8b4c02ef444b22dcb29c000d75c0` passed all four jobs in
+[Actions run 45182577169](https://github.com/Avinash78799/detexis-ai/actions/runs/45182577169).
+The installation guide now pins that immutable source and explains upgrading and
+restarting existing sensors. An initial offline wheel build stopped because the
+test environment lacked setuptools; pip's isolated build then succeeded without
+modifying the application environment's dependencies. Wheel
+`detexis_shield-0.1.1-py3-none-any.whl` has SHA256
+`ff18c2246830814cb454888dd9a6b870342c6bbe2a3e9eb34f442ba5f707dac5`.
+A fresh disposable target installation verified version 0.1.1, the actual import
+location, byte matches for all six package source files, nested masking and
+feature consistency. See `sdk-wheel-check.json`; the wheel is retained privately
+in `outputs/sdk-0.1.1-release`. Cached service images still need an actual package
+upgrade, and earlier SDK socket benchmarks must not be relabelled as 0.1.1 results.
 
 Logout invalidation-race correction activated, 23 November: a deterministic
 test reproduced HTTP 500 if a valid session was removed after authentication but

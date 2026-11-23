@@ -74,8 +74,12 @@ off-device disaster recovery claim. Read `BACKUP-RESTORE.md` before restoring.
 Pending SDK privacy change: source package version 0.1.1 recognizes nested secret
 query names (`credentials[password]`, `auth.token`, indexed bracket forms) in
 redaction/shared features. Fifty-seven focused checks passed, including the two
-middleware examples. CI, updating the immutable install pin, verifying the actual
-installed package and activation remain required. Cached API/worker images and
+middleware examples. All four CI jobs passed for source commit
+`0a64d7c9d05c8b4c02ef444b22dcb29c000d75c0` (run 45182577169). The guide now pins
+that commit. The built 0.1.1 wheel passed a fresh target installation and six-file
+source comparison (`sdk-wheel-check.json`); the wheel is in the private
+`outputs/sdk-0.1.1-release` directory. Runtime activation remains required.
+Cached API/worker images and
 existing customer SDKs still carry their earlier dependencies; copying only app
 files into a cached image does not install this SDK change. No historical data
 was scrubbed, and this is not comprehensive PII detection. ML stays disabled.
