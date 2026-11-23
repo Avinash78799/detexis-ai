@@ -71,6 +71,15 @@ off-device disaster recovery claim. Read `BACKUP-RESTORE.md` before restoring.
 
 ## Remaining work, in order
 
+Pending SDK privacy change: source package version 0.1.1 recognizes nested secret
+query names (`credentials[password]`, `auth.token`, indexed bracket forms) in
+redaction/shared features. Fifty-seven focused checks passed, including the two
+middleware examples. CI, updating the immutable install pin, verifying the actual
+installed package and activation remain required. Cached API/worker images and
+existing customer SDKs still carry their earlier dependencies; copying only app
+files into a cached image does not install this SDK change. No historical data
+was scrubbed, and this is not comprehensive PII detection. ML stays disabled.
+
 Activated logout fix: logout tolerates its session row disappearing after
 authentication. A deterministic regression reproduced HTTP 500 before the fix;
 focused tests now pass, preserving CSRF refusal and another device's session.

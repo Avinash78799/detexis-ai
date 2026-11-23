@@ -49,6 +49,21 @@ full-day packet downloads are required from the owner.
 
 ## Release gates
 
+SDK nested-query privacy update under review, 23 November: ten synthetic cases
+reproduced unmasked values under names such as `credentials[password]`,
+`auth.token` and `users[0][passwd]`. Source package version 0.1.1 now recognizes
+whole sensitive-name components separated by brackets or dots; names such as
+`password_policy`, `tokenizer` and `cardinality` retain their values. Shared
+features use the same name predicate. Fifty-seven focused checks passed, including
+both runnable middleware installation examples, repeated/encoded fields, decoder
+equivalence and feature consistency after masking. This remains named-field
+redaction, not comprehensive personal-data removal. Paths, user agents, field
+names and unrecognized fields can still contain private data. No historical
+telemetry was altered. CI, the pinned installation-command update, installed SDK
+verification and runtime activation remain pending. Existing deployments do not
+gain this protection until upgraded. No public PyPI release is claimed; ML remains
+disabled pending evaluation with the matching preprocessing representation.
+
 Logout invalidation-race correction activated, 23 November: a deterministic
 test reproduced HTTP 500 if a valid session was removed after authentication but
 before logout's second session lookup. Logout now deletes by token hash without

@@ -50,15 +50,16 @@ def test_published_installation_examples_run_and_emit_redacted_events(monkeypatc
         example = namespace["app"]
         if framework == "fastapi":
             with TestClient(example) as browser:
-                response = browser.get("/?password=never-send-this-value")
+                response = browser.get("/?password=never-send-this-value&credentials%5Bpassword%5D=nested-private-value")
         else:
             with example.test_client() as browser:
-                response = browser.get("/?password=never-send-this-value")
+                response = browser.get("/?password=never-send-this-value&credentials%5Bpassword%5D=nested-private-value")
                 response.close()
         assert response.status_code == 200
         assert events[-1]["path"] == "/"
         assert events[-1]["status"] == 200
         assert "never-send-this-value" not in str(events[-1])
+        assert "nested-private-value" not in str(events[-1])
     assert len(events) == 2
     assert configurations == [("https://shield.example", "dxs_test_synthetic")] * 2
 

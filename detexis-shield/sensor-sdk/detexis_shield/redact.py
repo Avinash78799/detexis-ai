@@ -10,6 +10,12 @@ MAX_QUERY_INPUT = 8192
 MAX_QUERY_STORED = 1024
 MAX_QUERY_FIELDS = 50
 _PERCENT_RUN = re.compile(rb'(?:%[0-9A-Fa-f]{2})+')
+_KEY_COMPONENTS = re.compile(r'[^.\[\]]+')
+
+
+def is_sensitive_key(key: str) -> bool:
+    """Match whole secret-name components in plain, bracket or dotted keys."""
+    return any(part.lower() in SENSITIVE_KEYS for part in _KEY_COMPONENTS.findall(key))
 
 
 def _parse_query(query: str) -> list[tuple[str, str]]:
@@ -44,5 +50,5 @@ def redact_query(query: str, max_len: int = MAX_QUERY_STORED) -> str:
     # Bound parsing before allocating pairs, and retain escaped parameter boundaries.
     bounded = "&".join(query[:MAX_QUERY_INPUT].split("&", MAX_QUERY_FIELDS)[:MAX_QUERY_FIELDS])
     pairs = _parse_query(bounded)
-    return urlencode([(k, "[REDACTED]" if k.lower() in SENSITIVE_KEYS else v)
+    return urlencode([(k, "[REDACTED]" if is_sensitive_key(k) else v)
                       for k, v in pairs])[:max_len]
