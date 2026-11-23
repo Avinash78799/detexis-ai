@@ -49,7 +49,7 @@ full-day packet downloads are required from the owner.
 
 ## Release gates
 
-SDK nested-query privacy update under review, 23 November: ten synthetic cases
+SDK nested-query privacy update activated, 23 November: ten synthetic cases
 reproduced unmasked values under names such as `credentials[password]`,
 `auth.token` and `users[0][passwd]`. Source package version 0.1.1 now recognizes
 whole sensitive-name components separated by brackets or dots; names such as
@@ -59,8 +59,8 @@ both runnable middleware installation examples, repeated/encoded fields, decoder
 equivalence and feature consistency after masking. This remains named-field
 redaction, not comprehensive personal-data removal. Paths, user agents, field
 names and unrecognized fields can still contain private data. No historical
-telemetry was altered. Runtime activation remains pending. Existing deployments do not
-gain this protection until upgraded. No public PyPI release is claimed; ML remains
+telemetry was altered. Customer sensors gain this protection only after their own
+upgrade/restart. No public PyPI release is claimed; ML remains
 disabled pending evaluation with the matching preprocessing representation.
 
 Source commit `0a64d7c9d05c8b4c02ef444b22dcb29c000d75c0` passed all four jobs in
@@ -74,8 +74,23 @@ modifying the application environment's dependencies. Wheel
 A fresh disposable target installation verified version 0.1.1, the actual import
 location, byte matches for all six package source files, nested masking and
 feature consistency. See `sdk-wheel-check.json`; the wheel is retained privately
-in `outputs/sdk-0.1.1-release`. Cached service images still need an actual package
-upgrade, and earlier SDK socket benchmarks must not be relabelled as 0.1.1 results.
+in `outputs/sdk-0.1.1-release`. Earlier SDK socket benchmarks must not be relabelled
+as 0.1.1 results.
+
+Activation commit `2ff36c6638f839760488230a31ca59c4facf4b37` passed all four jobs in
+[Actions run 45183119112](https://github.com/Avinash78799/detexis-ai/actions/runs/45183119112).
+The verified wheel was installed offline into a candidate image; all other
+installed package versions matched the previous services. After idle-queue checks
+and backup `outputs/computer-backups/shield-20261123T132344Z-c72ab636.dump`, API,
+three workers and maintenance were updated to image
+`sha256:03e15921e869d2d1b51cb46153889d51218ff7916f12324a04e7488847ce5f7a`.
+All five containers became healthy and verified actual SDK 0.1.1 imports, six SDK
+file hashes, nested masking/features and all 65 backend source hashes. Environment,
+command and every table row digest were unchanged; the scanner was preserved.
+CA-verified HTTPS readiness and the served install pin passed. Previous role
+images/configuration are retained for rollback. No customer-sensor installation,
+target traffic, migration or ML activation occurred. Private evidence:
+`outputs/sdk-011-runtime-20261123.json`.
 
 Logout invalidation-race correction activated, 23 November: a deterministic
 test reproduced HTTP 500 if a valid session was removed after authentication but

@@ -9,8 +9,8 @@ without an assistant. No more multi-gigabyte dataset downloads are required.
 
 Repository: https://github.com/Avinash78799/detexis-ai
 Branch: `codex/shield-sensor-foundation`; existing PR 1 remains unmerged.
-Last activated application change: `c52b9787c1afefe20196a2882613c44984dd23fc`.
-Its four CI jobs passed in run `45181432928`. Consult Git history for later
+Last activated application change: `2ff36c6638f839760488230a31ca59c4facf4b37`.
+Its four CI jobs passed in run `45183119112`. Consult Git history for later
 documentation-only checkpoints.
 
 Local address: https://localhost:8443/app
@@ -26,13 +26,10 @@ and limits rather than treating this feature list as production certification.
 ML remains disabled pending valid evaluation. External email is unconfigured by
 owner choice. Support contact: shield.org787@gmail.com.
 
-The active API image is
-`sha256:1488283264fd9e9aff72eb5dad40600125d0d135ec638b36c3a3d0aad723fde5`.
-Maintenance retains
-`sha256:317b5a92a5406702af6a670b8295ac52b69ac66aae5b8f2603811119d18de563`.
-The isolated scanner now runs
-`sha256:3b1d266a2a15f153c0ca399a93958cdd79bfbf14c138ce0dddd6c30ef6fbb7a6`.
-Workers retain their compatible earlier image. Do not publish local images:
+The API, three workers and maintenance now run image
+`sha256:03e15921e869d2d1b51cb46153889d51218ff7916f12324a04e7488847ce5f7a`,
+with actual installed SDK 0.1.1. The isolated scanner retains
+`sha256:3b1d266a2a15f153c0ca399a93958cdd79bfbf14c138ce0dddd6c30ef6fbb7a6`. Do not publish local images:
 cached image configuration can contain private environment values.
 
 ## Start and verify
@@ -60,28 +57,28 @@ Do not blindly replace the saved configuration or use destructive volume command
 - The local TLS CA volume and the reviewed public root certificate. Keep the
   private key private; a public certificate alone cannot restore the CA.
 - The workspace's private `outputs` folder, particularly `computer-backups`,
-  activation reports and `compose.logout-race-active.private.json` with its
+  activation reports and `compose.sdk-011-active.private.json` with its
   corresponding rollback file. These files are outside the Git checkout.
 - The owner's recovery code, site salts and sensor keys in their own private
   storage. Do not add them to this document, source control or screenshots.
 
-Latest activation backup: `shield-20261123T131307Z-f1719007.dump` in the private
+Latest activation backup: `shield-20261123T132344Z-c72ab636.dump` in the private
 `outputs/computer-backups` directory. It has local activation evidence, not an
 off-device disaster recovery claim. Read `BACKUP-RESTORE.md` before restoring.
 
 ## Remaining work, in order
 
-Pending SDK privacy change: source package version 0.1.1 recognizes nested secret
+Activated SDK privacy change: source package version 0.1.1 recognizes nested secret
 query names (`credentials[password]`, `auth.token`, indexed bracket forms) in
 redaction/shared features. Fifty-seven focused checks passed, including the two
 middleware examples. All four CI jobs passed for source commit
 `0a64d7c9d05c8b4c02ef444b22dcb29c000d75c0` (run 45182577169). The guide now pins
 that commit. The built 0.1.1 wheel passed a fresh target installation and six-file
 source comparison (`sdk-wheel-check.json`); the wheel is in the private
-`outputs/sdk-0.1.1-release` directory. Runtime activation remains required.
-Cached API/worker images and
-existing customer SDKs still carry their earlier dependencies; copying only app
-files into a cached image does not install this SDK change. No historical data
+`outputs/sdk-0.1.1-release` directory. Runtime activation passed in all five API/worker/maintenance containers, with
+package version 0.1.1 and all six installed source files verified. Other package
+versions and environments were preserved. Existing customer sensors still need
+their own upgrade/restart; copying backend app files alone is insufficient. No historical data
 was scrubbed, and this is not comprehensive PII detection. ML stays disabled.
 
 Activated logout fix: logout tolerates its session row disappearing after
