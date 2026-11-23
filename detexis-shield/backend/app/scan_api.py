@@ -6,7 +6,6 @@ import httpx
 from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, Depends, HTTPException
-from rq import Queue
 from sqlalchemy import select
 from redis.exceptions import RedisError
 
@@ -76,14 +75,16 @@ def request_scan(site=Depends(current_site), db=Depends(get_db), redis=Depends(g
     pending = db.scalar(select(Scan).where(Scan.site_id == site.id, Scan.status == "pending"))
     recent = db.scalar(select(Scan).where(Scan.site_id == site.id).order_by(Scan.created_at.desc()).limit(1))
     if pending:
-        return {"scan_id": pending.id}
-    if recent and utc(recent.created_at) > datetime.now(timezone.utc) - timedelta(hours=1):
-        raise HTTPException(429, "scan cooldown", headers={"Retry-After": "3600"})
-    record = Scan(site_id=site.id)
-    db.add(record)
+        record = pending
+    else:
+        if recent and utc(recent.created_at) > datetime.now(timezone.utc) - timedelta(hours=1):
+            raise HTTPException(429, "scan cooldown", headers={"Retry-After": "3600"})
+        record = Scan(site_id=site.id)
+        db.add(record)
     db.commit()
     try:
-        Queue("shield", connection=redis).enqueue("app.scan_jobs.run_scan", record.id, job_timeout=45, result_ttl=0)
+        from .scan_jobs import enqueue_scan
+        enqueue_scan(record.id, redis)
     except RedisError:
         pass  # Maintenance requeues pending scans.
     return {"scan_id": record.id}

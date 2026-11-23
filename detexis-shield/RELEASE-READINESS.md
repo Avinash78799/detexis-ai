@@ -49,6 +49,20 @@ full-day packet downloads are required from the owner.
 
 ## Release gates
 
+Scan scheduling correction under review, 23 November: the prior scheduler
+reproduced replacement of an old pending scan and duplicate queue publication.
+The source now retains pending records, commits new records before publishing,
+and serializes deterministic RQ job publication under the site's processing lock.
+Active queued/started/deferred/scheduled jobs are retained; terminal jobs can be
+replaced while the database scan remains pending. API requests use the same
+publisher. Thirty-seven focused checks passed, covering pending-record retention,
+repeat publication, complete synthetic Redis loss, scanner gates and maintenance.
+A PostgreSQL simultaneous-publisher check is added for CI. No target scan or
+external request was made by these scheduling tests. Partial Redis corruption
+(a queued job hash surviving without its queue entry) and crash/timeout recovery
+of an active dispatcher remain separate cases. The running API/maintenance images
+have not yet received this correction; CI and backup-first activation are pending.
+
 Alert outbox priority corrected on 23 November: tests first reproduced older
 unconfigured rows consuming the entire delivery batch. Configured sites now take
 priority; destination-free alerts are marked once and reconsidered when their
