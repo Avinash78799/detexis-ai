@@ -1,3 +1,5 @@
+from types import SimpleNamespace
+
 import pytest
 
 from app import maintenance, maintenance_health, redis_store
@@ -30,3 +32,31 @@ def test_health_is_scoped_to_container_and_expires(isolated_redis, monkeypatch):
     monkeypatch.setattr(maintenance_health.socket, "gethostname", lambda: "maintenance-one")
     isolated_redis.expire(maintenance_health.progress_key(), -1)
     assert not maintenance_health.healthy(isolated_redis)
+
+
+def test_recovery_runs_between_full_cycles_and_retries_on_failure(monkeypatch, caplog):
+    class EndLoop(Exception):
+        pass
+
+    now = 0
+    full_cycles, recovery_passes = [], []
+
+    def sleep(seconds):
+        nonlocal now
+        now += seconds
+        if now > 65:
+            raise EndLoop
+
+    def recover():
+        recovery_passes.append(now)
+        if now == 5:
+            raise RuntimeError("Temporary queue failure")
+
+    monkeypatch.setattr(maintenance, "time", SimpleNamespace(monotonic=lambda: now, sleep=sleep))
+    monkeypatch.setattr(maintenance, "run_once", lambda: full_cycles.append(now))
+    monkeypatch.setattr(maintenance, "recover_events", recover)
+    with pytest.raises(EndLoop):
+        maintenance.run_forever()
+    assert full_cycles == [0, 60]
+    assert recovery_passes == [*range(5, 60, 5), 65]
+    assert "Event recovery failed" in caplog.text

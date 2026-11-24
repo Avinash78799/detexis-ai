@@ -1,4 +1,5 @@
-"""Run every minute in its own process: recover jobs, deliver alerts, retain data."""
+"""Recover request jobs frequently, with the full maintenance cycle once a minute."""
+import logging
 import os
 import time
 from datetime import datetime, timedelta, timezone
@@ -9,6 +10,11 @@ from .alerts import send_pending
 from .db import SessionLocal
 from .models import Alert, Event, HourBucket, Incident, Scan, BrowserSession, IncidentAction, SensorHealthAlert, Site
 from .worker import recover_pending
+
+RECOVERY_INTERVAL_SECONDS = 5
+RECOVERY_MINIMUM_AGE_SECONDS = 15
+RECOVERY_ROWS_PER_PASS = 4_000
+MAINTENANCE_INTERVAL_SECONDS = 60
 
 
 def purge(days=None):
@@ -45,8 +51,14 @@ def purge(days=None):
             db.commit()
 
 
+def recover_events():
+    # Give ordinary queue delivery time to finish before republishing.
+    cutoff = datetime.now(timezone.utc) - timedelta(seconds=RECOVERY_MINIMUM_AGE_SECONDS)
+    return recover_pending(limit=RECOVERY_ROWS_PER_PASS, received_before=cutoff)
+
+
 def tick():
-    recover_pending()
+    recover_events()
     from .sensor_health import check_sensor_health
     check_sensor_health()
     send_pending()
@@ -64,15 +76,27 @@ def run_once():
     record_success(get_redis())
 
 
+def run_forever():
+    next_full_cycle = time.monotonic()
+    while True:
+        now = time.monotonic()
+        if now >= next_full_cycle:
+            next_full_cycle = now + MAINTENANCE_INTERVAL_SECONDS
+            try:
+                run_once()
+            except Exception:
+                logging.error("Maintenance cycle failed; will retry on the next full cycle")
+        else:
+            try:
+                recover_events()
+            except Exception:
+                logging.error("Event recovery failed; will retry on the next pass")
+        time.sleep(RECOVERY_INTERVAL_SECONDS)
+
+
 if __name__ == "__main__":
-    import logging
     from .maintenance_health import progress_key
     from .redis_store import get_redis
     # A restarted process must earn its own healthy status.
     get_redis().delete(progress_key())
-    while True:
-        try:
-            run_once()
-        except Exception:
-            logging.error("Maintenance failed; will retry next minute")
-        time.sleep(60)
+    run_forever()

@@ -111,9 +111,11 @@ own publishing policy. PostgreSQL still commits authenticated events, and ingest
 reports `queued: false` when the queue is full, there is repeated publishing
 contention, or Redis rejects the publish after the commit.
 
-Maintenance normally retries pending database events every minute, up to 1,000
-rows per pass. It may enqueue duplicate jobs when space is available, and large
-backlogs can take multiple passes to clear. Redis loss resets throttle
+Maintenance checks for pending events roughly every five seconds, up to 4,000
+rows per pass. Requests must have been received more than 15 seconds earlier
+to give normal queue delivery time to finish. The full maintenance cycle still
+runs roughly once a minute. Recovery may enqueue duplicate jobs when space is
+available, and larger backlogs can take multiple passes to clear. Redis loss resets throttle
 counters and short-term request/login windows. Pending recovery cannot recreate
 those windows or guarantee identical behavioral findings. External delivery,
 live database switching and off-device disaster recovery remain separate gates.

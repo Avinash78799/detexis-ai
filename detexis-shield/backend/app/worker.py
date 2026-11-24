@@ -209,13 +209,15 @@ def process_batch(site_id, event_ids, redis=None):
         return len(rows)
 
 
-def recover_pending(limit=1000, redis=None):
+def recover_pending(limit=1000, redis=None, *, received_before=None):
     redis = redis if redis is not None else get_redis()
     if Queue("shield", connection=redis).count >= EVENT_QUEUE_HIGH_WATER:
         return 0
+    query = select(Event.site_id, Event.event_id).where(Event.processed_at.is_(None))
+    if received_before is not None:
+        query = query.where(Event.received_at < received_before)
     with SessionLocal() as db:
-        rows = db.execute(select(Event.site_id, Event.event_id).where(Event.processed_at.is_(None))
-                          .order_by(Event.received_at).limit(limit)).all()
+        rows = db.execute(query.order_by(Event.received_at).limit(limit)).all()
     groups = {}
     for site_id, event_id in rows:
         groups.setdefault(site_id, []).append(event_id)

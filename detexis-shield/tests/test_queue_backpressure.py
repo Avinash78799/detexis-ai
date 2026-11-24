@@ -1,8 +1,9 @@
 from concurrent.futures import ThreadPoolExecutor
+from datetime import datetime, timedelta, timezone
 
 from fastapi.testclient import TestClient
 from rq import Queue
-from sqlalchemy import create_engine, func, select
+from sqlalchemy import create_engine, func, select, update
 from sqlalchemy.orm import sessionmaker
 
 from app import worker
@@ -71,7 +72,17 @@ def test_saturated_queue_keeps_requests_for_later_recovery(isolated_redis, monke
             assert queue.count == 0
 
         drain()
-        assert worker.recover_pending(redis=isolated_redis) == 4
+        stamp = datetime.now(timezone.utc)
+        cutoff = stamp - timedelta(seconds=15)
+        with sessions.begin() as db:
+            db.execute(update(Event).where(Event.event_id.in_([item["event_id"] for item in items[2:4]]))
+                       .values(received_at=stamp - timedelta(seconds=16)))
+            db.execute(update(Event).where(Event.event_id.in_([item["event_id"] for item in items[4:]]))
+                       .values(received_at=cutoff))
+        assert worker.recover_pending(redis=isolated_redis, received_before=cutoff) == 2
+        drain()
+        assert worker.recover_pending(redis=isolated_redis, received_before=cutoff) == 0
+        assert worker.recover_pending(redis=isolated_redis, received_before=stamp) == 2
         drain()
         assert worker.recover_pending(redis=isolated_redis) == 0
         with sessions() as db:
