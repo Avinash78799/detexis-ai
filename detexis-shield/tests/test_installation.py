@@ -30,6 +30,8 @@ def test_published_installation_examples_run_and_emit_redacted_events(monkeypatc
     page = TestClient(app).get("/app/install")
     assert page.status_code == 200
     assert page.headers["cache-control"] == "no-store"
+    assert "SDK 0.1.2" in page.text
+    assert "@00d700546396d9eedb4b70f5d991e9086ed6e318#subdirectory=" in page.text
 
     examples = Examples()
     examples.feed(page.text)
@@ -40,7 +42,7 @@ def test_published_installation_examples_run_and_emit_redacted_events(monkeypatc
     events, configurations = [], []
 
     def sender(api_url, api_key, **kwargs):
-        configurations.append((api_url, api_key))
+        configurations.append((api_url, api_key, kwargs["outage_retry_window"]))
         return SimpleNamespace(submit=events.append)
 
     monkeypatch.setattr("detexis_shield.middleware.ShieldClient", sender)
@@ -61,7 +63,7 @@ def test_published_installation_examples_run_and_emit_redacted_events(monkeypatc
         assert "never-send-this-value" not in str(events[-1])
         assert "nested-private-value" not in str(events[-1])
     assert len(events) == 2
-    assert configurations == [("https://shield.example", "dxs_test_synthetic")] * 2
+    assert configurations == [("https://shield.example", "dxs_test_synthetic", 30)] * 2
 
 
 def test_public_data_guide_renders_without_an_account():

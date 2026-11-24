@@ -21,11 +21,13 @@ The other 25 events were counted as overflow drops. This check covers one
 host process and a synthetic collector. Private evidence is in
 `outputs/sdk-0.1.2-release/outage-runtime.json`.
 
-SDK source release 0.1.1 adds masking for bracket/dot secret-name components such
-as `credentials[password]` and `auth.token`. The installation guide pins its
-CI-tested source. Existing sensors must upgrade and restart; the local API, three workers
-and maintenance now have the verified 0.1.1 package installed. Built-wheel installation
-evidence is in `sdk-wheel-check.json`. Earlier latency reports predate 0.1.1 and
+SDK source release 0.1.1 added masking for bracket/dot secret-name components such
+as `credentials[password]` and `auth.token`. The local API, workers and maintenance
+were updated to that version for its shared feature and redaction helpers. The
+outage setting runs in each instrumented website process. Existing sensors
+need the new version, configuration and a process restart to enable it.
+Built-wheel installation evidence for 0.1.1 is in `sdk-wheel-check.json`.
+Earlier latency reports predate 0.1.1 and
 remain scoped to their recorded version. New attested 0.1.1 four-client Windows
 loopback runs passed the stated gates; see `sdk-011-socket-check.json` and
 `SOCKET-OVERHEAD.md` for measurements and limits. Named-field masking is not comprehensive
