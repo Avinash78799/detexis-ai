@@ -57,6 +57,22 @@ full-day packet downloads are required from the owner.
 
 ## Release gates
 
+On 25 November, the incident inbox explanation and focus changes were deployed
+through commit `c1c4e89127100afd14089662139f24d353556ee8` after all four jobs in
+[Actions run 45460901431](https://github.com/Avinash78799/detexis-ai/actions/runs/45460901431)
+passed. The API update verified 66 source files, served inbox script, unchanged
+database digests and trusted HTTPS readiness after backup. Current override:
+`outputs/compose.inbox-focus-20261125-active.private.json`.
+
+The expanded isolated Chrome rehearsal verified incident heading focus,
+correlation text, a saved review decision and its history, in addition to the
+two-site onboarding checks. The first run timed out on the test's exact
+dropdown-label selector; the corrected accessible-role selector passed. Windows
+connection-reset warnings appeared during teardown. This fixture uses SQLite
+and fakeredis. PostgreSQL/Redis browser acceptance and screen-reader checks
+remain open. Private reports: `outputs/incident-browser-20261125.json` and
+`outputs/inbox-focus-20261125-runtime.json`.
+
 Multi-site onboarding now preserves each site's initial credentials in its own
 hostname-labelled block. A second website no longer replaces the first site's
 one-time secrets. A fresh isolated Chrome fixture reproduced the previous
