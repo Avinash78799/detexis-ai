@@ -68,7 +68,7 @@ def details(incident_id: str, user=Depends(owner), db=Depends(get_db)):
     actions = db.scalars(select(IncidentAction).where(IncidentAction.incident_id == row.id)
                          .order_by(IncidentAction.created_at.desc(), IncidentAction.id.desc()).limit(50)).all()
     site = db.get(Site, row.site_id)
-    return {**incident_summary(row, site.domain), "correlations": row.correlations,
+    return {**incident_summary(row, site.domain), "correlations": row.reported_correlations,
             "evidence": [{"ts": event.received_at, "method": event.method, "path": event.path,
                           "status": event.status, "findings": event.findings} for event in events if event.findings],
             "actions": [{"at": action.created_at, "status": action.status, "previous_status": action.previous_status,

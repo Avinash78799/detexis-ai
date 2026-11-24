@@ -6,6 +6,7 @@ from sqlalchemy import select
 
 from app.db import SessionLocal
 from app.models import Alert, Event, HourBucket, Incident, Site
+from app.rules import Finding
 from app.worker import baseline_threshold, process_batch, utc
 from app.alerts import send_pending
 from test_smoke import event, make_site
@@ -78,6 +79,41 @@ def test_delayed_batch_revises_incident_start_without_duplicate_alert(isolated_r
         assert incident.event_count == 2
         alert = db.scalars(select(Alert).where(Alert.site_id == site)).one()
         assert alert.incident_id == incident.id
+
+
+@pytest.mark.parametrize("exploit_offset,processing_order,correlates", [
+    (30, (0, 1), True), (30, (1, 0), True),
+    (-30, (0, 1), False), (-30, (1, 0), False),
+    (0, (0, 1), False), (0, (1, 0), False),
+])
+def test_recon_correlation_uses_request_order_across_jobs(
+    isolated_redis, monkeypatch, exploit_offset, processing_order, correlates,
+):
+    site, _ = make_site("correlation-order.test")
+    stamp = datetime.now(timezone.utc).replace(minute=2, second=0, microsecond=0)
+
+    def synthetic_finding(path, *args, **kwargs):
+        rule = {"/fixture-recon": "honeytoken", "/fixture-exploit": "xss"}[path]
+        return [Finding(rule, "high", "CWE-20", "A05:2025", "Synthetic correlation fixture")]
+
+    monkeypatch.setattr("app.worker.evaluate", synthetic_finding)
+    items = [seed(site, "/fixture-recon", received_at=stamp),
+             seed(site, "/fixture-exploit", received_at=stamp + timedelta(seconds=exploit_offset))]
+    for index in processing_order:
+        assert process_batch(site, [items[index]], isolated_redis) == 1
+    assert process_batch(site, items, isolated_redis) == 0
+    with SessionLocal() as db:
+        incident = db.scalars(select(Incident).where(Incident.site_id == site)).one()
+        assert set(incident.rules) == {"honeytoken", "xss"}
+        assert incident.reported_correlations == (["recon_to_exploit"] if correlates else [])
+        assert incident.event_count == 2
+        assert db.scalars(select(Alert).where(Alert.site_id == site)).one().incident_id == incident.id
+
+
+def test_historical_recon_label_reports_co_occurrence_without_timestamps():
+    incident = Incident(correlations=["flood", "recon_to_exploit"])
+    assert incident.reported_correlations == ["flood", "recon_and_exploit"]
+    assert incident.correlations == ["flood", "recon_to_exploit"]
 
 
 def test_login_and_flood_state_isolated_and_canary_flags_not_trusted(isolated_redis):

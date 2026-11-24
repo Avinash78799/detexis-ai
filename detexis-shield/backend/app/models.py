@@ -88,8 +88,18 @@ class Incident(Base):
     event_count: Mapped[int] = mapped_column(Integer, default=0)
     first_seen: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
     last_seen: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
+    first_recon_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    last_exploit_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     __table_args__ = (UniqueConstraint("site_id", "ip_hash", "bucket", name="uq_incident_group"),
                       Index("ix_incidents_site_seen", "site_id", "last_seen"))
+
+    @property
+    def reported_correlations(self):
+        """Historical rules lists establish co-occurrence but cannot prove order."""
+        first, last = self.first_recon_at, self.last_exploit_at
+        if first is not None and last is not None and first < last:
+            return self.correlations
+        return ["recon_and_exploit" if label == "recon_to_exploit" else label for label in self.correlations]
 
 
 class Alert(Base):

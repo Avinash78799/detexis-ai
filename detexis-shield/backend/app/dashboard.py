@@ -83,5 +83,5 @@ def feed(request: Request, site=Depends(dashboard_site), db=Depends(get_db)):
 @router.get("/v1/incidents")
 def incidents(site=Depends(current_site), db=Depends(get_db)):
     rows = db.scalars(select(Incident).where(Incident.site_id == site.id).order_by(Incident.last_seen.desc()).limit(100)).all()
-    return [{"id": r.id, "severity": r.severity, "rules": r.rules, "correlations": r.correlations,
+    return [{"id": r.id, "severity": r.severity, "rules": r.rules, "correlations": r.reported_correlations,
              "event_count": r.event_count, "last_seen": r.last_seen} for r in rows]

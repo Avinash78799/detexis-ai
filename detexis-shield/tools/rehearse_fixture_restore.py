@@ -145,8 +145,8 @@ def main():
                 if time.monotonic() >= deadline:
                     raise RuntimeError("Fixture database did not become ready")
                 time.sleep(1)
-        if sql(container, "detexis", "SELECT version_num FROM alembic_version;") != "0009":
-            raise RuntimeError("This heartbeat-history rehearsal requires schema 0009")
+        if sql(container, "detexis", "SELECT to_regclass('public.sensor_health_alerts') IS NOT NULL;") != "t":
+            raise RuntimeError("This rehearsal requires the heartbeat history table")
         report["populated_restore"] = backup_restore(container, "detexis", restored, folder)
         # Seed only the isolated restored copy, leaving the benchmark source intact.
         sql(container, restored, """

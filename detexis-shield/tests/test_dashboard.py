@@ -42,6 +42,22 @@ def test_dashboard_reports_stale_heartbeat_and_expired_verification():
         assert "Verification expired" in page.text
 
 
+def test_dashboard_describes_historical_correlation_without_asserting_order():
+    from app.db import SessionLocal
+    from app.models import Incident
+
+    site, key = make_site("historical-correlation.test")
+    with SessionLocal() as db:
+        db.add(Incident(site_id=site, ip_hash="a" * 64, bucket=1, severity="high",
+                        rules=["honeytoken", "xss"], correlations=["recon_to_exploit"]))
+        db.commit()
+    with TestClient(app) as client:
+        page = client.get("/dashboard", auth=("site", key))
+        assert page.status_code == 200
+        assert "Reconnaissance and exploit indicators observed (order unverified)" in page.text
+        assert "Reconnaissance observed before an exploit indicator" not in page.text
+
+
 def test_owner_dashboard_distinguishes_installation_and_processing_states():
     from datetime import datetime, timedelta, timezone
     from app.db import SessionLocal

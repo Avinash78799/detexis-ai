@@ -47,7 +47,8 @@ The existing app at https://detexis.vercel.app/ remains the separate legacy app.
   refresh, heartbeat, redaction and [shared URL features](FEATURES.md).
 - RQ processing with durable pending-row recovery, 12 heuristic rules, CWE/OWASP
   tags, and three positive/three negative cases per rule.
-- Incident grouping, recon-to-exploit/repeated-failure/flood correlations,
+- Incident grouping, receive-time ordering for reconnaissance and exploit
+  indicators, repeated-failure and flood correlations,
   seven-day same-hour baselines, notification outbox and retention maintenance.
 - Authenticated, escaped HTMX event/incident feed and site-isolation tests.
 - Verified-domain scanner with pinned public IPs, redirect checks, time/size caps,

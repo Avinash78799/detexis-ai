@@ -20,6 +20,8 @@ redis.call('EXPIRE', KEYS[1], 120)
 return redis.call('ZCOUNT', KEYS[1], ARGV[1] - 60, ARGV[1])
 """
 SEVERITY = {"low": 0, "medium": 1, "high": 2, "critical": 3}
+RECON_RULES = {"sensitive_path", "scanner_ua", "honeytoken"}
+EXPLOIT_RULES = {"sqli_boolean", "sqli_union", "sqli_time", "xss", "command_injection"}
 
 
 def utc(value):
@@ -156,7 +158,14 @@ def process_batch(site_id, event_ids, redis=None):
                 existing = set(incident.rules)
                 current = {h["rule_id"] for h in hits}
                 correlations = set(incident.correlations)
-                if existing & {"sensitive_path", "scanner_ua", "honeytoken"} and current & {"sqli_boolean", "sqli_union", "sqli_time", "xss", "command_injection"}:
+                # Earliest recon and latest exploit are enough to prove that
+                # some recon strictly preceded an exploit within this group.
+                first_recon, last_exploit = incident.first_recon_at, incident.last_exploit_at
+                if current & RECON_RULES and (first_recon is None or stamp < utc(first_recon)):
+                    first_recon = incident.first_recon_at = stamp
+                if current & EXPLOIT_RULES and (last_exploit is None or stamp > utc(last_exploit)):
+                    last_exploit = incident.last_exploit_at = stamp
+                if first_recon is not None and last_exploit is not None and utc(first_recon) < utc(last_exploit):
                     correlations.add("recon_to_exploit")
                 if "login_brute_force" in current:
                     correlations.add("repeated_login_failures")  # Credentials are not collected; stuffing is not proven.
