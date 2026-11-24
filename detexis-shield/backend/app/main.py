@@ -22,9 +22,10 @@ from .detection import router as detection_router
 from .sensor_health import router as sensor_health_router
 from pathlib import Path
 from fastapi.staticfiles import StaticFiles
-from fastapi.exception_handlers import http_exception_handler
+from fastapi.exception_handlers import http_exception_handler, request_validation_exception_handler
+from fastapi.exceptions import RequestValidationError
 from starlette.exceptions import HTTPException as StarletteHTTPException
-from starlette.responses import RedirectResponse
+from starlette.responses import JSONResponse, RedirectResponse
 from urllib.parse import urlencode
 
 app = FastAPI(title="Detexis Shield API")
@@ -48,6 +49,14 @@ async def account_navigation_errors(request, exc):
         return RedirectResponse("/app?" + urlencode({"next": target}), status_code=303,
                                 headers={"Cache-Control": "no-store"})
     return await http_exception_handler(request, exc)
+
+
+@app.exception_handler(RequestValidationError)
+async def private_request_validation_errors(request, exc):
+    # Validation details can contain entire inputs, including telemetry or credentials.
+    if request.method == "POST" and (request.url.path == "/v1/events" or request.url.path.startswith("/app/api/")):
+        return JSONResponse({"detail": "Invalid request. Check the submitted fields and try again."}, status_code=422)
+    return await request_validation_exception_handler(request, exc)
 
 
 @app.middleware("http")

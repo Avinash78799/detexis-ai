@@ -57,6 +57,23 @@ def test_batch_cap():
     assert r.status_code == 422
 
 
+def test_invalid_ingest_and_account_payloads_are_not_echoed():
+    _, key = make_site("validation-privacy.test")
+    invalid_event = {**event(), "query_redacted": "password=synthetic-telemetry-value", "status": "invalid"}
+    responses = [
+        client.post("/v1/events", headers={"X-API-Key": key},
+                    json={"events": [invalid_event] * 101}),
+        client.post("/app/api/login", headers={"Origin": "https://testserver"},
+                    json={"email": "synthetic-private-address", "password": "short-fake"}),
+    ]
+    for response in responses:
+        assert response.status_code == 422
+        assert isinstance(response.json()["detail"], str)
+        assert response.headers["Cache-Control"] == "no-store"
+        assert "synthetic-" not in response.text
+        assert "short-fake" not in response.text
+
+
 def test_ingest_masks_named_secrets_from_older_sensors_before_storage():
     site_id, key = make_site("older-sensor.test")
     item = event()
