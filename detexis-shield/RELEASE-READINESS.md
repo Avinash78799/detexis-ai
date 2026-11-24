@@ -57,6 +57,17 @@ full-day packet downloads are required from the owner.
 
 ## Release gates
 
+Dashboard refresh controls now preserve scan details and keyboard focus. Owners
+can pause automatic updates and use manual refresh when the feed is idle. The
+live status announces errors and state changes, with the update timestamp shown
+separately. All 32 JavaScript checks, three dashboard route tests, and
+[all four CI jobs](https://github.com/Avinash78799/detexis-ai/actions/runs/45353510532)
+passed for `a0903ade977a5714e70749aa5daf82bc1feb7790`. The API-only activation
+verified the served script and HTTPS readiness after backup. The active local
+override is `outputs/compose.dashboard-polling-active.private.json`. Full
+signed-in browser and assistive technology checks remain open.
+
+
 The site dashboard now distinguishes an unconnected sensor, a heartbeat without
 recent requests, received requests awaiting analysis, delayed processing, and
 an analyzed request. The full owner page and feed refresh route passed a
