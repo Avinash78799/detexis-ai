@@ -1,5 +1,24 @@
 # Pending-event and duplicate-delivery rehearsal
 
+## Timed worker outage, 24 November 2026
+
+Fresh unpublished PostgreSQL, Redis, API and maintenance containers ran the
+recovery cadence release `812c8767180a0e266b18ce54eda4cbd1a72bbbed`. With no
+workers running, four synthetic sites sent 60,000 events over 120.002 seconds
+through the ASGI ingest API. Ingest deferred 47,750 events and the maximum
+waiting depth was 256 jobs. All 60,000 events were pending when ingest ended.
+
+After requesting startup of three normal RQ workers, the first sample with
+empty pending, waiting and started counts arrived 86.547 seconds later.
+Each tenant finished with 15,000 processed events and the baseline count was
+60,000. No job failures were observed. All fixture containers were stopped.
+
+This was a worker outage with the database, Redis and maintenance available.
+The driver stopped sending events before the workers started. Catch-up under
+continuous incoming traffic and recovery after a simultaneous dependency
+outage are still open. Private evidence is in
+`outputs/shield-perf-timed-outage-20261124/report.json`.
+
 ## Saturation rehearsal, 24 November 2026
 
 The backpressure release `6cfa202cb516c225f8b895973bb040cfc54650ef` was

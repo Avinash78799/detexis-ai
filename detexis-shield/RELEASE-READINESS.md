@@ -57,6 +57,21 @@ full-day packet downloads are required from the owner.
 
 ## Release gates
 
+Maintenance now checks deferred events roughly every five seconds, up to 4,000
+rows older than 15 seconds each pass. It still runs its full cycle roughly
+once a minute. Thirty-one focused tests and
+[all four CI jobs](https://github.com/Avinash78799/detexis-ai/actions/runs/45371398464)
+passed for `812c8767180a0e266b18ce54eda4cbd1a72bbbed`. A two-minute isolated worker
+outage at 500 events per second accepted 60,000 events and drained them 86.547
+seconds after worker startup was requested. Ingest had stopped by that point.
+See `QUEUE-RECOVERY.md` for the rehearsal and its limits.
+
+Only the local maintenance service was replaced after backup. Its 66 source
+files matched. Existing database row digests and other container identities
+were preserved, and CA-verified HTTPS readiness passed. The current override
+is `outputs/compose.recovery-cadence-active.private.json` and private proof is
+in `outputs/recovery-cadence-20261124-runtime.json`.
+
 Event ingest and pending-event recovery now stop publishing into the shared
 waiting list at 256 jobs. Accepted events remain in PostgreSQL for later
 recovery. Twenty-eight focused tests and
@@ -68,7 +83,7 @@ after queue saturation. See `QUEUE-RECOVERY.md` for workload and scope.
 The local API and maintenance services were updated after backup. All 66
 source files matched in each service, database digests were unchanged, and
 CA-verified HTTPS readiness passed. Other services, including all three
-workers, kept their container identities. The current override is
+workers, kept their container identities. That activation used
 `outputs/compose.queue-bound-active.private.json` and private proof is in
 `outputs/queue-bound-20261124-runtime.json`.
 
