@@ -6,7 +6,7 @@ from sqlalchemy import select
 
 from app.db import SessionLocal
 from app.models import Alert, Event, HourBucket, Incident, Site
-from app.worker import baseline_threshold, process_batch
+from app.worker import baseline_threshold, process_batch, utc
 from app.alerts import send_pending
 from test_smoke import event, make_site
 
@@ -59,6 +59,25 @@ def test_many_client_batch_preserves_groups_correlations_and_outbox_dedupe(isola
         alerts = db.scalars(select(Alert).where(Alert.site_id == site)).all()
         assert len(alerts) == 12
         assert {alert.incident_id for alert in alerts} == {group.id for group in groups}
+
+
+def test_delayed_batch_revises_incident_start_without_duplicate_alert(isolated_redis):
+    site, _ = make_site("delayed-batch.test")
+    stamp = datetime.now(timezone.utc).replace(minute=0, second=0, microsecond=0)
+    early = seed(site, "/.env", received_at=stamp)
+    later_at = stamp + timedelta(seconds=30)
+    late = seed(site, "/.env", received_at=later_at)
+
+    assert process_batch(site, [late], isolated_redis) == 1
+    assert process_batch(site, [early], isolated_redis) == 1
+    assert process_batch(site, [early, late], isolated_redis) == 0
+    with SessionLocal() as db:
+        incident = db.scalars(select(Incident).where(Incident.site_id == site)).one()
+        assert utc(incident.first_seen) == stamp
+        assert utc(incident.last_seen) == later_at
+        assert incident.event_count == 2
+        alert = db.scalars(select(Alert).where(Alert.site_id == site)).one()
+        assert alert.incident_id == incident.id
 
 
 def test_login_and_flood_state_isolated_and_canary_flags_not_trusted(isolated_redis):

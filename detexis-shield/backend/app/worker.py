@@ -164,6 +164,7 @@ def process_batch(site_id, event_ids, redis=None):
                     correlations.add("flood")
                 incident.rules = sorted(existing | current)
                 incident.correlations = sorted(correlations)
+                incident.first_seen = min(utc(incident.first_seen), stamp)
                 incident.last_seen = max(utc(incident.last_seen), stamp)
                 incident.event_count += 1
                 if SEVERITY[incident.severity] >= 2 and incident.id not in alerted:

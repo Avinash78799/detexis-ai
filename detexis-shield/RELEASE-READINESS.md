@@ -57,15 +57,24 @@ full-day packet downloads are required from the owner.
 
 ## Release gates
 
+The request feed now shows pending requests among its 50 visible rows and warns
+when any of them has waited over a minute. A dashboard regression checked that a
+newer analyzed request no longer hides an older pending request.
+[All four CI jobs](https://github.com/Avinash78799/detexis-ai/actions/runs/45354022726)
+passed for `e824cb6462f0fabc6d6e621be821d0f77828be75`. The local API update passed
+source verification and CA-verified readiness after a database backup. Database
+row digests and worker and maintenance containers were preserved. The active
+local override is `outputs/compose.dashboard-backlog-active.private.json`.
+Private evidence is in `outputs/dashboard-backlog-runtime-20261124.json`.
+
 Dashboard refresh controls now preserve scan details and keyboard focus. Owners
 can pause automatic updates and use manual refresh when the feed is idle. The
 live status announces errors and state changes, with the update timestamp shown
 separately. All 32 JavaScript checks, three dashboard route tests, and
 [all four CI jobs](https://github.com/Avinash78799/detexis-ai/actions/runs/45353510532)
 passed for `a0903ade977a5714e70749aa5daf82bc1feb7790`. The API-only activation
-verified the served script and HTTPS readiness after backup. The active local
-override is `outputs/compose.dashboard-polling-active.private.json`. Full
-signed-in browser and assistive technology checks remain open.
+verified the served script and HTTPS readiness after backup. Full signed-in
+browser and assistive technology checks remain open.
 
 
 The site dashboard now distinguishes an unconnected sensor, a heartbeat without
