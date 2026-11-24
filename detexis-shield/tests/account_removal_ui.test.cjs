@@ -50,7 +50,8 @@ test('confirmed removal clears secrets and workspace only after server success',
   assert.equal(calls[0].body.password, 'synthetic-current-password');
   assert.equal(calls[0].body.confirmation, 'DELETE');
   assert.equal(get('workspace').hidden, true); assert.equal(get('auth').hidden, false);
-  for (const id of ['credentials','snippet','recovery-value','owner-email']) assert.equal(get(id).textContent, '');
+  for (const id of ['recovery-value','owner-email']) assert.equal(get(id).textContent, '');
+  assert.equal(get('installation-list').cleared, true);
   assert.equal(get('sites').cleared, true);
   assert.equal(get('issued-keys-list').cleared, true);
   assert.equal(get('issued-keys-status').textContent, '');
@@ -63,7 +64,7 @@ test('confirmed removal clears secrets and workspace only after server success',
 test('rejected removal preserves workspace and explains password error', async () => {
   const {get, fields} = await runDeletion(true);
   assert.equal(get('workspace').hidden, false);
-  assert.equal(get('credentials').textContent, 'private fixture');
+  assert.notEqual(get('installation-list').cleared, true);
   assert.notEqual(get('issued-keys-list').cleared, true);
   assert.equal(get('delete-status').textContent, 'Password is incorrect');
   assert.equal(get('delete-account-form').resetCalled, true);

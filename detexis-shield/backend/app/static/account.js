@@ -197,12 +197,20 @@ for (const id of ['auth-form','site-form','recover-form','recovery-form','passwo
       node('recovery-secret').hidden = false; node('recovery-value').textContent = issued.recovery_code;
       event.target.reset(); node('recovery-secret').scrollIntoView({block:'start'});
     } else {
+      const creationCsrf = csrf;
       const data = await api('sites', body);
+      if (csrf !== creationCsrf) return;
+      const saved = document.createElement('section');
+      const heading = document.createElement('h3');
+      heading.textContent = data.domain;
+      heading.tabIndex = -1;
+      const credentials = document.createElement('pre');
+      credentials.textContent = 'SHIELD_URL=' + location.origin + '\nSHIELD_API_KEY=' + data.api_key + '\nSHIELD_SALT=' + data.site_salt;
+      saved.append(heading, credentials);
+      node('installation-list').append(saved);
       node('installation').hidden = false;
-      node('credentials').textContent = 'SHIELD_URL=' + location.origin + '\nSHIELD_API_KEY=' + data.api_key + '\nSHIELD_SALT=' + data.site_salt;
-      node('snippet').textContent = 'import os\nfrom detexis_shield import ShieldMiddleware\n\napp.add_middleware(ShieldMiddleware,\n    api_url=os.environ["SHIELD_URL"],\n    api_key=os.environ["SHIELD_API_KEY"],\n    site_salt=os.environ["SHIELD_SALT"],\n)';
       event.target.reset(); await refreshSites();
-      node('installation').scrollIntoView({block:'start'});
+      if (csrf === creationCsrf) heading.focus();
     }
   } catch (error) {node('message').textContent = error.message;}
   finally {buttons.forEach(b => b.disabled = false);}
@@ -220,7 +228,8 @@ node('delete-account-form').addEventListener('submit', async event => {
     ++sitesRequest;
     csrf = '';
     node('workspace').hidden = true; node('auth').hidden = false;
-    for (const id of ['credentials', 'snippet', 'recovery-value', 'owner-email']) node(id).textContent = '';
+    for (const id of ['recovery-value', 'owner-email']) node(id).textContent = '';
+    node('installation-list').replaceChildren();
     node('issued-keys-list').replaceChildren(); node('issued-keys-status').textContent = '';
     node('issued-keys').hidden = true;
     node('sites').replaceChildren();

@@ -9,7 +9,7 @@ async function workspace(handler) {
   const nodes = new Map(), created = [], calls = [];
   function element() {
     return {children:[], attrs:{}, handlers:{}, textContent:'', disabled:false,
-      classList:{add(){},remove(){}}, scrollIntoView(){}, querySelectorAll:()=>[],
+      classList:{add(){},remove(){}}, scrollIntoView(){}, querySelectorAll:()=>[], focus(){this.focused = true;},
       querySelector:()=>({focus(){}}), reset(){},
       setAttribute(k,v){this.attrs[k] = v;},
       addEventListener(k,v){this.handlers[k] = v;},
@@ -27,7 +27,7 @@ async function workspace(handler) {
     window:{shieldApi:async (path,body) => {
       calls.push({path,body});
       if (path === 'session') return {csrf_token:'fixture', email:'fixture@example.test'};
-      if (path === 'sites') return [{id:'a',domain:'first.example'}, {id:'b',domain:'second.example'}];
+      if (path === 'sites' && !body) return [{id:'a',domain:'first.example'}, {id:'b',domain:'second.example'}];
       return handler(path,body);
     }},
   });
@@ -146,4 +146,34 @@ test('a late key response cannot restore credentials after confirmed account del
   assert.equal(app.get('issued-keys').hidden, true);
   assert.equal(app.get('issued-keys-list').children.length, 0);
   assert.equal(app.get('issued-keys-status').textContent, '');
+});
+
+test('adding a second site preserves labeled initial credentials through refresh', async () => {
+  const sites = ['first.example', 'second.example'];
+  let created = 0;
+  const app = await workspace(() => ({domain:sites[created], api_key:'dxs_fixture_' + created++, site_salt:'fixture-salt'}));
+  const form = app.get('site-form');
+  await form.handlers.submit({preventDefault(){},target:form});
+  await form.handlers.submit({preventDefault(){},target:form});
+  await app.get('refresh-sites').handlers.click();
+  const rows = app.get('installation-list').children;
+  assert.equal(rows.length, 2);
+  for (const [index, row] of rows.entries()) {
+    assert.equal(row.children[0].textContent, sites[index]);
+    assert.equal(row.children[0].focused, true);
+    assert.match(row.children[1].textContent, new RegExp('SHIELD_API_KEY=dxs_fixture_' + index));
+  }
+});
+
+test('a late site creation cannot restore credentials after account deletion', async () => {
+  let finishCreation;
+  const app = await workspace(path => path === 'account/delete' ? {} : new Promise(resolve => {finishCreation = resolve;}));
+  const siteForm = app.get('site-form');
+  const creating = siteForm.handlers.submit({preventDefault(){},target:siteForm});
+  const deleteForm = app.get('delete-account-form');
+  await deleteForm.handlers.submit({preventDefault(){},target:deleteForm});
+  finishCreation({domain:'first.example',api_key:'dxs_fixture_late',site_salt:'fixture-salt'});
+  await creating;
+  assert.equal(app.get('installation').hidden, true);
+  assert.equal(app.get('installation-list').children.length, 0);
 });
