@@ -1,5 +1,34 @@
 # Pending-event and duplicate-delivery rehearsal
 
+## Saturation rehearsal, 24 November 2026
+
+The backpressure release `6cfa202cb516c225f8b895973bb040cfc54650ef` was
+rehearsed with a fresh PostgreSQL database, Redis and the application image on
+unpublished Docker networks. Four synthetic sites sent 320 batches with ten
+events each while workers were offline. Shield accepted all 3,200 events and
+reported 640 as deferred. The waiting list stayed at 256 jobs through 41
+simulated recovery passes. After an RQ burst worker drained the original jobs,
+maintenance recovery published the deferred rows and another burst finished
+them. Each site finished with 800 processed events. The final pending, waiting,
+running and failed counts were zero, and the baseline count totaled 3,200.
+The drain and recovery phase took 25.761 seconds on this host.
+
+Recovery passes ran back to back. This rehearsal verifies saturation behavior
+and catch-up but does not measure any specific outage duration, external latency,
+or Redis becoming unavailable. The first setup was rejected because the fixture
+omitted the Compose layer that defines its optional proxy. The corrected retry
+did not start the proxy. Private evidence is in
+`outputs/shield-perf-queue-bound-20261124-r2/report.json`.
+
+A separate one-minute CA-verified HTTPS loopback run exercised normal ingest
+and owner reads with three workers. It accepted 30,000 events at 502.35/s.
+The highest tenant p95s were 456.4 ms for ingest batches, 294.5 ms for owner
+reads and 0.409 s for processing. Pending, waiting, running and failed counts
+were all zero at the end. This is a short regression check on this candidate.
+The raw report is `outputs/shield-perf-queue-capacity-20261124/benchmark.json`.
+
+## Redis loss and duplicate delivery, 18 November 2026
+
 On 18 November 2026, a new isolated database was restored from the completed
 four-site fixture's private host-copy backup. Complete-row fingerprints matched
 the original 300,004-event source. A fresh unpublished Redis service and the

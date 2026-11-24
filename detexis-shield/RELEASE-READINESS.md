@@ -57,6 +57,21 @@ full-day packet downloads are required from the owner.
 
 ## Release gates
 
+Event ingest and pending-event recovery now stop publishing into the shared
+waiting list at 256 jobs. Accepted events remain in PostgreSQL for later
+recovery. Twenty-eight focused tests and
+[all four CI jobs](https://github.com/Avinash78799/detexis-ai/actions/runs/45362011679)
+passed for `6cfa202cb516c225f8b895973bb040cfc54650ef`. An isolated outage rehearsal
+verified 3,200 accepted and processed events across four sites, with 640 deferred
+after queue saturation. See `QUEUE-RECOVERY.md` for workload and scope.
+
+The local API and maintenance services were updated after backup. All 66
+source files matched in each service, database digests were unchanged, and
+CA-verified HTTPS readiness passed. Other services, including all three
+workers, kept their container identities. The current override is
+`outputs/compose.queue-bound-active.private.json` and private proof is in
+`outputs/queue-bound-20261124-runtime.json`.
+
 Reconnaissance and exploit indicators now receive an ordered correlation only
 when Shield recorded reconnaissance strictly before an exploit indicator in the
 same incident. Historical labels without timestamp evidence are displayed as
@@ -70,7 +85,7 @@ existing application row digests. The first Compose replacement command was
 rejected because it specified a worker scale for an API-only operation. The
 corrected retry updated the API and all three workers, verified all 66 source
 files in each container, and passed CA-verified HTTPS readiness. The two new
-columns remain null for historical rows. The current local override is
+columns remained null for historical rows. That activation used
 `outputs/compose.incident-order-active.private.json`. The previous API code
 is available with the new revision file for rollback without dropping columns.
 Private evidence is in `outputs/incident-order-20261124-runtime.json`.
