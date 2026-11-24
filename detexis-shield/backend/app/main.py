@@ -4,10 +4,11 @@ from sqlalchemy.orm import Session
 from sqlalchemy.orm.exc import StaleDataError
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.dialects import postgresql, sqlite
+from detexis_shield.redact import redact_query
 from .auth import current_site
 from .db import get_db
 from .models import Event, Site
-from .schemas import BatchIn
+from .schemas import BatchIn, MAX_INGEST_QUERY_LENGTH
 from .redis_store import get_redis
 from .rate_limit import enforce_limit
 from .body_limit import IngestBodyLimit
@@ -91,7 +92,13 @@ def ingest(batch: BatchIn, site: Site = Depends(current_site), db: Session = Dep
            redis=Depends(get_redis)):
     enforce_limit(redis, site.id, len(batch.events))
     # site_id always comes from the API key, never from the payload (tenant isolation).
-    rows = [{**e.model_dump(), "site_id": site.id} for e in batch.events]
+    rows = []
+    for event in batch.events:
+        row = event.model_dump()
+        # Older sensors may have missed sensitive fields in the submitted query.
+        row["query_redacted"] = redact_query(event.query_redacted, max_len=MAX_INGEST_QUERY_LENGTH)
+        row["site_id"] = site.id
+        rows.append(row)
     site_id = site.id
     try:
         inserted = insert_ignore(db, rows) if rows else []

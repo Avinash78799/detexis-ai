@@ -2,6 +2,8 @@ from datetime import datetime
 from pydantic import BaseModel, Field, field_validator
 from uuid import UUID
 
+MAX_INGEST_QUERY_LENGTH = 2048
+
 
 class EventIn(BaseModel):
     event_id: str = Field(min_length=36, max_length=36)
@@ -9,7 +11,7 @@ class EventIn(BaseModel):
     ip_hash: str = Field(min_length=64, max_length=64, pattern=r"^[0-9a-f]{64}$")
     method: str = Field(max_length=10)
     path: str = Field(max_length=2048)
-    query_redacted: str = Field(default="", max_length=2048)
+    query_redacted: str = Field(default="", max_length=MAX_INGEST_QUERY_LENGTH)
     ua: str = Field(default="", max_length=512)
     status: int = Field(ge=100, le=599)
     latency_ms: float = Field(ge=0, allow_inf_nan=False)

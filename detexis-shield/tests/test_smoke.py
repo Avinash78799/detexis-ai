@@ -57,6 +57,24 @@ def test_batch_cap():
     assert r.status_code == 422
 
 
+def test_ingest_masks_named_secrets_from_older_sensors_before_storage():
+    site_id, key = make_site("older-sensor.test")
+    item = event()
+    item["query_redacted"] = (
+        "q=hello&credentials%5Bpassword%5D=synthetic-first&auth.token=synthetic-second"
+        "&password=%5BREDACTED%5D&tag=a%26b&tag=c"
+    )
+    response = client.post("/v1/events", json={"events": [item]}, headers={"X-API-Key": key})
+    assert response.status_code == 202
+    assert response.json()["accepted"] == 1
+    with SessionLocal() as db:
+        stored = db.get(Event, (item["event_id"], site_id))
+        assert stored.query_redacted == (
+            "q=hello&credentials%5Bpassword%5D=%5BREDACTED%5D&auth.token=%5BREDACTED%5D"
+            "&password=%5BREDACTED%5D&tag=a%26b&tag=c"
+        )
+
+
 def test_redaction():
     out = redact_query("q=hello&password=hunter2&token=abc")
     assert "hunter2" not in out and "abc" not in out and "q=hello" in out
