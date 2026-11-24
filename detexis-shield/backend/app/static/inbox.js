@@ -57,6 +57,10 @@ async function show(id, afterSave = false) {
   for (const action of data.actions) el('history').append(text('p', action.at + ' · ' + action.actor + ' · ' + action.previous_status + ' → ' + action.status + (action.note ? '\n' + action.note:'')));
   if (!data.actions.length) el('history').append(text('p','No review decisions recorded yet.'));
   el('detail').scrollIntoView({block:'start'});
+  if (!afterSave) {
+    el('detail-title').tabIndex = -1;
+    el('detail-title').focus({preventScroll:true});
+  }
 }
 el('triage').addEventListener('submit', async event => {
   event.preventDefault();

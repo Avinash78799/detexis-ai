@@ -21,7 +21,7 @@ async function inbox(handler, loadHandler) {
   const nodes = new Map(), calls = [];
   function element() {return {textContent:'',value:'',disabled:false,children:[],handlers:{},
     append(...items){this.children.push(...items);}, replaceChildren(){this.children=[];},
-    addEventListener(k,v){this.handlers[k]=v;},scrollIntoView(){}};}
+    addEventListener(k,v){this.handlers[k]=v;},scrollIntoView(){},focus(){this.focusCount=(this.focusCount||0)+1;}};}
   const get = id => {if (!nodes.has(id)) nodes.set(id,element()); return nodes.get(id);};
   get('triage').querySelectorAll = () => [get('save'),get('status'),get('note')];
   const context = {document:{getElementById:get,createElement:element},
@@ -50,6 +50,15 @@ test('a committed decision remains reported as saved when detail refresh fails',
   assert.equal(app.get('note').value,'');
   assert.equal(app.get('save').disabled,false);
   assert.equal(app.calls.filter(c=>c.body).length,1,'no mutation retry after successful commit');
+});
+
+test('opening an incident focuses its heading while a saved-decision refresh preserves focus', async () => {
+  const app = await inbox(() => detail('fixture.example'));
+  await app.show('fixture');
+  assert.equal(app.get('detail-title').tabIndex, -1);
+  assert.equal(app.get('detail-title').focusCount, 1);
+  await app.show('fixture', true);
+  assert.equal(app.get('detail-title').focusCount, 1);
 });
 
 test('a rejected or uncertain mutation preserves the draft and does not retry', async () => {
