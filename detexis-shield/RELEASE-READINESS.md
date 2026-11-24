@@ -57,6 +57,22 @@ full-day packet downloads are required from the owner.
 
 ## Release gates
 
+On 24 November Docker Desktop resumed and CA-verified local HTTPS readiness
+passed. The API now masks recognized sensitive query names before storing new
+events, including bracket and dotted names sent by older sensors. SDK 0.1.1
+remains the way to mask those fields before transmission. Existing stored
+telemetry was untouched. The ingestion regression and 44 focused checks
+passed, as did all four CI jobs for `89bf05176fe5ed1747d7e82f716375e87a2a2774`
+([run 45317739818](https://github.com/Avinash78799/detexis-ai/actions/runs/45317739818)).
+The API now runs image
+`sha256:857b022ad0c1eeb47911dd5a05e5e5687ad6dd3bf4b60b2d68731c54a76e7f50`.
+Activation preserved SDK 0.1.1 and verified 65 backend source files, all table
+digests, and local HTTPS. The private activation report is
+`outputs/ingest-redaction-runtime-20261124.json` and the active local override is
+`outputs/compose.ingest-redaction-active.private.json`. This change needs a
+fresh ingest capacity run.
+
+
 SDK 0.1.1 performance revalidation, 23 November: two four-client Windows loopback
 runs passed every-client and pooled median <5 ms/p95 <10 ms for normal, large and
 nested-secret profiles, online and refused collectors. Worst-client median/p95
