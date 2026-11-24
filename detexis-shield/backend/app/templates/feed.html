@@ -7,12 +7,11 @@
 Install and start the Python sensor, then open a page on your site. <a href="/app/install">Open the sensor installation guide</a>.
 {% elif traffic_status == 'waiting' %}
 The sensor has checked in, but Shield has no recent request events. Open a page on the monitored site and refresh this feed.
-{% elif traffic_status == 'pending' %}
-Shield received the latest request and is waiting to analyze it.
-{% elif traffic_status == 'delayed' %}
-The latest received request is still waiting for analysis. If this continues, ask your Shield operator to check the workers.
+{% elif pending_count %}
+{{ pending_count }} {{ 'request is' if pending_count == 1 else 'requests are' }} awaiting analysis in this feed.
+{% if traffic_status == 'delayed' %}The oldest pending request shown has waited more than a minute. If this continues, ask your Shield operator to check the workers.{% endif %}
 {% else %}
-Shield analyzed the latest received request. Review any findings in the feed below.
+Shield analyzed all requests shown. Review any findings in the feed below.
 {% endif %}
 </p>
 <div class="table-wrap"><table><thead><tr><th>Received (UTC)</th><th>Method</th><th>Path</th><th>Status</th><th>Signals</th></tr></thead><tbody>

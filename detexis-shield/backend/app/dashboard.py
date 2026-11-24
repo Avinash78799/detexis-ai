@@ -54,16 +54,18 @@ def context(db, site):
                      else "Pending delivery" if "pending" in states else "Delivered" if states else "No alert records")
     events = db.scalars(select(Event).where(Event.site_id == site.id)
                         .order_by(Event.received_at.desc()).limit(50)).all()
+    pending_events = [event for event in events if event.processed_at is None]
     if not events:
         traffic_status = "waiting"
-    elif events[0].processed_at is not None:
+    elif not pending_events:
         traffic_status = "processed"
     else:
-        traffic_status = "delayed" if age(events[0].received_at) > timedelta(minutes=1) else "pending"
+        # The feed is newest first. A newer completion can precede older pending work.
+        traffic_status = "delayed" if age(pending_events[-1].received_at) > timedelta(minutes=1) else "pending"
     return {"site": site,
             "sensor_status": sensor_status, "verification_status": verification_status,
             "notifications": notifications,
-            "traffic_status": traffic_status, "events": events,
+            "traffic_status": traffic_status, "pending_count": len(pending_events), "events": events,
             "incidents": db.scalars(select(Incident).where(Incident.site_id == site.id).order_by(Incident.last_seen.desc()).limit(20)).all(),
             "scans": db.scalars(select(Scan).where(Scan.site_id == site.id).order_by(Scan.created_at.desc()).limit(5)).all()}
 

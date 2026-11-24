@@ -62,13 +62,19 @@ def test_owner_dashboard_distinguishes_installation_and_processing_states():
         assert "The sensor has checked in" in client.get(path + "/feed").text
 
         event_id = seed(site["id"], "/first-request")
-        assert "waiting to analyze it" in client.get(path + "/feed").text
+        assert "1 request is awaiting analysis in this feed" in client.get(path + "/feed").text
         with SessionLocal() as db:
             row = db.get(Event, (event_id, site["id"]))
             row.received_at = datetime.now(timezone.utc) - timedelta(minutes=2)
             db.commit()
-        assert "ask your Shield operator to check the workers" in client.get(path + "/feed").text
+        newer_event_id = seed(site["id"], "/newer-completed-request")
+        with SessionLocal() as db:
+            db.get(Event, (newer_event_id, site["id"])).processed_at = datetime.now(timezone.utc)
+            db.commit()
+        feed = client.get(path + "/feed").text
+        assert "/newer-completed-request" in feed
+        assert "ask your Shield operator to check the workers" in feed
         with SessionLocal() as db:
             db.get(Event, (event_id, site["id"])).processed_at = datetime.now(timezone.utc)
             db.commit()
-        assert "Shield analyzed the latest received request" in client.get(path + "/feed").text
+        assert "Shield analyzed all requests shown" in client.get(path + "/feed").text
