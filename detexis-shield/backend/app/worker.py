@@ -3,6 +3,7 @@ from datetime import datetime, timedelta, timezone
 from statistics import mean, pstdev
 from uuid import uuid4
 
+from redis.exceptions import WatchError
 from rq import Queue
 from sqlalchemy import select, literal, bindparam, tuple_
 
@@ -22,6 +23,7 @@ return redis.call('ZCOUNT', KEYS[1], ARGV[1] - 60, ARGV[1])
 SEVERITY = {"low": 0, "medium": 1, "high": 2, "critical": 3}
 RECON_RULES = {"sensitive_path", "scanner_ua", "honeytoken"}
 EXPLOIT_RULES = {"sqli_boolean", "sqli_union", "sqli_time", "xss", "command_injection"}
+EVENT_QUEUE_HIGH_WATER = 256
 
 
 def utc(value):
@@ -29,8 +31,23 @@ def utc(value):
 
 
 def enqueue_batch(site_id, event_ids, redis=None):
-    return Queue("shield", connection=redis if redis is not None else get_redis()).enqueue(
-        "app.worker.process_batch", site_id, event_ids, job_timeout=120, result_ttl=0, failure_ttl=86400)
+    """Publish an event batch if there is room; committed rows remain recoverable."""
+    redis = redis if redis is not None else get_redis()
+    queue = Queue("shield", connection=redis)
+    for _ in range(3):
+        try:
+            with redis.pipeline() as pipe:
+                pipe.watch(queue.key)
+                if pipe.llen(queue.key) >= EVENT_QUEUE_HIGH_WATER:
+                    return None
+                job = queue.enqueue_call("app.worker.process_batch", args=(site_id, event_ids),
+                                         timeout=120, result_ttl=0, failure_ttl=86400, pipeline=pipe)
+                pipe.execute()
+                return job
+        except WatchError:
+            # A concurrent enqueue or dequeue changed the count we observed.
+            continue
+    return None
 
 
 def baseline_threshold(db, site, hour):
@@ -194,13 +211,19 @@ def process_batch(site_id, event_ids, redis=None):
 
 def recover_pending(limit=1000, redis=None):
     redis = redis if redis is not None else get_redis()
+    if Queue("shield", connection=redis).count >= EVENT_QUEUE_HIGH_WATER:
+        return 0
     with SessionLocal() as db:
         rows = db.execute(select(Event.site_id, Event.event_id).where(Event.processed_at.is_(None))
                           .order_by(Event.received_at).limit(limit)).all()
     groups = {}
     for site_id, event_id in rows:
         groups.setdefault(site_id, []).append(event_id)
+    published = 0
     for site_id, ids in groups.items():
         for start in range(0, len(ids), 100):
-            enqueue_batch(site_id, ids[start:start + 100], redis)
-    return len(rows)
+            batch = ids[start:start + 100]
+            if enqueue_batch(site_id, batch, redis) is None:
+                return published
+            published += len(batch)
+    return published

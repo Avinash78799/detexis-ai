@@ -74,9 +74,17 @@ afterward, preserving databases and reports.
 
 ## Limits
 
-Maintenance normally retries pending database events every minute. Recovery may
-enqueue duplicate jobs before previous jobs finish; this checks idempotency,
-not queue-growth limits during a prolonged outage. Redis loss resets throttle
+The original rehearsal measured idempotency before backpressure was added.
+Event publishers now check the shared RQ waiting list and stop publishing when
+it reaches 256 jobs. This applies to ingest and recovery. A transaction prevents
+concurrent event publishers from using the same final slot. The scanner has its
+own publishing policy. PostgreSQL still commits authenticated events, and ingest
+reports `queued: false` when the queue is full, there is repeated publishing
+contention, or Redis rejects the publish after the commit.
+
+Maintenance normally retries pending database events every minute, up to 1,000
+rows per pass. It may enqueue duplicate jobs when space is available, and large
+backlogs can take multiple passes to clear. Redis loss resets throttle
 counters and short-term request/login windows. Pending recovery cannot recreate
 those windows or guarantee identical behavioral findings. External delivery,
 live database switching and off-device disaster recovery remain separate gates.

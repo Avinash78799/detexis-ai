@@ -121,7 +121,7 @@ def ingest(batch: BatchIn, site: Site = Depends(current_site), db: Session = Dep
     queued = True
     if inserted:
         try:
-            enqueue_batch(site.id, inserted, redis)
+            queued = enqueue_batch(site_id, inserted, redis) is not None
         except RedisError:
             queued = False  # Durable pending rows are recovered by maintenance.
     return {"accepted": len(inserted), "duplicates": len(rows) - len(inserted), "queued": queued}
