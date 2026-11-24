@@ -2,6 +2,7 @@ from fastapi.testclient import TestClient
 from app.main import app
 from test_smoke import make_site
 from test_pipeline import seed
+from test_accounts import register
 
 
 def test_dashboard_requires_auth_and_escapes_attacker_fields():
@@ -39,3 +40,35 @@ def test_dashboard_reports_stale_heartbeat_and_expired_verification():
         page = client.get("/dashboard", auth=("site", key))
         assert "Heartbeat overdue" in page.text
         assert "Verification expired" in page.text
+
+
+def test_owner_dashboard_distinguishes_installation_and_processing_states():
+    from datetime import datetime, timedelta, timezone
+    from app.db import SessionLocal
+    from app.models import Event
+
+    with TestClient(app, base_url="https://testserver") as client:
+        headers = register(client, "dashboard-connection")
+        created = client.post("/app/api/sites", headers=headers, json={"domain": "dashboard-connection.test"})
+        assert created.status_code == 201
+        site = created.json()
+        path = f"/app/sites/{site['id']}"
+        initial = client.get(path)
+        assert initial.status_code == 200
+        assert "Open the sensor installation guide" in initial.text
+
+        sensor_headers = {"X-API-Key": site["api_key"]}
+        assert client.post("/v1/heartbeat", headers=sensor_headers).status_code == 200
+        assert "The sensor has checked in" in client.get(path + "/feed").text
+
+        event_id = seed(site["id"], "/first-request")
+        assert "waiting to analyze it" in client.get(path + "/feed").text
+        with SessionLocal() as db:
+            row = db.get(Event, (event_id, site["id"]))
+            row.received_at = datetime.now(timezone.utc) - timedelta(minutes=2)
+            db.commit()
+        assert "ask your Shield operator to check the workers" in client.get(path + "/feed").text
+        with SessionLocal() as db:
+            db.get(Event, (event_id, site["id"])).processed_at = datetime.now(timezone.utc)
+            db.commit()
+        assert "Shield analyzed the latest received request" in client.get(path + "/feed").text

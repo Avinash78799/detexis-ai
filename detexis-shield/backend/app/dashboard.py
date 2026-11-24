@@ -45,17 +45,25 @@ def context(db, site):
         if value.tzinfo is None:
             value = value.replace(tzinfo=timezone.utc)
         return now - value
-    sensor_status = ("Not connected" if site.last_heartbeat is None else
+    sensor_status = ("Awaiting first heartbeat" if site.last_heartbeat is None else
                      "Reporting" if age(site.last_heartbeat) <= timedelta(minutes=3) else "Heartbeat overdue")
     verification_status = ("Not verified" if site.verified_at is None else
                            "Verified" if age(site.verified_at) < timedelta(days=7) else "Verification expired")
     states = db.scalars(select(Alert.status).where(Alert.site_id == site.id).order_by(Alert.created_at.desc()).limit(10)).all()
     notifications = ("Delivery needs setup" if "unconfigured" in states else "Delivery failed" if "failed" in states
                      else "Pending delivery" if "pending" in states else "Delivered" if states else "No alert records")
+    events = db.scalars(select(Event).where(Event.site_id == site.id)
+                        .order_by(Event.received_at.desc()).limit(50)).all()
+    if not events:
+        traffic_status = "waiting"
+    elif events[0].processed_at is not None:
+        traffic_status = "processed"
+    else:
+        traffic_status = "delayed" if age(events[0].received_at) > timedelta(minutes=1) else "pending"
     return {"site": site,
             "sensor_status": sensor_status, "verification_status": verification_status,
             "notifications": notifications,
-            "events": db.scalars(select(Event).where(Event.site_id == site.id).order_by(Event.received_at.desc()).limit(50)).all(),
+            "traffic_status": traffic_status, "events": events,
             "incidents": db.scalars(select(Incident).where(Incident.site_id == site.id).order_by(Incident.last_seen.desc()).limit(20)).all(),
             "scans": db.scalars(select(Scan).where(Scan.site_id == site.id).order_by(Scan.created_at.desc()).limit(5)).all()}
 
