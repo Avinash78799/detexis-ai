@@ -53,6 +53,47 @@ def test_retry_budget_and_exponential_waits(sender):
     assert sender.dropped == 2
 
 
+def test_outage_window_delivers_same_batch_after_short_retries(sender):
+    sender.outage_retry_window = 20
+    http = Mock()
+    http.post.side_effect = [httpx.Response(503)] * 3 + [httpx.Response(202)]
+    sender._send(http, [{"event_id": "same-event"}])
+    assert http.post.call_count == 4
+    assert len({call.kwargs["content"] for call in http.post.call_args_list}) == 1
+    assert [call.args[0] for call in sender._stop.wait.call_args_list] == [0.25, 0.5, 6]
+    assert sender.dropped == 0
+
+
+def test_outage_budget_drops_once_without_starting_a_late_attempt(sender, monkeypatch):
+    sender.outage_retry_window = 10
+    now = 0
+
+    def wait(delay):
+        nonlocal now
+        now += delay + (4 if delay > 2 else 0)
+        return False
+
+    sender._stop.wait.side_effect = wait
+    monkeypatch.setattr("detexis_shield.client.time.monotonic", lambda: now)
+    http = Mock()
+    http.post.return_value = httpx.Response(503)
+    sender._send(http, [{}, {}])
+    assert http.post.call_count == 3
+    assert sender.dropped == 2
+
+
+@pytest.mark.parametrize("status,max_retries", [(401, 2), (503, 0)])
+def test_outage_window_does_not_retry_permanent_failure_or_override_zero_retries(sender, status, max_retries):
+    sender.outage_retry_window = 30
+    sender.max_retries = max_retries
+    http = Mock()
+    http.post.return_value = httpx.Response(status)
+    sender._send(http, [{}])
+    http.post.assert_called_once()
+    sender._stop.wait.assert_not_called()
+    assert sender.dropped == 1
+
+
 def test_backoff_is_capped(sender):
     sender.max_retries = 5
     http = Mock()
@@ -129,6 +170,8 @@ def test_unserializable_batch_drops_once_without_network(sender):
 
 @pytest.mark.parametrize("options", [{"max_retries": -1}, {"max_retries": 6},
                                      {"max_retries": 1.5}, {"max_retries": True},
+                                     {"outage_retry_window": -1}, {"outage_retry_window": 121},
+                                     {"outage_retry_window": float("nan")},
                                      {"flush_interval": float("nan")},
                                      {"flush_interval": float("inf")}])
 def test_unbounded_or_invalid_retry_settings_rejected(options):

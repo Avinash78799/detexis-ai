@@ -11,6 +11,7 @@ import httpx
 
 RETRYABLE_STATUS = {408, 429, 500, 502, 503, 504}
 MAX_RETRY_DELAY = 2.0
+MAX_OUTAGE_RETRY_WINDOW = 120.0
 
 
 def retry_after_seconds(value: str) -> float:
@@ -35,7 +36,8 @@ class ShieldClient:
 
     def __init__(self, api_url: str, api_key: str, batch_size: int = 50,
                  flush_interval: float = 3.0, max_buffer: int = 5000,
-                 max_retries: int = 2, config_interval: float = 60):
+                 max_retries: int = 2, config_interval: float = 60,
+                 outage_retry_window: float = 0):
         if not isinstance(batch_size, int) or not 1 <= batch_size <= 100:
             raise ValueError("batch_size must be between 1 and 100")
         if not isinstance(max_buffer, int) or max_buffer < 1:
@@ -46,12 +48,15 @@ class ShieldClient:
             raise ValueError("max_retries must be an integer between 0 and 5")
         if not math.isfinite(config_interval) or config_interval < 10:
             raise ValueError("config_interval must be finite and at least 10 seconds")
+        if not math.isfinite(outage_retry_window) or not 0 <= outage_retry_window <= MAX_OUTAGE_RETRY_WINDOW:
+            raise ValueError("outage_retry_window must be between 0 and 120 seconds")
         self.api_url = api_url.rstrip("/")
         self.headers = {"X-API-Key": api_key, "Content-Type": "application/json"}
         self.batch_size = batch_size
         self.flush_interval = flush_interval
         self.max_retries = max_retries
         self.config_interval = config_interval
+        self.outage_retry_window = outage_retry_window
         self.honeytoken_paths = frozenset({"/.env", "/admin-backup"})
         self.q: queue.Queue = queue.Queue(maxsize=max_buffer)
         self._dropped = 0
@@ -146,8 +151,10 @@ class ShieldClient:
         except Exception:
             self._drop(len(batch))
             return
-        for attempt in range(self.max_retries + 1):
-            if self._stop.is_set():
+        attempt = 0
+        outage_deadline = time.monotonic() + self.outage_retry_window
+        while not self._stop.is_set():
+            if attempt > self.max_retries and time.monotonic() >= outage_deadline:
                 break
             retry_after = 0.0
             try:
@@ -162,12 +169,21 @@ class ShieldClient:
                 pass
             except Exception:
                 break  # Invalid URLs, serialization errors, etc. will not heal on retry.
-            if attempt == self.max_retries or retry_after > MAX_RETRY_DELAY:
+            if attempt < self.max_retries and retry_after <= MAX_RETRY_DELAY:
+                ceiling = min(MAX_RETRY_DELAY, 0.25 * (2 ** attempt))
+                delay = max(retry_after, random.uniform(0, ceiling))
+            elif self.max_retries and self.outage_retry_window:
+                # Keep just the in-flight batch. Space attempts apart while
+                # accepting additional events into the same bounded queue.
+                delay = max(retry_after, random.uniform(3, 6))
+                if time.monotonic() + delay >= outage_deadline:
+                    break
+                attempt = self.max_retries
+            else:
                 break
-            ceiling = min(MAX_RETRY_DELAY, 0.25 * (2 ** attempt))
-            delay = max(retry_after, random.uniform(0, ceiling))
             if self._stop.wait(delay):  # Shutdown interrupts backoff immediately.
                 break
+            attempt += 1
         self._drop(len(batch))  # Count loss once, not once per failed attempt.
 
     def close(self) -> None:

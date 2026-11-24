@@ -1,5 +1,26 @@
 # Sensor: implemented behavior and roadmap
 
+SDK 0.1.2 adds the optional `outage_retry_window` setting for ASGI and WSGI.
+For example, `outage_retry_window=30` lets a failed batch make spaced retries
+within 30 seconds of its first send attempt. Existing short retry settings
+remain the default. After a retryable failure, the sender retains one batch
+and accepts new events into the same bounded queue. It honors `Retry-After`
+within the configured window. Permanent errors and `max_retries=0` retain
+their existing behavior.
+
+Each process holds at most `max_buffer` queued events plus one batch. A full
+queue drops new telemetry, and closing the process discards unsent events.
+The retry window can be set up to 120 seconds and does not make the buffer
+durable. Size it for the rate and available memory on each application worker.
+
+The installed 0.1.2 wheel passed a Windows loopback rehearsal using a real
+ASGI host and a collector returning HTTP 503 for 12 seconds. All 66 host
+requests succeeded. A 40-event queue and one in-flight slot retained 41
+events, which arrived after recovery with unique IDs and redacted query values.
+The other 25 events were counted as overflow drops. This check covers one
+host process and a synthetic collector. Private evidence is in
+`outputs/sdk-0.1.2-release/outage-runtime.json`.
+
 SDK source release 0.1.1 adds masking for bracket/dot secret-name components such
 as `credentials[password]` and `auth.token`. The installation guide pins its
 CI-tested source. Existing sensors must upgrade and restart; the local API, three workers
@@ -24,7 +45,7 @@ CDN or rejected upstream. Response bodies and WebSocket traffic are not captured
 | Event fields | Method, bounded path/query/user agent, status, latency, daily site-salted IP hash, flags and four URL-derived features |
 | Privacy | Named sensitive query values are masked before submission. Bodies, cookies and authorization headers are not collected. Arbitrary secrets in paths, user agents or other query values can still be present. |
 | Buffer and batching | Default 5,000 queued events, batches of 50, nominal three-second flush interval; drops when full |
-| Retries | Bounded exponential jitter and short Retry-After support; retains event IDs for idempotency |
+| Retries | Bounded exponential jitter, Retry-After support, and optional longer retry window; retains event IDs for idempotency |
 | Fail-open | Request-time telemetry errors are contained; network delivery runs in a background thread |
 | Honeytokens | Configured path signals, initially `/.env` and `/admin-backup`; the worker independently checks them |
 | Configuration | Polls `/v1/config` every 60 seconds by default; applies validated honeytoken paths and always remains monitor-only |
@@ -61,6 +82,7 @@ app.add_middleware(
     api_url=os.environ["SHIELD_URL"],
     api_key=os.environ["SHIELD_API_KEY"],
     site_salt=os.environ["SHIELD_SALT"],
+    outage_retry_window=30,
 )
 ```
 
@@ -75,6 +97,7 @@ app.wsgi_app = ShieldWSGIMiddleware(
     api_url=os.environ["SHIELD_URL"],
     api_key=os.environ["SHIELD_API_KEY"],
     site_salt=os.environ["SHIELD_SALT"],
+    outage_retry_window=30,
 )
 ```
 
