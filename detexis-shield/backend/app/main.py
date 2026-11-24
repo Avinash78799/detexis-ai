@@ -2,7 +2,7 @@ from datetime import datetime, timezone
 from fastapi import Depends, FastAPI, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy.orm.exc import StaleDataError
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import IntegrityError, OperationalError
 from sqlalchemy.dialects import postgresql, sqlite
 from detexis_shield.redact import redact_query
 from .auth import current_site
@@ -57,6 +57,12 @@ async def private_request_validation_errors(request, exc):
     if request.method == "POST" and (request.url.path == "/v1/events" or request.url.path.startswith("/app/api/")):
         return JSONResponse({"detail": "Invalid request. Check the submitted fields and try again."}, status_code=422)
     return await request_validation_exception_handler(request, exc)
+
+
+@app.exception_handler(OperationalError)
+async def database_unavailable(request, exc):
+    return JSONResponse({"detail": "Database temporarily unavailable. Try again shortly."},
+                        status_code=503, headers={"Retry-After": "2"})
 
 
 @app.middleware("http")

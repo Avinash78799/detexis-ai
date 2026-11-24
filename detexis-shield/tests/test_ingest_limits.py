@@ -7,7 +7,9 @@ import pytest
 from fastapi.testclient import TestClient
 from redis.exceptions import ConnectionError
 from sqlalchemy import create_engine, inspect
+from sqlalchemy.exc import OperationalError
 
+from app.db import get_db
 from app.main import app
 from app.rate_limit import enforce_limit
 from app.redis_store import get_redis
@@ -35,6 +37,20 @@ def test_ingest_unavailable_when_budget_cannot_be_enforced(monkeypatch):
     with TestClient(app) as client:
         response = client.post("/v1/events", json={"events": [event()]}, headers={"X-API-Key": key})
     assert response.status_code == 503
+
+
+def test_ingest_database_failure_is_retryable_and_hides_database_details(monkeypatch):
+    def unavailable():
+        raise OperationalError("SELECT database_details", {"key": "private-fixture"}, RuntimeError("offline"))
+
+    monkeypatch.setitem(app.dependency_overrides, get_db, unavailable)
+    with TestClient(app) as client:
+        response = client.post("/v1/events", json={"events": [event()]},
+                               headers={"X-API-Key": "dxs_fixture_secret"})
+    assert response.status_code == 503
+    assert response.headers["Retry-After"] == "2"
+    assert response.headers["Cache-Control"] == "no-store"
+    assert response.json() == {"detail": "Database temporarily unavailable. Try again shortly."}
 
 
 def test_payload_cannot_choose_rate_limit_tenant(monkeypatch):
