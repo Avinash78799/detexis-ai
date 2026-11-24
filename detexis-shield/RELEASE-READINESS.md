@@ -57,6 +57,24 @@ full-day packet downloads are required from the owner.
 
 ## Release gates
 
+Reconnaissance and exploit indicators now receive an ordered correlation only
+when Shield recorded reconnaissance strictly before an exploit indicator in the
+same incident. Historical labels without timestamp evidence are displayed as
+indicators observed with order unverified. The six ordering cases include
+delayed jobs, reversed timestamps and ties. Thirty-five focused checks and
+[all four CI jobs](https://github.com/Avinash78799/detexis-ai/actions/runs/45358121028)
+passed for `7683c4194b21878df93e4d7d00fb6a0b3c1696a8`.
+
+The backup-first local PostgreSQL migration reached `0010` and preserved all
+existing application row digests. The first Compose replacement command was
+rejected because it specified a worker scale for an API-only operation. The
+corrected retry updated the API and all three workers, verified all 66 source
+files in each container, and passed CA-verified HTTPS readiness. The two new
+columns remain null for historical rows. The current local override is
+`outputs/compose.incident-order-active.private.json`. The previous API code
+is available with the new revision file for rollback without dropping columns.
+Private evidence is in `outputs/incident-order-20261124-runtime.json`.
+
 Incident start times now reflect the earliest matching request received, even
 when an older batch is processed after a newer one. The regression reproduced
 the incorrect start time and now checks both timestamps, incident count and
@@ -65,7 +83,7 @@ alert deduplication after a retry. Twenty-two focused tests and
 passed for `7922dcc84c9007382a892c19e89888c674721211`. All three local workers
 passed health and source checks after a backup and an idle-queue check. HTTPS
 readiness passed and database row digests were unchanged. This update applies
-as requests are processed. The current override is
+as requests are processed. Its override was
 `outputs/compose.incident-timeline-active.private.json`. Private verification is
 in `outputs/incident-timeline-runtime-20261124.json`.
 
