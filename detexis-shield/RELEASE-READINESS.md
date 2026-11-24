@@ -57,6 +57,22 @@ full-day packet downloads are required from the owner.
 
 ## Release gates
 
+The API returns a generic retryable 503 for database operational errors.
+Twenty focused tests and
+[all four CI jobs](https://github.com/Avinash78799/detexis-ai/actions/runs/45376356575)
+passed for `ace3f7542672437eec6ee66301ae750f11086091`. An isolated fixture
+verified liveness, readiness and ingest responses while PostgreSQL and Redis
+were stopped, then processed all 101 events after a staged restart, including
+one event retried over HTTP. A separate four-minute fixture processed the
+60,000-event outage backlog while ingest continued at 500 events per second.
+See `QUEUE-RECOVERY.md` for both protocols and their limits.
+
+The computer-hosted update replaced only the API, with all 66 source files
+verified. Database row digests and other container identities were preserved.
+CA-verified local HTTPS readiness passed after backup. The current override is
+`outputs/compose.dependency-outage-active.private.json`, with private proof in
+`outputs/dependency-outage-20261124-runtime.json`.
+
 Maintenance now checks deferred events roughly every five seconds, up to 4,000
 rows older than 15 seconds each pass. It still runs its full cycle roughly
 once a minute. Thirty-one focused tests and
@@ -68,8 +84,8 @@ See `QUEUE-RECOVERY.md` for the rehearsal and its limits.
 
 Only the local maintenance service was replaced after backup. Its 66 source
 files matched. Existing database row digests and other container identities
-were preserved, and CA-verified HTTPS readiness passed. The current override
-is `outputs/compose.recovery-cadence-active.private.json` and private proof is
+were preserved, and CA-verified HTTPS readiness passed. That activation used
+`outputs/compose.recovery-cadence-active.private.json` and private proof is
 in `outputs/recovery-cadence-20261124-runtime.json`.
 
 Event ingest and pending-event recovery now stop publishing into the shared

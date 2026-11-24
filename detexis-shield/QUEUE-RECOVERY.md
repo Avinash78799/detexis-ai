@@ -1,5 +1,26 @@
 # Pending-event and duplicate-delivery rehearsal
 
+## Simultaneous dependency stop and restart, 24 November 2026
+
+An unpublished fixture ran `ace3f7542672437eec6ee66301ae750f11086091`.
+It committed 100 synthetic events, then stopped PostgreSQL and Redis while
+leaving the API running. Container-local HTTP liveness stayed at 200. Readiness
+and ingest returned 503, and ingest returned a generic response with a
+two-second retry delay. The same checks passed after PostgreSQL returned while
+Redis was still offline.
+
+Once Redis returned, readiness passed in the same API container. The checker
+resent the previously refused event twice. Shield accepted it once and
+reported the second submission as a duplicate. Three workers finished the
+100 original events and the retried event. The final baseline count was 101,
+with zero pending, waiting, running or failed jobs. The fixture containers
+were stopped after the checks. Private evidence is in
+`outputs/shield-perf-dependency-outage-20261124/report.json`.
+
+This check covers graceful dependency stops and an explicit HTTP retry. It
+does not establish SDK buffer behavior during a long dependency outage or
+recovery from disk loss.
+
 ## Worker recovery with ongoing traffic, 24 November 2026
 
 Four synthetic sites sent 120,000 events through the same paced ASGI driver
