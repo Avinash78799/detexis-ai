@@ -57,6 +57,24 @@ full-day packet downloads are required from the owner.
 
 ## Release gates
 
+Multi-site onboarding now preserves each site's initial credentials in its own
+hostname-labelled block. A second website no longer replaces the first site's
+one-time secrets. A fresh isolated Chrome fixture reproduced the previous
+failure and verified the correction, focus placement, replacement issuance
+during refresh, revocation, owner isolation, sign-out cleanup and 390px layout.
+The fixture used SQLite and fakeredis with synthetic accounts on loopback HTTPS.
+It does not establish production-stack browser acceptance or screen-reader use.
+
+Commit `c4d9569fa58313b45f120030037dfb6af0509ef2` passed 487 local Python tests
+with five skips, all 34 frontend tests and all four jobs in
+[Actions run 45407794833](https://github.com/Avinash78799/detexis-ai/actions/runs/45407794833).
+The API-only activation verified 66 source files, served workspace/script,
+unchanged database digests and trusted HTTPS readiness after backup. The current
+override is `outputs/compose.initial-credentials-ui-active.private.json`.
+Private evidence is in `outputs/initial-credentials-ui-20261124-runtime.json`
+and `outputs/sdk-workspace-browser-fixed.json`. The complete transfer handoff
+is `outputs/DETEXIS-SHIELD-COMPLETE-HANDOFF.txt`, outside the checkout.
+
 SDK 0.1.2 adds an optional, bounded retry window for short collector outages.
 The packaged wheel matched all six SDK source files. In a real loopback ASGI
 rehearsal, all 66 host requests succeeded while the collector returned 503.
