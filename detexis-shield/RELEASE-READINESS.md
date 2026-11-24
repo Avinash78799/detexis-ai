@@ -57,6 +57,17 @@ full-day packet downloads are required from the owner.
 
 ## Release gates
 
+The validation privacy fix in `faddd53488b15d288830987b407f1ef068a4d08f`
+is now active in the local API. Invalid POST requests to ingestion or the
+owner API receive HTTP 422 without echoed input. Thirty-three focused tests,
+[all four CI jobs](https://github.com/Avinash78799/detexis-ai/actions/runs/45320082507),
+and a live CA-verified invalid-login response check passed. The API image is
+`sha256:c905f3c08cbcf57f1a8f0d4f302ec6a8d0bcac36d7866dcb4871384b13e7723b`.
+Backup `outputs/computer-backups/shield-20261124T034451Z-2689eff7.dump`
+and rollback configuration are retained. The active override is
+`outputs/compose.validation-privacy-active.private.json`.
+
+
 On 24 November Docker Desktop resumed and CA-verified local HTTPS readiness
 passed. The API now masks recognized sensitive query names before storing new
 events, including bracket and dotted names sent by older sensors. SDK 0.1.1
@@ -69,8 +80,8 @@ The API now runs image
 Activation preserved SDK 0.1.1 and verified 65 backend source files, all table
 digests, and local HTTPS. The private activation report is
 `outputs/ingest-redaction-runtime-20261124.json` and the active local override is
-`outputs/compose.ingest-redaction-active.private.json`. This change needs a
-fresh ingest capacity run.
+`outputs/compose.ingest-redaction-active.private.json`. The ten-minute ingest capacity rerun passed at 500.16 events/s with a
+fully drained queue. See `MULTITENANT-PERFORMANCE.md` for scope and latency.
 
 
 SDK 0.1.1 performance revalidation, 23 November: two four-client Windows loopback

@@ -217,3 +217,18 @@ remove only finished disposable fixture containers/networks, preserving their
 named database/CA volumes and reports. Never use a global Docker prune. The
 original ten-second pilot's containers/networks were removed for this reason;
 its volumes, private environment and failed report remain retained.
+
+## 24 November capacity recheck
+
+The 24 November release with server-side redaction sustained 500.16 accepted
+events/s across 300,000 synthetic events over 599.813 seconds. Using verified
+loopback HTTPS, four synthetic tenants and three workers, worst-tenant p95s
+were 419 ms for ingest batches, 322 ms for owner HTTP requests, and 0.438 s
+for processing. All queues drained, with zero failed jobs and zero worker
+restarts. The initial fixture setup hit Docker's default subnet limit and
+sent no traffic. A fresh fixture with explicit private subnets passed and
+was stopped. The report is
+`outputs/shield-perf-ingest-redaction-20261124-r2/benchmark.json` (SHA256
+`399aa36aba98767aa45a90fe9948986175881ec7dd4474ccc55dd9c94b313437`).
+This was a rules-only workload with concurrent owner HTTP reads. Browser,
+scanner, ML, and real-site performance are still open.
