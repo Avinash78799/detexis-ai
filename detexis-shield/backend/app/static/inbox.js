@@ -35,6 +35,15 @@ async function show(id, afterSave = false) {
   selected = id;
   el('detail').hidden = false; el('detail-title').textContent = data.domain + ' · ' + data.severity;
   el('detail-summary').textContent = data.rules.join(', ') + ' · ' + data.event_count + ' matching events';
+  const correlations = {
+    recon_to_exploit:'Reconnaissance observed before an exploit indicator',
+    recon_and_exploit:'Reconnaissance and exploit indicators observed (order unverified)',
+    repeated_login_failures:'Repeated login failures',
+    flood:'Request flood',
+  };
+  for (const label of data.correlations || []) {
+    el('detail-summary').append(text('span', ' · ' + (correlations[label] || label.replaceAll('_', ' '))));
+  }
   el('status').value = data.status; el('note').value = '';
   el('evidence').replaceChildren();
   for (const event of data.evidence) {

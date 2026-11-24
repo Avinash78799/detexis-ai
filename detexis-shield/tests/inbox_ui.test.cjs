@@ -7,6 +7,16 @@ const settled = () => new Promise(resolve => setImmediate(resolve));
 const detail = domain => ({domain,severity:'low',rules:[],event_count:1,status:'open',evidence:[],actions:[]});
 const deferred = () => {let resolve, reject; const promise = new Promise((a,b)=>{resolve=a;reject=b;}); return {promise,resolve,reject};};
 
+test('incident details explain ordered and historical correlation evidence', async () => {
+  const app = await inbox(() => ({...detail('fixture.example'),
+    correlations:['recon_to_exploit','recon_and_exploit']}));
+  await app.show('fixture');
+  assert.deepEqual(app.get('detail-summary').children.map(node=>node.textContent), [
+    ' · Reconnaissance observed before an exploit indicator',
+    ' · Reconnaissance and exploit indicators observed (order unverified)',
+  ]);
+});
+
 async function inbox(handler, loadHandler) {
   const nodes = new Map(), calls = [];
   function element() {return {textContent:'',value:'',disabled:false,children:[],handlers:{},
