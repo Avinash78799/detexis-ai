@@ -57,14 +57,26 @@ full-day packet downloads are required from the owner.
 
 ## Release gates
 
+Incident start times now reflect the earliest matching request received, even
+when an older batch is processed after a newer one. The regression reproduced
+the incorrect start time and now checks both timestamps, incident count and
+alert deduplication after a retry. Twenty-two focused tests and
+[all four CI jobs](https://github.com/Avinash78799/detexis-ai/actions/runs/45354571859)
+passed for `7922dcc84c9007382a892c19e89888c674721211`. All three local workers
+passed health and source checks after a backup and an idle-queue check. HTTPS
+readiness passed and database row digests were unchanged. This update applies
+as requests are processed. The current override is
+`outputs/compose.incident-timeline-active.private.json`. Private verification is
+in `outputs/incident-timeline-runtime-20261124.json`.
+
 The request feed now shows pending requests among its 50 visible rows and warns
 when any of them has waited over a minute. A dashboard regression checked that a
 newer analyzed request no longer hides an older pending request.
 [All four CI jobs](https://github.com/Avinash78799/detexis-ai/actions/runs/45354022726)
 passed for `e824cb6462f0fabc6d6e621be821d0f77828be75`. The local API update passed
 source verification and CA-verified readiness after a database backup. Database
-row digests and worker and maintenance containers were preserved. The active
-local override is `outputs/compose.dashboard-backlog-active.private.json`.
+row digests and worker and maintenance containers were preserved during that
+API update. Its override was `outputs/compose.dashboard-backlog-active.private.json`.
 Private evidence is in `outputs/dashboard-backlog-runtime-20261124.json`.
 
 Dashboard refresh controls now preserve scan details and keyboard focus. Owners
