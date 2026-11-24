@@ -57,6 +57,17 @@ full-day packet downloads are required from the owner.
 
 ## Release gates
 
+The site dashboard now distinguishes an unconnected sensor, a heartbeat without
+recent requests, received requests awaiting analysis, delayed processing, and
+an analyzed request. The full owner page and feed refresh route passed a
+synthetic lifecycle test. Seven focused tests and
+[all four CI jobs](https://github.com/Avinash78799/detexis-ai/actions/runs/45322291357)
+passed for `81aec2a63b29b58c76a459dcfb85c189c79699b2`. The API-only activation
+verified source hashes and local HTTPS readiness after backup. The local
+override is `outputs/compose.dashboard-onboarding-active.private.json`.
+Signed-in visual and accessibility acceptance remain open.
+
+
 The validation privacy fix in `faddd53488b15d288830987b407f1ef068a4d08f`
 is now active in the local API. Invalid POST requests to ingestion or the
 owner API receive HTTP 422 without echoed input. Thirty-three focused tests,
