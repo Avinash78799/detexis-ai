@@ -57,6 +57,24 @@ full-day packet downloads are required from the owner.
 
 ## Release gates
 
+SDK 0.1.2 adds an optional, bounded retry window for short collector outages.
+The packaged wheel matched all six SDK source files. In a real loopback ASGI
+rehearsal, all 66 host requests succeeded while the collector returned 503.
+Forty queued events and one in-flight event arrived after recovery. The other
+25 were counted as overflow drops. See `SENSOR.md` for details and limitations.
+
+The installation guide now pins `00d700546396d9eedb4b70f5d991e9086ed6e318` and
+shows a 30-second retry window in both framework snippets. Sixty-six focused
+tests and [all four CI jobs](https://github.com/Avinash78799/detexis-ai/actions/runs/45404032828)
+passed for `575a5337be4062c710229b3e99cc742bb321e434`.
+Docker Desktop was initially unavailable. After the engine resumed and the
+existing service recovered, the backup-first API-only update passed local
+HTTPS readiness and served-guide verification. Database row digests and other
+container identities were preserved. Existing website sensors require an
+upgrade and restart to opt in. The current local override is
+`outputs/compose.sdk-outage-guide-active.private.json` and private proof is
+in `outputs/sdk-outage-guide-20261124-runtime.json`.
+
 The API returns a generic retryable 503 for database operational errors.
 Twenty focused tests and
 [all four CI jobs](https://github.com/Avinash78799/detexis-ai/actions/runs/45376356575)
@@ -69,7 +87,7 @@ See `QUEUE-RECOVERY.md` for both protocols and their limits.
 
 The computer-hosted update replaced only the API, with all 66 source files
 verified. Database row digests and other container identities were preserved.
-CA-verified local HTTPS readiness passed after backup. The current override is
+CA-verified local HTTPS readiness passed after backup. That activation used
 `outputs/compose.dependency-outage-active.private.json`, with private proof in
 `outputs/dependency-outage-20261124-runtime.json`.
 
