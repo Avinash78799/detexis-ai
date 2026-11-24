@@ -189,6 +189,7 @@ for (const id of ['auth-form','site-form','recover-form','recovery-form','passwo
       await showWorkspace(await api(event.submitter?.value || 'login', body)); event.target.reset();
     } else if (id === 'recover-form') {
       await showWorkspace(await api('recover', body)); event.target.reset();
+      node('message').textContent = 'Account recovered. Other sessions were signed out. Save your replacement recovery code; the previous code has expired.';
     } else if (id === 'password-form') {
       await showWorkspace(await api('password', body)); event.target.reset();
       node('message').textContent = 'Password changed. Other sessions were signed out. Save your replacement recovery code.';
@@ -196,6 +197,7 @@ for (const id of ['auth-form','site-form','recover-form','recovery-form','passwo
       const issued = await api('recovery-code', body);
       node('recovery-secret').hidden = false; node('recovery-value').textContent = issued.recovery_code;
       event.target.reset(); node('recovery-secret').scrollIntoView({block:'start'});
+      node('message').textContent = 'Recovery code replaced. Save the new code; the previous code has expired.';
     } else {
       const creationCsrf = csrf;
       const data = await api('sites', body);

@@ -38,6 +38,18 @@ function workspace({signedIn = true, sitesHandler} = {}) {
 // Let the session -> workspace -> sites -> catch promise chain settle.
 const settled = () => new Promise(resolve => setImmediate(resolve));
 
+test('successful recovery explains code replacement even when site refresh fails', async () => {
+  const app = workspace({signedIn:false});
+  await settled();
+  const form = app.get('recover-form');
+  await form.handlers.submit({preventDefault(){},target:form});
+  assert.equal(app.get('workspace').hidden, false);
+  assert.equal(form.resetCalled, true);
+  assert.match(app.get('message').textContent, /Account recovered/);
+  assert.match(app.get('message').textContent, /previous code has expired/);
+  assert.match(app.get('sites-status').textContent, /could not be refreshed/);
+});
+
 const deferred = () => {
   let resolve, reject;
   const promise = new Promise((yes, no) => {resolve = yes; reject = no;});
