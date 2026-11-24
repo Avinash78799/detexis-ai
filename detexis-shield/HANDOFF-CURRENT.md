@@ -1,6 +1,6 @@
 # Detexis Shield: continuation handoff
 
-Snapshot: 23 November 2026. This is a working handoff, not a completion claim.
+Snapshot: 24 November 2026. This is a working handoff, not a completion claim.
 The owner lifted the earlier project deadline; continue the full product scope.
 Their ChatGPT subscription may expire tomorrow, so keep this handoff usable
 without an assistant. No more multi-gigabyte dataset downloads are required.
@@ -33,6 +33,11 @@ with actual installed SDK 0.1.1. The isolated scanner retains
 cached image configuration can contain private environment values.
 
 ## Start and verify
+
+On the 24 November read-only status check, Docker's Linux engine pipe was
+unavailable. This does not change the saved deployment state, but current service
+availability is unverified. Start/check Docker Desktop before relying on the local
+address; previous healthy activation reports describe their recorded time only.
 
 Start Docker Desktop. Existing restart policies normally resume saved containers.
 From `detexis-shield`, using the project's Python environment:
@@ -73,8 +78,8 @@ runs passed every client's median <5 ms/p95 <10 ms for normal, large and nested
 query profiles, online/refused collectors. Worst p95s were 6.948 and 5.705 ms.
 All 2,640 events per online case arrived without seeded-secret matches or drops.
 See `sdk-011-socket-check.json` and `SOCKET-OVERHEAD.md`. The harness checks actual
-loaded package bytes/version; no-sensor calibration is diagnostic only. Tool CI
-is pending. Remote/TLS/Linux/long-lived checks and the post-upgrade backend
+loaded package bytes/version; no-sensor calibration is diagnostic only. All four
+tool CI jobs passed in run 45236294936. Remote/TLS/Linux/long-lived checks and the post-upgrade backend
 capacity experiment remain open.
 
 Activated SDK privacy change: source package version 0.1.1 recognizes nested secret

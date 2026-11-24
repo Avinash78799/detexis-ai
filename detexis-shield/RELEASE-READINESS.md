@@ -1,8 +1,16 @@
-# Release readiness: 23 November 2026
+# Release readiness: 24 November 2026
 
 The complete product goal is **not achieved**. Implemented code, local tests and
 temporary demonstrations do not prove a continuously operated public service.
 The percentage previously discussed was an effort estimate, not a release gate.
+
+24 November status check: the worktree was clean at application/tool checkpoint
+`398052316dd49a95197141b39dc5c41dc90ef755`; all four jobs in
+[Actions run 45236294936](https://github.com/Avinash78799/detexis-ai/actions/runs/45236294936)
+passed. Docker's Linux engine pipe was unavailable during the read-only check, so
+current service availability could not be verified. Earlier activation/health
+records remain historical evidence, not a claim that services are running now.
+No service or account was changed by this status check.
 
 ## Onboarding activation: 23 November
 
@@ -58,7 +66,7 @@ shutdown. Actual loaded package version and six SDK hashes matched the verified
 wheel across both runs. The harness now refuses loaded-source mismatch before
 measurement. Eight harness tests passed. Complete reports, diagnostic calibration
 and hashes are in `sdk-011-socket-check.json`; scope is in `SOCKET-OVERHEAD.md`.
-Tool CI remains pending. Remote/TLS, Linux, representative traffic and prolonged
+Tool CI passed all four jobs in Actions run 45236294936. Remote/TLS, Linux, representative traffic and prolonged
 operation remain open; the earlier backend capacity result is not a new
 post-SDK-upgrade capacity measurement.
 
