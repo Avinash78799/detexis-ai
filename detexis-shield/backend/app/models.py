@@ -90,8 +90,13 @@ class Incident(Base):
     last_seen: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
     first_recon_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     last_exploit_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
-    __table_args__ = (UniqueConstraint("site_id", "ip_hash", "bucket", name="uq_incident_group"),
-                      Index("ix_incidents_site_seen", "site_id", "last_seen"))
+    __table_args__ = (
+        UniqueConstraint("site_id", "ip_hash", "bucket", name="uq_incident_group"),
+        Index("ix_incidents_site_seen", "site_id", "last_seen"),
+        Index("ix_incidents_workspace_attention", "site_id", "last_seen", "id",
+              postgresql_where=text("status = 'open' AND severity IN ('high', 'critical')"),
+              sqlite_where=text("status = 'open' AND severity IN ('high', 'critical')")),
+    )
 
     @property
     def reported_correlations(self):

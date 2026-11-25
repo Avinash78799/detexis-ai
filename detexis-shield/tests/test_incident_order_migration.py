@@ -32,6 +32,12 @@ def test_incident_order_upgrade_preserves_historical_correlations(tmp_path):
     with sqlite3.connect(path) as db:
         assert db.execute("SELECT * FROM incidents").fetchone() == (*previous, None, None)
 
+    migrate("upgrade", "0011")
+    with sqlite3.connect(path) as db:
+        indexes = db.execute("PRAGMA index_list(incidents)").fetchall()
+        assert any(index[1] == "ix_incidents_workspace_attention" and index[4] for index in indexes)
+        assert db.execute("SELECT * FROM incidents").fetchone() == (*previous, None, None)
+
     migrate("downgrade", "0009")
     with sqlite3.connect(path) as db:
         assert db.execute("SELECT * FROM incidents").fetchone() == previous

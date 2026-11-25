@@ -124,6 +124,9 @@ with TestClient(app,base_url="https://testserver") as owner:
             key.created_at=datetime.now(timezone.utc)-timedelta(minutes=5)
         db.commit()
         assert any(index['name']=='uq_sensor_health_open_site' and index['unique'] for index in inspect(db.bind).get_indexes('sensor_health_alerts'))
+        indexes=inspect(db.bind).get_indexes('incidents')
+        assert any(index['name']=='ix_incidents_workspace_attention' and
+                   index['dialect_options'].get('postgresql_where') for index in indexes)
     with ThreadPoolExecutor(max_workers=2) as pool:
         transitions=list(pool.map(lambda _:check_sensor_health(),range(2)))
     assert sum(item['opened'] for item in transitions)==1,transitions

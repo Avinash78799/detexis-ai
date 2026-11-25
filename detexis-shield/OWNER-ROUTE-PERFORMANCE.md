@@ -1,5 +1,25 @@
 # Owner-route latency checkpoint
 
+## Workspace attention: 25 November 2026
+
+The authenticated attention endpoint was exercised against disposable
+PostgreSQL and Redis with 100,000 synthetic incidents across the signed-in
+owner's ten sites and 100,000 incidents belonging to a separate owner. Each
+site had one older open high-severity incident and a larger low-severity history.
+Each configuration received 20 warmups followed by 160 sequential requests.
+
+| Configuration | Median ms | p95 ms |
+| --- | ---: | ---: |
+| Existing schema | 35.4 | 61.7 |
+| Partial index | 12.5 | 15.7 |
+| Existing schema, repeated after dropping the index | 38.2 | 72.7 |
+
+The repeated baseline shows substantial run-to-run variation. Migration
+`0011` adds the measured partial index concurrently in PostgreSQL. Its
+predicate includes only open high and critical incidents. This comparison
+measures local ASGI request and database work. It excludes TLS, browser
+rendering, concurrent ingest, and production latency.
+
 ## Upgraded runtime: 6 November 2026
 
 Repeated the same fixture and measurement procedure on source `68c77d8`, using
