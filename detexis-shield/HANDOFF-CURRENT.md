@@ -1,5 +1,38 @@
 # Detexis Shield: continuation handoff
 
+## Current checkpoint, 25 November 2026
+
+Use this checkpoint before the historical notes below. The full transfer file
+is `outputs/DETEXIS-SHIELD-COMPLETE-HANDOFF.txt`, outside the checkout under the
+workspace root. It contains the original scope, owner constraints, commands,
+feature accounting, evidence, and unfinished work. Keep credentials private.
+
+Latest activated application commit is
+`e2f45727e732543e6ddad20725119d19abe688c9`, with all four CI jobs passing in
+[run 45542574164](https://github.com/Avinash78799/detexis-ai/actions/runs/45542574164).
+Current override is `outputs/compose.sensor-guidance-20261125-active.private.json`.
+Backup is `outputs/computer-backups/shield-20261125T035125Z-06209075.dump`.
+API image is `sha256:47ae67bbc1a9ed54060d93bcde30090f8ea93c15032b5a351f059056fa1781c2`.
+Source hashes, database preservation and trusted HTTPS passed during activation.
+Schema is `0010`. Different service roles have different verified images.
+
+Since the earlier snapshot, incident ordering, queue backpressure and faster
+recovery, database-outage responses, SDK 0.1.2 optional outage retries, multi-site
+credential display, incident explanations/focus, recovery feedback and sensor
+guidance have been implemented. See `QUEUE-RECOVERY.md` and `SENSOR.md`.
+
+Isolated Chrome acceptance now covers two-site onboarding, replacement issuance
+during refresh, revocation, tenant refusal, incident focus/review, recovery,
+wrong-password deletion refusal, successful deletion cleanup, and heartbeat-gap
+guidance. Reports under `outputs` include `removal-browser-20261125.json` and
+`sensor-gap-browser-20261125.json`. These fixtures use SQLite and fakeredis.
+Windows connection-reset warnings appeared during teardown. Production-stack
+browser coverage, screen-reader use, permissioned real-site onboarding/scanning,
+ML evaluation, off-device restore and broader operational gates remain open.
+Local hosting and in-app alerts remain the owner's choices. The full goal is active.
+
+## Historical checkpoint, 24 November 2026
+
 Snapshot: 24 November 2026. This is a working handoff, not a completion claim.
 The owner lifted the earlier project deadline; continue the full product scope.
 Their ChatGPT subscription may expire tomorrow, so keep this handoff usable
