@@ -46,10 +46,12 @@ cutoffs, dataset hash, feature schema and a model version. Repeated benign URLs 
 not silently removed; overlap is reported for review. Similar attack templates
 and cross-corpus duplicates still require manual leakage review before claims.
 
-The default 1% target is judged against the confidence bound, so tiny benign test
-sets cannot justify it. Artifacts are rejected when temporal or cross-dataset
-results fail the FPR/recall gates. Choose data, thresholds and minimum recall before
-opening the final test set; do not tune repeatedly on the held-out set.
+The default 1% target is applied separately to request and session confidence
+bounds. A session containing benign traffic contributes one trial and registers
+a false positive if any benign request is flagged. The calibration threshold
+must satisfy both bounds. Temporal and cross-dataset results must also satisfy
+both bounds and the recall floor. Choose data, thresholds and minimum recall
+before opening the final test set.
 
 Threshold search sorts scores and counts benign values above each candidate with
 binary search, preserving the runtime's strict `score > threshold` comparison,
@@ -58,17 +60,17 @@ for every score. Unequal score/label lengths, empty evaluation sets, nonbinary
 labels and nonfinite/out-of-range probabilities are rejected instead of silently
 truncating metrics or treating invalid scores as non-alerts.
 
-The Wilson bound assumes independent Bernoulli requests. Session grouping reduces
-split leakage but does not make requests within sessions independent. Metadata
-records this assumption; the bound is not a guarantee for correlated production
-traffic. Representative site/session-level uncertainty analysis remains required
-before real-world FPR claims. Public benchmark labels are not customer evidence.
+The request-level Wilson bound assumes independent requests. The session-level
+bound prevents rapid repeats in one session from counting as additional
+independent session trials. Sessions within a site can still be correlated.
+Public benchmark labels are not customer evidence.
 
 Use a new artifact directory for each run. Only a validated artifact contains
 `model.joblib`. After independently reviewing its report, mount it read-only in the
 worker, install compatible ML dependencies, set `SHIELD_MODEL_DIR`, and restart the
 worker. Never accept uploaded joblib files. Schema/load/prediction failures fall
-back to rules. XGBoost alerts attempt SHAP reasons in raw model-output units (log
+back to rules. Older artifacts without session-level bounds require re-evaluation.
+XGBoost alerts attempt SHAP reasons in raw model-output units (log
 odds for its default binary objective); contributions are not causal explanations.
 See [SHAP's TreeExplainer documentation](https://shap.readthedocs.io/en/latest/generated/shap.TreeExplainer.html).
 

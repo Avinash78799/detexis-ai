@@ -49,7 +49,7 @@ def prepare(rows, held_out_dataset):
             partitions[positions.pop()].extend(group)
     if any(not partition for partition in partitions):
         raise ValueError("temporal partitions empty after session purge")
-    # Exact duplicate request representations cannot straddle evaluation boundaries.
+    # Report exact request representations that occur across split boundaries.
     fingerprints = []
     for partition in [*partitions, cross]:
         fingerprints.append({hashlib.sha256(json.dumps([r["path"], r["query_redacted"]], ensure_ascii=True).encode()).hexdigest() for r in partition})
@@ -112,6 +112,24 @@ def choose_threshold(labels, probabilities, target):
     raise ValueError("insufficient benign calibration evidence for target FPR")
 
 
+def benign_session_scores(rows, probabilities):
+    labels, probabilities = checked_scores((row["label"] for row in rows), probabilities)
+    maxima = {}
+    for row, label, score in zip(rows, labels, probabilities):
+        if label == 0:
+            key = (row["dataset"], row["session_id"])
+            maxima[key] = max(maxima.get(key, 0), score)
+    return list(maxima.values())
+
+
+def session_metrics(scores, threshold):
+    false_positive = sum(score > threshold for score in scores)
+    count = len(scores)
+    return {"false_positive_sessions": false_positive, "benign_sessions": count,
+            "session_fpr": false_positive / count if count else None,
+            "session_fpr_upper_95": upper_fpr(false_positive, count)}
+
+
 def train(rows, output, cross_dataset, target_fpr=.01, model_kind="logistic", min_recall=.1):
     if not 0 < target_fpr < 1 or not 0 <= min_recall <= 1:
         raise ValueError("invalid evaluation thresholds")
@@ -135,17 +153,28 @@ def train(rows, output, cross_dataset, target_fpr=.01, model_kind="logistic", mi
         raise ValueError("unsupported model")
     model.fit([r["_x"] for r in fit], [r["label"] for r in fit])
     calibration_prob = model.predict_proba([r["_x"] for r in calibration])[:, 1]
-    threshold = choose_threshold([r["label"] for r in calibration], calibration_prob, target_fpr)
+    request_threshold = choose_threshold([r["label"] for r in calibration], calibration_prob, target_fpr)
+    session_scores = benign_session_scores(calibration, calibration_prob)
+    if upper_fpr(0, len(session_scores)) > target_fpr:
+        raise ValueError("insufficient distinct benign calibration sessions for target FPR")
+    session_threshold = choose_threshold([0] * len(session_scores), session_scores, target_fpr)
+    threshold = max(request_threshold, session_threshold)
     evaluations = {}
     for name, partition in [("calibration", calibration), ("temporal_test", test), ("cross_dataset", cross)]:
-        evaluations[name] = metrics([r["label"] for r in partition], model.predict_proba([r["_x"] for r in partition])[:, 1], threshold)
-    validated = all(m["fpr_upper_95"] <= target_fpr and m["recall"] is not None and m["recall"] >= min_recall for m in evaluations.values())
+        probabilities = model.predict_proba([r["_x"] for r in partition])[:, 1]
+        evaluations[name] = {
+            **metrics([r["label"] for r in partition], probabilities, threshold),
+            **session_metrics(benign_session_scores(partition, probabilities), threshold),
+        }
+    validated = all(m["fpr_upper_95"] <= target_fpr and m["session_fpr_upper_95"] <= target_fpr
+                    and m["recall"] is not None and m["recall"] >= min_recall for m in evaluations.values())
     metadata = {"schema_version": FEATURE_SCHEMA_VERSION, "feature_names": NAMES,
                 "threshold": threshold, "target_fpr": target_fpr, "min_recall": min_recall,
                 "model_version": str(uuid.uuid4()), "model_kind": model_kind,
                 "evaluation_status": "validated" if validated else "rejected",
                 "metrics": evaluations, "audit": audit,
-                "fpr_bound_method": "Wilson 95%; assumes independent Bernoulli requests",
+                "fpr_bound_method": "Wilson 95%; assumes independent trials within each reported unit",
+                "session_fpr_definition": "At least one benign request flagged in a session containing benign traffic",
                 "training_records": len(fit), "cross_dataset_name": cross_dataset,
                 "dataset_sha256": hashlib.sha256(json.dumps([
                     [r["path"], r["query_redacted"], r["ts"], r["session_id"], r["dataset"], r["label"]]

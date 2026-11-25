@@ -42,6 +42,22 @@ def test_threshold_selected_from_benign_fpr_confidence_bound():
     assert result["recall"] == 1
 
 
+def test_session_fpr_counts_one_trial_per_dataset_and_session():
+    rows = records(1000)
+    for row in rows:
+        row["label"] = 0
+        row["session_id"] = "same-session"
+    rows[0]["label"] = 1
+    rows[-1]["dataset"] = "separate-source"
+    scores = training.benign_session_scores(rows, [.99, .8] + [.1] * 998)
+    result = training.session_metrics(scores, .5)
+    assert result["benign_sessions"] == 2
+    assert result["false_positive_sessions"] == 1
+    assert result["session_fpr"] == .5
+    assert training.session_metrics(scores, .8)["false_positive_sessions"] == 0
+    assert training.session_metrics(scores, .8)["session_fpr_upper_95"] > .01
+
+
 def test_fast_threshold_matches_exhaustive_search_with_ties_and_endpoints():
     import random
     rng = random.Random(42)
@@ -91,12 +107,45 @@ def test_logistic_pipeline_artifact_and_runtime_on_controlled_fixture(tmp_path, 
     rows += [{**row, "dataset": "independent-fixture"} for row in rows[:500]]
     metadata = training.train(rows, tmp_path / "artifact", "independent-fixture", target_fpr=.05)
     assert metadata["evaluation_status"] == "validated"
+    assert metadata["metrics"]["cross_dataset"]["benign_sessions"] == 400
+    assert metadata["metrics"]["cross_dataset"]["session_fpr_upper_95"] <= .05
     assert (tmp_path / "artifact/model.joblib").is_file()
     from app.ml_runtime import classify
     from detexis_shield.features import extract_features
     monkeypatch.setenv("SHIELD_MODEL_DIR", str(tmp_path / "artifact"))
     assert classify(extract_features("/home", "q=hello"))["alert"] is False
     assert classify(extract_features("/../../private/secret", "q=%3Cscript%3E"))["alert"] is True
+
+
+def test_repeated_benign_holdout_requests_cannot_validate_an_artifact(tmp_path):
+    rows = records(2000)
+    for index, row in enumerate(rows):
+        row["label"] = int(index % 5 == 0)
+        row["path"] = "/fixture-review" if row["label"] else "/"
+    rows += [{**row, "dataset":"cross", "session_id":"repeated"} for row in rows[:500]]
+    metadata = training.train(rows, tmp_path / "rejected", "cross", target_fpr=.05)
+    cross = metadata["metrics"]["cross_dataset"]
+    assert cross["fpr_upper_95"] <= .05
+    assert cross["session_fpr_upper_95"] > .05 and cross["benign_sessions"] == 1
+    assert metadata["evaluation_status"] == "rejected"
+    assert not (tmp_path / "rejected/model.joblib").exists()
+
+
+def test_legacy_model_metadata_falls_back_before_loading_pickle(tmp_path, monkeypatch):
+    import json
+    import joblib
+    from app.ml_runtime import classify
+    (tmp_path / "metadata.json").write_text(json.dumps({
+        "schema_version": training.FEATURE_SCHEMA_VERSION, "feature_names": training.NAMES,
+        "threshold": .5, "evaluation_status": "validated", "target_fpr": .01,
+    }))
+    monkeypatch.setenv("SHIELD_MODEL_DIR", str(tmp_path))
+
+    from unittest.mock import Mock
+    load = Mock()
+    monkeypatch.setattr(joblib, "load", load)
+    assert classify({name: 0 for name in training.NAMES}) is None
+    load.assert_not_called()
 
 
 def test_nonfinite_model_probability_falls_back_to_rules(monkeypatch):

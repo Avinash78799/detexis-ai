@@ -14,13 +14,19 @@ log = logging.getLogger(__name__)
 
 @lru_cache(maxsize=1)
 def load_model(path):
-    import joblib  # Optional dependency. Only load trusted, locally trained artifacts.
     root = Path(path)
     metadata = json.loads((root / "metadata.json").read_text())
     if metadata["schema_version"] != FEATURE_SCHEMA_VERSION or metadata["feature_names"] != FEATURE_NAMES:
         raise ValueError("model schema mismatch")
     if not 0 <= metadata["threshold"] <= 1 or metadata.get("evaluation_status") != "validated":
         raise ValueError("model has no validated operating threshold")
+    target = metadata["target_fpr"]
+    splits = ("calibration", "temporal_test", "cross_dataset")
+    bounds = ("fpr_upper_95", "session_fpr_upper_95")
+    if not 0 < target < 1 or any(not 0 <= metadata["metrics"][split][bound] <= target
+                                 for split in splits for bound in bounds):
+        raise ValueError("model lacks validated request and session false-positive bounds")
+    import joblib  # Only deserialize trusted, locally trained artifacts.
     return joblib.load(root / "model.joblib"), metadata
 
 
