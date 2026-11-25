@@ -20,9 +20,19 @@ install `sensor-sdk`. Canonical JSONL rows require:
 ```
 
 Labels must be operator-reviewed 0/1 values. Do not turn rule matches into ground
-truth. For own traffic, `python -m app.export_training` exports only explicitly
-labeled event IDs, scoped to one site. Daily IP hashes are conservative grouping
-proxies, not authenticated sessions. Document NAT limitations and review labels.
+truth. For traffic you have permission to use, provide a private JSON object
+mapping reviewed event UUIDs to integer labels:
+
+```sh
+python -m app.export_training SITE_ID labels.json dataset-name reviewed.jsonl
+```
+
+The export reads only the requested IDs for the selected site. Missing or
+duplicate IDs invalidate the batch, and an existing export is protected from
+overwrite. The exporter reapplies query redaction. Keep the labels and output
+private because paths and ordinary query values may still contain personal
+data. Daily IP hashes are session grouping proxies. Document NAT limitations
+and review the labels before training.
 
 CIC-IDS2017's published CSVs are **network-flow features**, not this SDK's URL
 features. They cannot be renamed into compatible inputs. Compatible request-level
