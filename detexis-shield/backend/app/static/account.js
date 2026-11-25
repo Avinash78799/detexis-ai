@@ -1,6 +1,7 @@
 "use strict";
 let csrf = "";
 let sitesRequest = 0;
+let attentionRequest = 0;
 const node = id => document.getElementById(id);
 async function api(path, body) {
   return window.shieldApi(path, body, csrf);
@@ -14,12 +15,50 @@ async function showWorkspace(data) {
   node('owner-email').textContent = data.email;
   node('recovery-secret').hidden = !data.recovery_code;
   node('recovery-value').textContent = data.recovery_code || '';
+  refreshAttention();
   await refreshSites();
   if (data.recovery_code) node('recovery-secret').scrollIntoView({block:'start'});
   const next = new URLSearchParams(location.search).get('next');
   if (next && !data.recovery_code) {
     const target = new URL(next, location.origin);
     if (target.origin === location.origin && (['/app/inbox', '/app/analyze', '/app/detection', '/app/sensor-health'].includes(target.pathname) || /^\/app\/sites\/[0-9a-f-]+$/.test(target.pathname))) location.assign(target.pathname + target.search);
+  }
+}
+async function refreshAttention() {
+  const request = ++attentionRequest;
+  const list = node('attention-items');
+  const status = node('attention-status');
+  const button = node('refresh-attention');
+  list.replaceChildren();
+  status.textContent = 'Checking for open alerts…';
+  button.disabled = true;
+  try {
+    const signals = await api('attention');
+    if (request !== attentionRequest) return;
+    function add(label, href) {
+      const item = document.createElement('li');
+      const link = document.createElement('a');
+      link.textContent = label;
+      link.href = href;
+      item.append(link);
+      list.append(item);
+    }
+    for (const incident of signals.incidents) {
+      const severity = incident.severity === 'critical' ? 'Critical' : 'High';
+      add(severity + ' incident on ' + incident.domain, '/app/inbox?incident=' + encodeURIComponent(incident.id));
+    }
+    for (const gap of signals.gaps) {
+      add('Heartbeat overdue on ' + gap.domain, '/app/sensor-health#gap-' + encodeURIComponent(gap.id));
+    }
+    if (signals.more_incidents) add('View the full incident inbox', '/app/inbox');
+    if (signals.more_gaps) add('View all sensor signals', '/app/sensor-health');
+    status.textContent = list.children.length
+      ? 'Open high-priority incidents and heartbeat gaps.'
+      : 'No open high-priority incidents or heartbeat gaps.';
+  } catch (error) {
+    if (request === attentionRequest) status.textContent = 'Open alerts could not be checked. Use Refresh alerts to try again.';
+  } finally {
+    if (request === attentionRequest) button.disabled = false;
   }
 }
 async function refreshSites() {
@@ -175,6 +214,7 @@ async function refreshSites() {
     card.append(connection, manage, verify, connectionPanel, keyStatus, panel, verificationPanel); node('sites').append(card);
   }
 }
+node('refresh-attention').addEventListener('click', refreshAttention);
 node('refresh-sites').addEventListener('click', async () => {
   node('refresh-sites').disabled = true;
   try {await refreshSites();}
@@ -228,6 +268,9 @@ node('delete-account-form').addEventListener('submit', async event => {
   try {
     await api('account/delete', body);
     ++sitesRequest;
+    ++attentionRequest;
+    node('attention-items').replaceChildren();
+    node('attention-status').textContent = '';
     csrf = '';
     node('workspace').hidden = true; node('auth').hidden = false;
     for (const id of ['recovery-value', 'owner-email']) node(id).textContent = '';

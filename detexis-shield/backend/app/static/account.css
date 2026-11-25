@@ -10,3 +10,11 @@ select,textarea{display:block;width:100%;max-width:600px;margin-top:10px;padding
 .section-heading{flex-wrap:wrap}.section-heading #refresh-sites{margin:0;font-size:13px}
 
 .account-shell summary{cursor:pointer}.account-shell summary:focus-visible{outline:2px solid #baf9e2;outline-offset:3px}
+
+.attention-card{margin:24px 0 0;border-left:3px solid #91e7c6}
+.attention-card #refresh-attention{margin:0;font-size:13px}
+#attention-status{color:#adbbce;font-size:14px}
+#attention-items{display:grid;gap:8px;list-style:none;padding:0;margin:0}
+#attention-items a{display:block;padding:8px 10px;background:#172638;border-radius:6px;color:#c8f1e3;overflow-wrap:anywhere}
+#attention-items a:focus-visible{outline:2px solid #baf9e2;outline-offset:2px}
+.sensor-health article:target{outline:2px solid #91e7c6;outline-offset:3px}

@@ -4,7 +4,7 @@ from sqlalchemy import select
 
 from app.main import app
 from app.db import SessionLocal
-from app.models import Incident, IncidentAction
+from app.models import Incident, IncidentAction, SensorHealthAlert
 from app.worker import process_batch
 from app import incident_inbox
 from test_accounts import register, ORIGIN
@@ -100,3 +100,36 @@ def test_logged_out_browser_preserves_inbox_destination_without_redirecting_api_
         assert response.status_code == 303
         assert response.headers["location"] == "/app?next=%2Fapp%2Finbox%3Fincident%3Dsample"
         assert client.get("/app/api/inbox", headers={"Accept":"text/html"}).status_code == 401
+
+
+def test_workspace_attention_is_bounded_and_owner_scoped():
+    with TestClient(app, base_url="https://testserver") as owner, TestClient(app, base_url="https://testserver") as other:
+        assert owner.get("/app/api/attention").status_code == 401
+        headers = register(owner, "attention-owner")
+        other_headers = register(other, "attention-other")
+        site = owner.post("/app/api/sites", headers=headers, json={"domain":"attention.example"}).json()["id"]
+        foreign = other.post("/app/api/sites", headers=other_headers,
+                             json={"domain":"private-attention.example"}).json()["id"]
+        with SessionLocal() as db:
+            for index in range(4):
+                db.add(Incident(site_id=site, ip_hash="a"*64, bucket=index, severity="high", status="open"))
+            db.add(Incident(site_id=site, ip_hash="a"*64, bucket=4, severity="critical", status="acknowledged"))
+            db.add(Incident(site_id=site, ip_hash="a"*64, bucket=5, severity="medium", status="open"))
+            db.add(Incident(site_id=foreign, ip_hash="a"*64, bucket=0, severity="critical", status="open"))
+            gap = SensorHealthAlert(site_id=site, heartbeat_at=datetime.now(timezone.utc))
+            db.add(gap)
+            db.add(SensorHealthAlert(site_id=foreign, heartbeat_at=datetime.now(timezone.utc)))
+            db.commit()
+            gap_id = gap.id
+        response = owner.get("/app/api/attention")
+        assert response.status_code == 200 and response.headers["cache-control"] == "no-store"
+        data = response.json()
+        assert data["more_incidents"] and len(data["incidents"]) == 3
+        assert {(item["domain"], item["severity"]) for item in data["incidents"]} == {("attention.example", "high")}
+        assert data["gaps"] == [{"id":gap_id, "domain":"attention.example"}]
+        assert not data["more_gaps"]
+        assert f'id="gap-{gap_id}"' in owner.get("/app/sensor-health").text
+        other_data = other.get("/app/api/attention").json()
+        assert [item["domain"] for item in other_data["gaps"]] == ["private-attention.example"]
+        assert [item["domain"] for item in other_data["incidents"]] == ["private-attention.example"]
+        assert "private-attention.example" not in response.text

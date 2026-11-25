@@ -10,9 +10,10 @@ from sqlalchemy import select, or_, and_, func
 from .accounts import owner, owned_site, throttle
 from .redis_store import get_redis
 from .db import get_db
-from .models import Site, Incident, IncidentAction, Event
+from .models import Site, Incident, IncidentAction, Event, SensorHealthAlert
 
 router = APIRouter()
+ATTENTION_LIMIT = 3
 
 
 def aware(value):
@@ -23,6 +24,29 @@ def incident_summary(row, domain):
     return {"id": row.id, "site_id": row.site_id, "domain": domain, "severity": row.severity,
             "status": row.status, "rules": row.rules, "event_count": row.event_count,
             "first_seen": aware(row.first_seen), "last_seen": aware(row.last_seen)}
+
+
+@router.get("/app/api/attention")
+def attention(user=Depends(owner), db=Depends(get_db)):
+    incidents = db.execute(
+        select(Incident.id, Site.domain, Incident.severity)
+        .join(Site, Site.id == Incident.site_id)
+        .where(Site.owner_id == user.id, Incident.status == "open",
+               Incident.severity.in_(("high", "critical")))
+        .order_by(Incident.last_seen.desc(), Incident.id)
+        .limit(ATTENTION_LIMIT + 1)
+    ).mappings().all()
+    gaps = db.execute(
+        select(SensorHealthAlert.id, Site.domain)
+        .join(Site, Site.id == SensorHealthAlert.site_id)
+        .where(Site.owner_id == user.id, SensorHealthAlert.resolved_at.is_(None))
+        .order_by(SensorHealthAlert.opened_at.desc(), SensorHealthAlert.id)
+        .limit(ATTENTION_LIMIT + 1)
+    ).mappings().all()
+    return {"incidents": [dict(row) for row in incidents[:ATTENTION_LIMIT]],
+            "gaps": [dict(row) for row in gaps[:ATTENTION_LIMIT]],
+            "more_incidents": len(incidents) > ATTENTION_LIMIT,
+            "more_gaps": len(gaps) > ATTENTION_LIMIT}
 
 
 @router.get("/app/api/inbox")
