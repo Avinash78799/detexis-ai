@@ -5,7 +5,7 @@ const {runInNewContext} = require('node:vm');
 const {join} = require('node:path');
 const settled = () => new Promise(resolve => setImmediate(resolve));
 
-async function workspace(handler) {
+async function workspace(handler, attention = () => ({incidents:[], gaps:[]})) {
   const nodes = new Map(), created = [], calls = [];
   function element() {
     return {children:[], attrs:{}, handlers:{}, textContent:'', disabled:false,
@@ -28,6 +28,7 @@ async function workspace(handler) {
       calls.push({path,body});
       if (path === 'session') return {csrf_token:'fixture', email:'fixture@example.test'};
       if (path === 'sites' && !body) return [{id:'a',domain:'first.example'}, {id:'b',domain:'second.example'}];
+      if (path === 'attention') return attention();
       return handler(path,body);
     }},
   });
@@ -176,4 +177,37 @@ test('a late site creation cannot restore credentials after account deletion', a
   await creating;
   assert.equal(app.get('installation').hidden, true);
   assert.equal(app.get('installation-list').children.length, 0);
+});
+
+test('workspace attention offers direct links and recovers after a failed refresh', async () => {
+  let available = false;
+  const app = await workspace(() => {}, () => {
+    if (!available) throw new Error('Service unavailable');
+    return {
+      incidents:[{id:'incident-fixture',domain:'first.example',severity:'critical'}],
+      gaps:[{id:'gap-fixture',domain:'second.example'}],
+    };
+  });
+  assert.match(app.get('attention-status').textContent, /could not be checked/);
+  assert.equal(app.get('attention-items').children.length, 0);
+  available = true;
+  await app.get('refresh-attention').handlers.click();
+  const links = app.get('attention-items').children.map(item => item.children[0]);
+  assert.deepEqual(links.map(link => [link.textContent, link.href]), [
+    ['Critical incident on first.example', '/app/inbox?incident=incident-fixture'],
+    ['Heartbeat overdue on second.example', '/app/sensor-health#gap-gap-fixture'],
+  ]);
+  assert.equal(app.get('refresh-attention').disabled, false);
+});
+
+test('a late attention response cannot repopulate a deleted workspace', async () => {
+  let finish;
+  const app = await workspace(() => ({}), () => new Promise(resolve => {finish = resolve;}));
+  const form = app.get('delete-account-form');
+  await form.handlers.submit({preventDefault(){},target:form});
+  finish({incidents:[{id:'late',domain:'first.example',severity:'high'}], gaps:[]});
+  await settled();
+  assert.equal(app.get('workspace').hidden, true);
+  assert.equal(app.get('attention-status').textContent, '');
+  assert.equal(app.get('attention-items').children.length, 0);
 });
