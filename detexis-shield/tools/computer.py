@@ -52,31 +52,63 @@ def compose(*args, capture=False):
                    *args, capture=capture)
 
 
+def check_api_ready():
+    if not compose("port", "api", "8000", capture=True).strip():
+        raise RuntimeError("API has no host port mapping. Check port 8000 conflicts before recreating only the API container.")
+    with urlopen("http://127.0.0.1:8000/ready", timeout=5) as response:
+        if json.load(response) != {"ok": True}:
+            raise RuntimeError("Unexpected API readiness response")
+
+
+def resume_existing(local_https=False, malware=False):
+    """Start the last deployed containers without rebuilding or recreating them."""
+    prepare_env(ENV, existing_volume=True)
+    profiles = []
+    required = ["db", "redis", "api", "worker", "maintenance", "scanner"]
+    if local_https:
+        profiles.extend(("--profile", "localtls"))
+        required.append("localproxy")
+    if malware:
+        profiles.extend(("--profile", "malware"))
+        required.append("clamav")
+    existing = set(compose(*profiles, "ps", "--all", "--services", capture=True).splitlines())
+    missing = [service for service in required if service not in existing]
+    if missing:
+        raise RuntimeError("Cannot resume because containers are missing for " + ", ".join(missing)
+                           + ". Use the original release configuration to recreate them.")
+    compose(*profiles, "start", "--wait", "--wait-timeout", "240", *required)
+    check_api_ready()
+    print("Existing Shield containers resumed. API: http://127.0.0.1:8000/ready")
+    if local_https:
+        print("Local workspace: https://localhost:8443/app")
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("action", choices=["start", "status", "logs", "stop", "backup", "malware-start", "malware-stop"])
+    parser.add_argument("action", choices=["start", "resume", "status", "logs", "stop", "backup", "malware-start", "malware-stop"])
     parser.add_argument("--backup-dir", type=Path)
     parser.add_argument("--local-https", action="store_true", help="Start the optional loopback HTTPS proxy; does not install certificate trust")
+    parser.add_argument("--with-malware", action="store_true", help="Resume the existing optional ClamAV container")
     args = parser.parse_args()
-    if args.local_https and args.action != "start":
-        parser.error("--local-https applies only to start")
+    if args.local_https and args.action not in {"start", "resume"}:
+        parser.error("--local-https applies only to start or resume")
+    if args.with_malware and args.action != "resume":
+        parser.error("--with-malware applies only to resume")
     command("info", "--format", "{{.ServerVersion}}", capture=True)
     if args.action == "start":
         volumes = command("volume", "ls", "--format", "{{.Name}}", capture=True).splitlines()
         prepare_env(ENV, PROJECT + "_pgdata" in volumes)
         profiles = ["--profile", "localtls"] if args.local_https else []
         compose(*profiles, "up", "--build", "-d", "--wait")
-        if not compose("port", "api", "8000", capture=True).strip():
-            raise RuntimeError("API has no host port mapping. Check port 8000 conflicts before recreating only the API container.")
-        with urlopen("http://127.0.0.1:8000/ready", timeout=5) as response:
-            if json.load(response) != {"ok": True}:
-                raise RuntimeError("Unexpected API readiness response")
+        check_api_ready()
         print("Computer instance started. API: http://127.0.0.1:8000/ready")
         print("Account UI requires HTTPS; see COMPUTER-HOSTING.md. Keep .computer.env private and back it up.")
         if args.local_https:
             print("Local proxy requested: https://localhost:8443/app. Verify certificate trust using LOCAL-HTTPS.md before entering credentials.")
     elif not ENV.exists():
         raise RuntimeError("Start the computer instance first, or restore its .computer.env")
+    elif args.action == "resume":
+        resume_existing(local_https=args.local_https, malware=args.with_malware)
     elif args.action == "status":
         compose("--profile", "malware", "--profile", "localtls", "ps", "--all")
     elif args.action == "logs":

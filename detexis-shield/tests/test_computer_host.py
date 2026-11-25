@@ -90,3 +90,46 @@ def test_local_https_flag_rejected_before_operations_for_other_actions(monkeypat
     monkeypatch.setattr("sys.argv", ["computer.py", "backup", "--local-https"])
     with pytest.raises(SystemExit):
         computer.main()
+
+
+def test_resume_starts_existing_release_with_requested_profiles(monkeypatch, tmp_path):
+    from io import BytesIO
+
+    calls = []
+    saved = tmp_path / "saved.env"
+    computer.prepare_env(saved, False)
+    monkeypatch.setattr(computer, "ENV", saved)
+    monkeypatch.setattr(computer, "command", lambda *args, **kwargs: "")
+    services = ("db", "redis", "api", "worker", "maintenance", "scanner", "localproxy", "clamav")
+
+    def compose(*args, **kwargs):
+        calls.append(args)
+        if "ps" in args:
+            return "\n".join(services)
+        if args[0] == "port":
+            return "127.0.0.1:8000"
+
+    monkeypatch.setattr(computer, "compose", compose)
+    monkeypatch.setattr(computer, "urlopen", lambda *args, **kwargs: BytesIO(b'{"ok":true}'))
+    monkeypatch.setattr("sys.argv", ["computer.py", "resume", "--local-https", "--with-malware"])
+    computer.main()
+    profiles = ("--profile", "localtls", "--profile", "malware")
+    assert calls == [
+        (*profiles, "ps", "--all", "--services"),
+        (*profiles, "start", "--wait", "--wait-timeout", "240", *services),
+        ("port", "api", "8000"),
+    ]
+
+
+def test_resume_reports_missing_containers_before_starting_any(monkeypatch, tmp_path):
+    saved = tmp_path / "saved.env"
+    computer.prepare_env(saved, False)
+    monkeypatch.setattr(computer, "ENV", saved)
+
+    def compose(*args, **kwargs):
+        assert args == ("ps", "--all", "--services")
+        return "db\nredis\napi\nmaintenance\nscanner"
+
+    monkeypatch.setattr(computer, "compose", compose)
+    with pytest.raises(RuntimeError, match="containers are missing for worker"):
+        computer.resume_existing()

@@ -54,12 +54,25 @@ ClamAV engine: use `python tools/computer.py malware-start` after normal startup
 It requires additional memory and signature updates; unavailable scans never
 produce a safety verdict. See that guide for limits and privacy behavior.
 
-Open Docker Desktop and wait until its engine is running. From this directory:
+Open Docker Desktop and wait until its engine is running. For the initial
+installation, run these commands from this directory:
 
 ```powershell
 python tools/computer.py start --local-https
 python tools/computer.py status
 ```
+
+After a reboot or deliberate stop, resume the existing release:
+
+```powershell
+python tools/computer.py resume --local-https
+python tools/computer.py status
+```
+
+Add `--with-malware` if you already set up ClamAV and want to resume it too.
+`resume` starts the existing containers and verifies API readiness. If any
+requested containers are missing, it reports them before starting anything.
+Use the original release configuration if you need to recreate them.
 
 This uses project `detexis-shield-computer`, a separate database volume and private
 `.computer.env`. Its random database password is created once, never printed and
@@ -74,9 +87,10 @@ All services have restart policies. Those policies work only after Docker starts
 they do not start Windows, sign in, prevent sleep or launch Docker Desktop.
 Configure Docker Desktop startup and Windows power behavior yourself as desired.
 
-The computer overlay starts two RQ workers. On this machine, a fresh four-site
-ten-minute rules-only workload passed at 500.248 events/s with 4.200-second
-processing p95 and no final backlog; the equivalent single-worker run failed.
+The computer overlay starts three RQ workers. An earlier two-worker validation
+on this machine ran a four-site, ten-minute rules-only workload at 500.248
+events/s with 4.200-second processing p95 and no final backlog. The equivalent
+single-worker run failed.
 This is a measured configuration, not a capacity guarantee for every computer,
 traffic pattern or enabled feature. See `MULTITENANT-PERFORMANCE.md`.
 
