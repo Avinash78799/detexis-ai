@@ -14,11 +14,13 @@ window.shieldApi = async function(path, body, csrf = '') {
       throw new Error(controller.signal.aborted
         ? (body === undefined ? 'Request timed out. Check your connection and retry.'
           : 'Request timed out. It may have completed; refresh before retrying.')
-        : 'Cannot reach Shield. Check your connection and try again.');
+        : (body === undefined ? 'Cannot reach Shield. Check your connection and try again.'
+          : 'Connection lost. The action may have completed; refresh before retrying.'));
     }
     const error = new Error('Shield is temporarily unavailable. Please try again shortly.');
     error.status = response.status;
     if (response.status >= 500) {
+      if (body !== undefined) error.message = 'The action could not be confirmed. It may have completed; refresh before retrying.';
       if (path === 'account/delete') error.message = 'Account removal could not be confirmed. Refresh before retrying.';
       throw error;
     }

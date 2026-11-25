@@ -66,3 +66,13 @@ test('network failures and rate limits remain actionable', async () => {
   const limited = client(async () => response(429, {detail: 'Please wait before trying again'}));
   await assert.rejects(limited.request('sites'), /Please wait/);
 });
+
+test('connection loss and server errors after submission warn before repeating a mutation', async () => {
+  for (const fetch of [async () => {throw new Error('network');}, async () => response(500)]) {
+    let calls = 0;
+    const api = client(async (...args) => {calls++; return fetch(...args);});
+    await assert.rejects(api.request('sites/fixture/keys', {}), /may have completed; refresh before retrying/);
+    assert.equal(calls, 1);
+    assert.equal(api.cleared(), true);
+  }
+});
