@@ -1,5 +1,10 @@
 # Sensor: implemented behavior and roadmap
 
+For sites added in the owner workspace, the sensor key can submit events,
+send heartbeats and read sensor configuration. Use the signed-in workspace to
+view monitoring history or manage domain verification and scans. Existing
+SDK installations keep using the same key.
+
 SDK 0.1.2 adds the optional `outage_retry_window` setting for ASGI and WSGI.
 For example, `outage_retry_window=30` lets a failed batch make spaced retries
 within 30 seconds of its first send attempt. Existing short retry settings

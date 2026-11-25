@@ -32,3 +32,10 @@ def current_site(x_api_key: str | None = Header(None), db: Session = Depends(get
     if not site:
         raise HTTPException(401, "invalid api key")
     return site
+
+
+def legacy_site(site: Site = Depends(current_site)) -> Site:
+    """Allow legacy management only for sites provisioned without an owner."""
+    if site.owner_id is not None:
+        raise HTTPException(403, "Use the signed-in workspace to manage this website")
+    return site

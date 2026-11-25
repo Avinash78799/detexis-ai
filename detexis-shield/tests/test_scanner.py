@@ -134,18 +134,17 @@ def test_rotated_challenge_cannot_be_verified_by_an_in_flight_lookup(monkeypatch
             site = created.json()
             verification = f"/app/api/sites/{site['id']}"
             scans = f"{verification}/scans"
-            sensor_headers = {"X-API-Key": site["api_key"]}
         else:
             _, key = make_site("rotate-proof.example")
-            sensor_headers = headers = {"X-API-Key": key}
+            headers = {"X-API-Key": key}
             verification = "/v1/domain"
             scans = "/v1/scans"
         challenge = client.post(f"{verification}/verification", headers=headers).json()
 
         rotations = []
         def complete_old_lookup(_name):
-            with TestClient(app) as rotating_client:
-                rotations.append(rotating_client.post("/v1/domain/verification", headers=sensor_headers))
+            with TestClient(app, base_url="https://testserver", cookies=client.cookies) as rotating_client:
+                rotations.append(rotating_client.post(f"{verification}/verification", headers=headers))
             return [challenge["value"]]
 
         monkeypatch.setattr("app.scan_api.txt", complete_old_lookup)

@@ -3,7 +3,7 @@ from sqlalchemy import select
 from app.main import app
 from app.models import User, BrowserSession
 from app.db import SessionLocal
-from test_smoke import make_site
+from test_smoke import event, make_site
 
 ORIGIN = {"Origin": "https://testserver"}
 
@@ -64,3 +64,31 @@ def test_cross_origin_registration_rejected_and_login_rate_limited():
         for _ in range(10):
             assert client.post("/app/api/login", headers=ORIGIN, json=body).status_code == 401
         assert client.post("/app/api/login", headers=ORIGIN, json=body).status_code == 429
+
+
+def test_owner_site_sensor_key_can_report_but_cannot_manage_the_site(monkeypatch):
+    with TestClient(app, base_url="https://testserver") as owner, TestClient(app) as sensor:
+        owner_headers = register(owner, "sensor-scope-owner")
+        created = owner.post("/app/api/sites", headers=owner_headers, json={"domain":"sensor-scope.example"})
+        assert created.status_code == 201
+        site = created.json()
+        key = site["api_key"]
+        headers = {"X-API-Key":key}
+        assert sensor.post("/v1/heartbeat", headers=headers).status_code == 200
+        assert sensor.get("/v1/config", headers=headers).status_code == 200
+        assert sensor.post("/v1/events", headers=headers, json={"events":[event("/health")]}).status_code == 202
+
+        for path in ("/dashboard", "/dashboard/feed"):
+            response = sensor.get(path, auth=("site", key))
+            assert response.status_code == 403 and "www-authenticate" not in response.headers
+        assert sensor.get("/v1/incidents", headers=headers).status_code == 403
+        assert sensor.get("/v1/scans/fixture", headers=headers).status_code == 403
+        for path in ("/v1/domain/verification", "/v1/domain/verify", "/v1/scans"):
+            assert sensor.post(path, headers=headers).status_code == 403
+
+        path = f"/app/api/sites/{site['id']}"
+        challenge = owner.post(path + "/verification", headers=owner_headers).json()
+        monkeypatch.setattr("app.scan_api.txt", lambda _domain: [challenge["value"]])
+        assert owner.post(path + "/verify", headers=owner_headers).status_code == 200
+        assert owner.post(path + "/scans", headers=owner_headers).status_code == 202
+        assert owner.get(f"/app/sites/{site['id']}").status_code == 200

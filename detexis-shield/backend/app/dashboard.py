@@ -9,7 +9,7 @@ from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from fastapi.templating import Jinja2Templates
 from sqlalchemy import select
 
-from .auth import current_site
+from .auth import current_site, legacy_site
 from .db import get_db
 from .models import Alert, Event, Incident, Scan
 
@@ -34,9 +34,10 @@ def dashboard_site(credentials: HTTPBasicCredentials | None = Depends(basic), db
     try:
         if credentials is None:
             raise HTTPException(401)
-        return current_site(x_api_key=credentials.password, db=db)
+        site = current_site(x_api_key=credentials.password, db=db)
     except HTTPException:
         raise HTTPException(401, "Use your site API key as the password", headers={"WWW-Authenticate": 'Basic realm="Detexis Shield", charset="UTF-8"'})
+    return legacy_site(site)
 
 
 def context(db, site):
@@ -81,7 +82,7 @@ def feed(request: Request, site=Depends(dashboard_site), db=Depends(get_db)):
 
 
 @router.get("/v1/incidents")
-def incidents(site=Depends(current_site), db=Depends(get_db)):
+def incidents(site=Depends(legacy_site), db=Depends(get_db)):
     rows = db.scalars(select(Incident).where(Incident.site_id == site.id).order_by(Incident.last_seen.desc()).limit(100)).all()
     return [{"id": r.id, "severity": r.severity, "rules": r.rules, "correlations": r.reported_correlations,
              "event_count": r.event_count, "last_seen": r.last_seen} for r in rows]

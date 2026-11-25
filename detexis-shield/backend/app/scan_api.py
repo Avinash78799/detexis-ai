@@ -9,7 +9,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select, update
 from redis.exceptions import RedisError
 
-from .auth import current_site
+from .auth import legacy_site
 from .db import get_db
 from .models import Scan, Site
 from .redis_store import get_redis
@@ -21,7 +21,7 @@ router = APIRouter()
 
 
 @router.post("/v1/domain/verification")
-def start_verification(site=Depends(current_site), db=Depends(get_db)):
+def start_verification(site=Depends(legacy_site), db=Depends(get_db)):
     try:
         domain = domain_name(site.domain)
     except UnsafeTarget:
@@ -47,7 +47,7 @@ def verify_http(domain, expected_hash):
 
 
 @router.post("/v1/domain/verify")
-def confirm_verification(site=Depends(current_site), db=Depends(get_db), redis=Depends(get_redis)):
+def confirm_verification(site=Depends(legacy_site), db=Depends(get_db), redis=Depends(get_redis)):
     site_id, domain, expected_hash = site.id, site.domain, site.verification_hash
     if not expected_hash:
         raise HTTPException(409, "request a verification token first")
@@ -74,7 +74,7 @@ def confirm_verification(site=Depends(current_site), db=Depends(get_db), redis=D
 
 
 @router.post("/v1/scans", status_code=202)
-def request_scan(site=Depends(current_site), db=Depends(get_db), redis=Depends(get_redis)):
+def request_scan(site=Depends(legacy_site), db=Depends(get_db), redis=Depends(get_redis)):
     site = db.scalar(select(Site).where(Site.id == site.id).with_for_update().execution_options(populate_existing=True))
     if site.verified_at is None or utc(site.verified_at) < datetime.now(timezone.utc) - timedelta(days=7):
         raise HTTPException(403, "recent domain ownership verification required")
@@ -98,7 +98,7 @@ def request_scan(site=Depends(current_site), db=Depends(get_db), redis=Depends(g
 
 
 @router.get("/v1/scans/{scan_id}")
-def get_scan(scan_id: str, site=Depends(current_site), db=Depends(get_db)):
+def get_scan(scan_id: str, site=Depends(legacy_site), db=Depends(get_db)):
     record = db.scalar(select(Scan).where(Scan.id == scan_id, Scan.site_id == site.id))
     if record is None:
         raise HTTPException(404, "scan not found")

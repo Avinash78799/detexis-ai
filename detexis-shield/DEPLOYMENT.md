@@ -96,9 +96,9 @@ future work; use the provided persistent demo for initial end-to-end monitoring.
 
 ## Ownership verification, including vercel.app
 
-Create a Shield site for the exact hostname (no scheme/path), then call
-`POST /v1/domain/verification` with its `X-API-Key`. The response provides a token,
-TXT record and fixed HTTPS URL. Publish either proof and call `POST /v1/domain/verify`.
+Add the exact hostname in the signed-in workspace, then open **Verify domain & scan**.
+Shield provides a token, TXT record and fixed HTTPS URL. Publish either proof,
+then confirm ownership from the same website card.
 Verification lasts seven days and attempts have a one-minute cooldown.
 
 For `detexis.vercel.app`, the legacy app includes an optional well-known route.
@@ -106,8 +106,10 @@ After that change is deployed, set Vercel's `SHIELD_VERIFICATION_TOKEN` to the
 challenge's complete `value` and redeploy. The route returns 404 when unset. This
 enables scanning ownership proof; it does not install a serverless sensor.
 
-Request `POST /v1/scans`, then read `GET /v1/scans/{scan_id}`. Scans are limited to
-once per hour manually and are scheduled daily while verification remains valid.
+Request a scan from the website card and open its dashboard for the result.
+Manual scans are limited to once per hour. Shield schedules a daily scan while
+verification remains valid. For operator-provisioned sites without an owner,
+the legacy `/v1/domain/*` and `/v1/scans` endpoints remain available.
 DKIM checks need operator-configured selectors in `Site.settings.dkim_selectors`;
 unknown selectors are reported as unassessed rather than guessed.
 
