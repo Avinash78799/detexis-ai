@@ -7,6 +7,7 @@ from fastapi.testclient import TestClient
 from app.main import app
 from app.safe_fetch import UnsafeTarget, domain_name, fetch, public_ip
 from app.scanner import scan
+from test_accounts import register
 from test_smoke import make_site
 
 
@@ -121,6 +122,39 @@ def test_cannot_verify_with_another_domains_token(monkeypatch):
         monkeypatch.setattr("app.scan_api.txt", lambda name: ["dxs-verification=wrong"])
         monkeypatch.setattr("app.scan_api.verify_http", lambda *args: False)
         assert client.post("/v1/domain/verify", headers=headers).status_code == 422
+
+
+@pytest.mark.parametrize("owner_route", [False, True], ids=["sensor", "owner"])
+def test_rotated_challenge_cannot_be_verified_by_an_in_flight_lookup(monkeypatch, owner_route):
+    with TestClient(app, base_url="https://testserver") as client:
+        if owner_route:
+            headers = register(client, "rotate-proof-owner")
+            created = client.post("/app/api/sites", headers=headers, json={"domain": "rotate-proof.example"})
+            assert created.status_code == 201
+            site = created.json()
+            verification = f"/app/api/sites/{site['id']}"
+            scans = f"{verification}/scans"
+            sensor_headers = {"X-API-Key": site["api_key"]}
+        else:
+            _, key = make_site("rotate-proof.example")
+            sensor_headers = headers = {"X-API-Key": key}
+            verification = "/v1/domain"
+            scans = "/v1/scans"
+        challenge = client.post(f"{verification}/verification", headers=headers).json()
+
+        rotations = []
+        def complete_old_lookup(_name):
+            with TestClient(app) as rotating_client:
+                rotations.append(rotating_client.post("/v1/domain/verification", headers=sensor_headers))
+            return [challenge["value"]]
+
+        monkeypatch.setattr("app.scan_api.txt", complete_old_lookup)
+        monkeypatch.setattr("app.scan_api.verify_http", lambda *_args: False)
+        response = client.post(f"{verification}/verify", headers=headers)
+        assert len(rotations) == 1 and rotations[0].status_code == 200
+        assert rotations[0].json()["value"] != challenge["value"]
+        assert response.status_code == 409
+        assert client.post(scans, headers=headers).status_code == 403
 
 
 def test_vercel_style_domain_can_verify_using_https_file(monkeypatch):

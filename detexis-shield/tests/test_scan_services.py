@@ -18,17 +18,31 @@ import sys
 sys.path[:0] = ['backend', 'sensor-sdk', 'tests']
 from concurrent.futures import ThreadPoolExecutor
 import fakeredis
+from pytest import MonkeyPatch
 from rq import Queue
 from app.db import SessionLocal
+from app.main import app
 from app.models import Scan
+from app.redis_store import get_redis
 from app.scan_jobs import enqueue_scan
 from test_smoke import make_site
 from test_scan_scheduling import (test_scheduler_keeps_one_old_pending_scan_and_one_queue_job,
-                                  test_pending_scan_requeues_after_complete_redis_loss)
+                                  test_pending_scan_requeues_after_complete_redis_loss,
+                                  test_stale_scans_close_without_external_requests,
+                                  test_manual_scan_ignores_stale_requests_but_retains_cooldown)
+from test_scanner import test_rotated_challenge_cannot_be_verified_by_an_in_flight_lookup
 fake = fakeredis.FakeRedis()
 try:
+    for owner_route in (False, True):
+        with MonkeyPatch.context() as patch:
+            patch.setitem(app.dependency_overrides, get_redis, lambda: fake)
+            test_rotated_challenge_cannot_be_verified_by_an_in_flight_lookup(patch, owner_route)
     test_scheduler_keeps_one_old_pending_scan_and_one_queue_job(fake)
     test_pending_scan_requeues_after_complete_redis_loss(fake)
+    with MonkeyPatch.context() as patch:
+        patch.setitem(app.dependency_overrides, get_redis, lambda: fake)
+        test_stale_scans_close_without_external_requests(fake, patch)
+        test_manual_scan_ignores_stale_requests_but_retains_cooldown()
     site, _ = make_site('concurrent-scan-publish.example.test')
     with SessionLocal() as db:
         record = Scan(site_id=site)

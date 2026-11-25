@@ -2,11 +2,14 @@ import os
 from datetime import datetime, timedelta, timezone
 
 import httpx
-from sqlalchemy import select
+from sqlalchemy import or_, select, update
 
 from .db import SessionLocal
 from .models import Scan, Site
 from .worker import utc
+
+VERIFICATION_MAX_AGE = timedelta(days=7)
+EXPIRED_SCAN_BATCH_SIZE = 200
 
 
 def run_scan(scan_id):
@@ -15,7 +18,9 @@ def run_scan(scan_id):
         if record is None or record.status != "pending":
             return
         site = db.get(Site, record.site_id)
-        if site.verified_at is None or utc(site.verified_at) < datetime.now(timezone.utc) - timedelta(days=7):
+        cutoff = datetime.now(timezone.utc) - VERIFICATION_MAX_AGE
+        if (site is None or site.verified_at is None or utc(site.verified_at) < cutoff
+                or utc(site.verified_at) > utc(record.created_at)):
             record.status = "unverified"
         else:
             try:
@@ -55,19 +60,37 @@ def enqueue_scan(scan_id, redis):
         return True
 
 
+def expire_pending_scans(now):
+    """Close stale requests even when their Redis jobs disappeared."""
+    with SessionLocal() as db:
+        stale = (select(Scan.id).join(Site, Site.id == Scan.site_id)
+                 .where(Scan.status == "pending", or_(
+                     Site.verified_at.is_(None),
+                     Site.verified_at < now - VERIFICATION_MAX_AGE,
+                     Site.verified_at > Scan.created_at,
+                 ))
+                 .order_by(Scan.created_at, Scan.id).limit(EXPIRED_SCAN_BATCH_SIZE)
+                 .with_for_update(of=Scan, skip_locked=True))
+        db.execute(update(Scan).where(Scan.id.in_(stale), Scan.status == "pending")
+                   .values(status="unverified"))
+        db.commit()
+
+
 def schedule_rescans(redis):
     now = datetime.now(timezone.utc)
+    expire_pending_scans(now)
     with SessionLocal() as db:
         sites = list(db.scalars(select(Site.id).where(Site.verified_at.is_not(None))))
     for site_id in sites:
         with SessionLocal() as db:
             site = db.scalar(select(Site).where(Site.id == site_id)
                              .with_for_update(key_share=True, skip_locked=True))
-            if site is None or site.verified_at is None or utc(site.verified_at) < now - timedelta(days=7):
+            if site is None or site.verified_at is None or utc(site.verified_at) < now - VERIFICATION_MAX_AGE:
                 continue
-            pending = db.scalar(select(Scan).where(Scan.site_id == site.id, Scan.status == "pending")
+            pending = db.scalar(select(Scan).where(Scan.site_id == site.id, Scan.status == "pending",
+                                                  Scan.created_at >= site.verified_at)
                                 .order_by(Scan.created_at, Scan.id).limit(1))
-            recent = db.scalar(select(Scan).where(Scan.site_id == site.id)
+            recent = db.scalar(select(Scan).where(Scan.site_id == site.id, Scan.status.in_(("complete", "failed")))
                                .order_by(Scan.created_at.desc(), Scan.id).limit(1))
             if pending is not None:
                 record = pending

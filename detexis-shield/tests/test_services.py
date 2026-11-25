@@ -14,11 +14,12 @@ def test_real_services_migration_ingest_rq_and_worker(tmp_path):
     migrate = subprocess.run([sys.executable, "-m", "alembic", "-c", "backend/alembic.ini", "upgrade", "head"], env=env, capture_output=True, text=True)
     assert migrate.returncode == 0, migrate.stderr
     script = '''
-import sys,uuid
+import signal,sys,uuid
 sys.path.insert(0,"backend")
 from datetime import datetime,timezone
 from fastapi.testclient import TestClient
 from rq import Queue,SimpleWorker
+from rq.timeouts import TimerDeathPenalty
 from app.main import app
 from app.db import SessionLocal
 from app.models import Site,ApiKey,Incident,Event
@@ -35,7 +36,12 @@ with TestClient(app) as client:
     response=client.post("/v1/events",json={"events":[item]},headers={"X-API-Key":raw})
     assert response.status_code==202,response.text
 redis=get_redis()
-SimpleWorker([Queue("shield",connection=redis)],connection=redis).work(burst=True)
+def drain_queue():
+    worker=SimpleWorker([Queue("shield",connection=redis)],connection=redis)
+    if not hasattr(signal,"SIGALRM"):
+        worker.death_penalty_class=TimerDeathPenalty
+    worker.work(burst=True)
+drain_queue()
 with SessionLocal() as db:
     assert db.get(Event,(item["event_id"],site_id)).processed_at is not None
     assert db.scalar(select(Incident).where(Incident.site_id==site_id)) is not None
@@ -80,10 +86,19 @@ with TestClient(app,base_url="https://testserver") as owner:
     created=owner.post("/app/api/sites",headers=csrf,json={"domain":"owner-integration.example"})
     assert created.status_code==201,created.text
     owner_site=created.json()["id"]
+    # A site update may hold the row lock, but key inventory remains readable.
+    with SessionLocal() as db, ThreadPoolExecutor(max_workers=1) as pool:
+        db.scalar(select(Site).where(Site.id==owner_site).with_for_update())
+        try:
+            key_list=pool.submit(owner.get,f"/app/api/sites/{owner_site}/keys").result(timeout=5)
+            assert key_list.status_code==200,key_list.text
+            assert len(key_list.json())==1 and "api_key" not in key_list.json()[0]
+        finally:
+            db.rollback()
     # The same event ID is valid in two tenants; processing must use both keys.
     owner_item={**item,"path":"/admin-backup"}
     assert owner.post("/v1/events",json={"events":[owner_item]},headers={"X-API-Key":created.json()["api_key"]}).status_code==202
-    SimpleWorker([Queue("shield",connection=redis)],connection=redis).work(burst=True)
+    drain_queue()
     listed=owner.get("/app/api/inbox").json()["incidents"]
     assert len(listed)==1 and listed[0]["site_id"]==owner_site
     detail_path="/app/api/incidents/"+listed[0]["id"]

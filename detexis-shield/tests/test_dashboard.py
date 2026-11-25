@@ -29,17 +29,20 @@ def test_dashboard_requires_auth_and_escapes_attacker_fields():
 def test_dashboard_reports_stale_heartbeat_and_expired_verification():
     from datetime import datetime, timedelta, timezone
     from app.db import SessionLocal
-    from app.models import Site
+    from app.models import Scan, Site
     site_id, key = make_site("stale-sensor.test")
     with SessionLocal() as db:
         site = db.get(Site, site_id)
         site.last_heartbeat = datetime.now(timezone.utc) - timedelta(minutes=4)
         site.verified_at = datetime.now(timezone.utc) - timedelta(days=8)
+        db.add(Scan(site_id=site_id, status="unverified"))
         db.commit()
     with TestClient(app) as client:
         page = client.get("/dashboard", auth=("site", key))
         assert "Heartbeat overdue" in page.text
         assert "Verification expired" in page.text
+        assert "<strong>Canceled</strong>" in page.text
+        assert "Domain verification changed or expired before this scan could run." in page.text
 
 
 def test_dashboard_describes_historical_correlation_without_asserting_order():

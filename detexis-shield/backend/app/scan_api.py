@@ -6,7 +6,7 @@ import httpx
 from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import select
+from sqlalchemy import select, update
 from redis.exceptions import RedisError
 
 from .auth import current_site
@@ -48,21 +48,27 @@ def verify_http(domain, expected_hash):
 
 @router.post("/v1/domain/verify")
 def confirm_verification(site=Depends(current_site), db=Depends(get_db), redis=Depends(get_redis)):
-    if not site.verification_hash:
+    site_id, domain, expected_hash = site.id, site.domain, site.verification_hash
+    if not expected_hash:
         raise HTTPException(409, "request a verification token first")
     try:
-        if not redis.set(f"dxs:verify-cooldown:{site.id}", "1", nx=True, ex=60):
+        if not redis.set(f"dxs:verify-cooldown:{site_id}", "1", nx=True, ex=60):
             raise HTTPException(429, "verification cooldown", headers={"Retry-After": "60"})
     except RedisError:
         raise HTTPException(503, "verification temporarily unavailable")
     try:
-        values = txt("_detexis." + domain_name(site.domain))
+        values = txt("_detexis." + domain_name(domain))
     except Exception:
         values = []
-    dns_verified = any(hmac.compare_digest(hashlib.sha256(value.encode()).hexdigest(), site.verification_hash) for value in values)
-    if not dns_verified and not verify_http(site.domain, site.verification_hash):
+    dns_verified = any(hmac.compare_digest(hashlib.sha256(value.encode()).hexdigest(), expected_hash) for value in values)
+    if not dns_verified and not verify_http(domain, expected_hash):
         raise HTTPException(422, "verification token not found in DNS or the well-known HTTPS file")
-    site.verified_at = datetime.now(timezone.utc)
+    # The lookup can outlive a challenge rotation. Verify only the challenge checked above.
+    confirmed = db.scalar(update(Site).where(
+        Site.id == site_id, Site.domain == domain, Site.verification_hash == expected_hash,
+    ).values(verified_at=datetime.now(timezone.utc)).returning(Site.id))
+    if confirmed is None:
+        raise HTTPException(409, "Verification challenge changed. Refresh the website settings before trying again")
     db.commit()
     return {"verified": True}
 
@@ -72,8 +78,9 @@ def request_scan(site=Depends(current_site), db=Depends(get_db), redis=Depends(g
     site = db.scalar(select(Site).where(Site.id == site.id).with_for_update().execution_options(populate_existing=True))
     if site.verified_at is None or utc(site.verified_at) < datetime.now(timezone.utc) - timedelta(days=7):
         raise HTTPException(403, "recent domain ownership verification required")
-    pending = db.scalar(select(Scan).where(Scan.site_id == site.id, Scan.status == "pending"))
-    recent = db.scalar(select(Scan).where(Scan.site_id == site.id).order_by(Scan.created_at.desc()).limit(1))
+    scans = select(Scan).where(Scan.site_id == site.id)
+    pending = db.scalar(scans.where(Scan.status == "pending", Scan.created_at >= site.verified_at))
+    recent = db.scalar(scans.where(Scan.status.in_(("complete", "failed"))).order_by(Scan.created_at.desc()).limit(1))
     if pending:
         record = pending
     else:

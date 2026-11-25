@@ -275,8 +275,9 @@ def add_site(body: NewSite, user=Depends(owner), db=Depends(get_db)):
     return {"id": site.id, "domain": site.domain, "api_key": raw, "site_salt": secrets.token_urlsafe(32)}
 
 
-def owned_site(db, user, site_id):
-    site = db.scalar(select(Site).where(Site.id == site_id, Site.owner_id == user.id).with_for_update())
+def owned_site(db, user, site_id, *, lock=True):
+    query = select(Site).where(Site.id == site_id, Site.owner_id == user.id)
+    site = db.scalar(query.with_for_update() if lock else query)
     if site is None:
         raise HTTPException(404, "Website not found")
     return site
@@ -312,7 +313,7 @@ def connection_status(site_id: str, user=Depends(owner), db=Depends(get_db)):
 
 @router.get("/sites/{site_id}/keys")
 def list_keys(site_id: str, user=Depends(owner), db=Depends(get_db)):
-    owned_site(db, user, site_id)
+    owned_site(db, user, site_id, lock=False)
     return [{"id": key.id, "prefix": key.prefix, "revoked": key.revoked} for key in
             db.scalars(select(ApiKey).where(ApiKey.site_id == site_id).order_by(ApiKey.revoked, ApiKey.id.desc()).limit(50))]
 
@@ -348,7 +349,7 @@ def verification_challenge(site_id: str, user=Depends(owner), db=Depends(get_db)
 @router.post("/sites/{site_id}/verify")
 def verify_domain(site_id: str, user=Depends(owner), db=Depends(get_db), redis=Depends(get_redis)):
     from .scan_api import confirm_verification
-    return confirm_verification(site=owned_site(db, user, site_id), db=db, redis=redis)
+    return confirm_verification(site=owned_site(db, user, site_id, lock=False), db=db, redis=redis)
 
 
 @router.post("/sites/{site_id}/scans", status_code=202)
