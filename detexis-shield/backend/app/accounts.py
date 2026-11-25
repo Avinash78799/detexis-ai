@@ -166,15 +166,19 @@ class AccountRemoval(CurrentPassword):
     confirmation: Literal["DELETE"]
 
 
+def limit_removal_wait(db):
+    if db.bind.dialect.name == "postgresql":
+        db.execute(text("SET LOCAL lock_timeout = '3s'"))
+        db.execute(text("SET LOCAL statement_timeout = '10s'"))
+
+
 @router.post("/account/delete", status_code=204)
 def delete_account(body: AccountRemoval, request: Request, response: Response, user=Depends(owner),
                    db=Depends(get_db), redis=Depends(get_redis)):
     from .account_removal import remove_account_data
     throttle(request, redis, identity=user.id, limit=3, namespace="account-delete")
     try:
-        if db.bind.dialect.name == "postgresql":
-            db.execute(text("SET LOCAL lock_timeout = '3s'"))
-            db.execute(text("SET LOCAL statement_timeout = '10s'"))
+        limit_removal_wait(db)
         user = locked_owner(db, user, no_key_update=True)
         try:
             hasher.verify(user.password_hash, body.password)
@@ -281,6 +285,34 @@ def owned_site(db, user, site_id, *, lock=True):
     if site is None:
         raise HTTPException(404, "Website not found")
     return site
+
+
+class SiteRemoval(CurrentPassword):
+    confirmation: str = Field(min_length=1, max_length=253)
+
+
+@router.post("/sites/{site_id}/delete", status_code=204)
+def delete_site(site_id: str, body: SiteRemoval, request: Request, user=Depends(owner),
+                db=Depends(get_db), redis=Depends(get_redis)):
+    from .account_removal import remove_site_data
+
+    owned_site(db, user, site_id, lock=False)
+    throttle(request, redis, identity=user.id, limit=3, namespace="site-delete")
+    try:
+        limit_removal_wait(db)
+        user = locked_owner(db, user, no_key_update=True)
+        try:
+            hasher.verify(user.password_hash, body.password)
+        except (VerificationError, InvalidHashError):
+            raise HTTPException(401, "Password is incorrect")
+        site = owned_site(db, user, site_id)
+        if body.confirmation.strip() != site.domain:
+            raise HTTPException(422, "Type the website hostname to confirm removal")
+        remove_site_data(db, [site.id])
+        db.commit()
+    except OperationalError:
+        db.rollback()
+        raise HTTPException(503, "Website removal could not be confirmed. Refresh before retrying")
 
 
 @router.get("/sites/{site_id}/connection")

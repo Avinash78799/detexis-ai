@@ -1,5 +1,11 @@
 # Self-service account removal
 
+To remove just one site, expand **Remove website** on its workspace card.
+Enter your current password and type that site's hostname to confirm. Shield
+revokes its keys and removes its live monitoring records in one transaction.
+Your account, browser sessions, and your other websites are preserved.
+The same backup and external notification limitations apply.
+
 Signed-in owners can open **Delete account and monitoring data** near the bottom
 of their workspace. The form requires their current password and typing `DELETE`.
 The API takes its target exclusively from the authenticated session, never from

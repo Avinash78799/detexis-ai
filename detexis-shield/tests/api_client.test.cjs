@@ -39,6 +39,7 @@ test('session expiry differs from rejected sign-in credentials', async () => {
   await assert.rejects(api.request('sites'), /session expired/);
   await assert.rejects(api.request('login', {}), /Invalid credentials/);
   await assert.rejects(api.request('account/delete', {}), /Invalid credentials/);
+  await assert.rejects(api.request('sites/fixture/delete', {}), /Invalid credentials/);
 });
 
 test('deletion server failure reports uncertain completion without retry', async () => {
@@ -46,6 +47,8 @@ test('deletion server failure reports uncertain completion without retry', async
   const api = client(async () => {calls++; return response(503);});
   await assert.rejects(api.request('account/delete', {}), /could not be confirmed.*Refresh before retrying/);
   assert.equal(calls, 1);
+  await assert.rejects(api.request('sites/fixture/delete', {}), /Website removal could not be confirmed.*Refresh before retrying/);
+  assert.equal(calls, 2);
 });
 
 test('timed-out mutations warn about uncertain completion and are not retried', async () => {

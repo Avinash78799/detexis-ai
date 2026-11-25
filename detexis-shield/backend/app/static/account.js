@@ -2,6 +2,7 @@
 let csrf = "";
 let sitesRequest = 0;
 let attentionRequest = 0;
+const removedSites = new Set();
 const node = id => document.getElementById(id);
 async function api(path, body) {
   return window.shieldApi(path, body, csrf);
@@ -61,6 +62,74 @@ async function refreshAttention() {
     if (request === attentionRequest) button.disabled = false;
   }
 }
+function siteRemoval(site, card) {
+  const box = document.createElement('details');
+  box.className = 'site-removal';
+  const summary = document.createElement('summary');
+  summary.textContent = 'Remove website';
+  summary.setAttribute('aria-label', 'Remove website ' + site.domain);
+  const explanation = document.createElement('p');
+  explanation.textContent = 'Remove the sensor from your application first. This deletes the website’s keys and live monitoring history. Your account and other websites stay in place. Backup copies expire under the operator’s retention policy.';
+  const form = document.createElement('form');
+  function field(name, label, type) {
+    const wrapper = document.createElement('label');
+    wrapper.textContent = label;
+    const input = document.createElement('input');
+    input.name = name;
+    input.type = type;
+    input.required = true;
+    input.autocomplete = type === 'password' ? 'current-password' : 'off';
+    input.maxLength = type === 'password' ? 128 : 253;
+    if (type === 'password') input.minLength = 12;
+    wrapper.append(input);
+    return wrapper;
+  }
+  const submit = document.createElement('button');
+  submit.className = 'danger';
+  submit.type = 'submit';
+  submit.textContent = 'Permanently remove website';
+  const status = document.createElement('p');
+  status.setAttribute('role', 'status');
+  status.setAttribute('aria-live', 'polite');
+  form.append(field('password', 'Current password', 'password'),
+              field('confirmation', 'Type ' + site.domain + ' to confirm', 'text'), submit, status);
+  box.append(summary, explanation, form);
+  form.addEventListener('submit', async event => {
+    event.preventDefault();
+    if (submit.disabled) return;
+    const requestCsrf = csrf;
+    const body = Object.fromEntries(new FormData(form));
+    submit.disabled = true;
+    status.textContent = 'Removing website and monitoring history…';
+    try {
+      await api('sites/' + encodeURIComponent(site.id) + '/delete', body);
+      if (csrf !== requestCsrf) return;
+      removedSites.add(site.id);
+      for (const [panel, list] of [['issued-keys', 'issued-keys-list'], ['installation', 'installation-list']]) {
+        const container = node(list);
+        for (const item of [...container.children]) {
+          if (item.getAttribute('data-site-id') === site.id) item.remove();
+        }
+        node(panel).hidden = !container.children.length;
+      }
+      node('issued-keys-status').textContent = '';
+      card.remove();
+      node('message').textContent = site.domain + ' and its monitoring history were removed.';
+      const heading = node('sites-heading');
+      heading.tabIndex = -1;
+      heading.focus();
+      refreshAttention();
+      await refreshSites();
+    } catch (error) {
+      if (csrf === requestCsrf) status.textContent = error.message;
+    } finally {
+      form.reset();
+      submit.disabled = false;
+    }
+  });
+  return box;
+}
+
 async function refreshSites() {
   const request = ++sitesRequest;
   node('sites-status').textContent = 'Loading websites…';
@@ -166,9 +235,10 @@ async function refreshSites() {
           const issuanceCsrf = csrf;
           try {
             const issued = await api(path, {}); const secret = document.createElement('pre');
-            if (csrf !== issuanceCsrf) return;
+            if (csrf !== issuanceCsrf || removedSites.has(site.id)) return;
             secret.textContent = 'Save this key now; it is shown once:\n' + issued.api_key;
             const saved = document.createElement('section');
+            saved.setAttribute('data-site-id', site.id);
             const heading = document.createElement('h3'); heading.textContent = site.domain;
             saved.append(heading, secret); node('issued-keys-list').append(saved);
             node('issued-keys').hidden = false;
@@ -211,7 +281,7 @@ async function refreshSites() {
       } catch (error) {node('message').textContent = error.message;}
       finally {verify.disabled = false;}
     });
-    card.append(connection, manage, verify, connectionPanel, keyStatus, panel, verificationPanel); node('sites').append(card);
+    card.append(connection, manage, verify, connectionPanel, keyStatus, panel, verificationPanel, siteRemoval(site, card)); node('sites').append(card);
   }
 }
 node('refresh-attention').addEventListener('click', refreshAttention);
@@ -241,8 +311,9 @@ for (const id of ['auth-form','site-form','recover-form','recovery-form','passwo
     } else {
       const creationCsrf = csrf;
       const data = await api('sites', body);
-      if (csrf !== creationCsrf) return;
+      if (csrf !== creationCsrf || removedSites.has(data.id)) return;
       const saved = document.createElement('section');
+      saved.setAttribute('data-site-id', data.id);
       const heading = document.createElement('h3');
       heading.textContent = data.domain;
       heading.tabIndex = -1;
@@ -269,6 +340,7 @@ node('delete-account-form').addEventListener('submit', async event => {
     await api('account/delete', body);
     ++sitesRequest;
     ++attentionRequest;
+    removedSites.clear();
     node('attention-items').replaceChildren();
     node('attention-status').textContent = '';
     csrf = '';

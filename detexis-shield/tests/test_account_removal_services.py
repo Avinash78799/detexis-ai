@@ -27,13 +27,15 @@ from app.models import Site,IncidentAction
 from app.redis_store import get_redis
 from test_accounts import register
 from test_smoke import event
-from test_account_removal import populated_owner,BODY,test_account_removal_erases_owned_history_sessions_and_keys_only
+from test_account_removal import (populated_owner,BODY,test_account_removal_erases_owned_history_sessions_and_keys_only,
+                                  test_site_removal_erases_only_selected_website)
 import app.accounts as accounts
 import app.main as main_module
 from app.auth import current_site
 
 redis=get_redis()
 test_account_removal_erases_owned_history_sessions_and_keys_only(redis)
+test_site_removal_erases_only_selected_website(redis)
 # A deletion waiting for a site must not block an in-flight actor FK check.
 with TestClient(app,base_url='https://testserver') as owner:
     headers,created,user_id,incident_id=populated_owner(owner,redis)

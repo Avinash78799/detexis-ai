@@ -111,3 +111,52 @@ def test_removal_without_sites_and_password_attempt_budget():
             assert client.post("/app/api/account/delete", headers=headers, json=wrong).status_code == 401
         assert client.post("/app/api/account/delete", headers=headers, json=BODY).status_code == 429
         assert client.get("/app/api/session").status_code == 200
+
+
+def test_site_removal_erases_only_selected_website(isolated_redis):
+    with TestClient(app, base_url="https://testserver") as owner, TestClient(app, base_url="https://testserver") as other:
+        headers, removed, user_id, incident = populated_owner(owner, isolated_redis)
+        other_headers, foreign, _, foreign_incident = populated_owner(other, isolated_redis)
+        remaining = owner.post("/app/api/sites", headers=headers,
+                               json={"domain":"remaining-site.example"}).json()
+        remaining_event = event("/health")
+        assert owner.post("/v1/events", headers={"X-API-Key":remaining["api_key"]},
+                          json={"events":[remaining_event]}).status_code == 202
+        path = f"/app/api/sites/{removed['id']}/delete"
+        body = {"password":PASSWORD, "confirmation":removed["domain"]}
+        assert owner.post(path, headers=ORIGIN, json=body).status_code == 403
+        assert other.post(path, headers=other_headers, json=body).status_code == 404
+        assert owner.post(path, headers=headers, json={**body, "password":"wrong-long-test-password"}).status_code == 401
+        assert owner.post(path, headers=headers, json={**body, "confirmation":"another.example"}).status_code == 422
+        assert owner.post(path, headers=headers, json=body).status_code == 204
+        assert owner.get("/app/api/session").status_code == 200
+        assert [site["id"] for site in owner.get("/app/api/sites").json()] == [remaining["id"]]
+        assert owner.get(f"/app/api/incidents/{incident}").status_code == 404
+        assert other.get(f"/app/api/incidents/{foreign_incident}").status_code == 200
+        for site, expected in [(removed, 401), (remaining, 200), (foreign, 200)]:
+            assert owner.get("/v1/config", headers={"X-API-Key":site["api_key"]}).status_code == expected
+        with SessionLocal() as db:
+            assert db.get(User, user_id) is not None and db.get(Site, removed["id"]) is None
+            assert db.get(Event, (remaining_event["event_id"], remaining["id"])) is not None
+            assert db.scalar(select(IncidentAction).where(IncidentAction.incident_id == incident)) is None
+            for model in [Alert, ApiKey, Event, HourBucket, Incident, Scan, SensorHealthAlert]:
+                assert db.scalar(select(func.count()).select_from(model).where(model.site_id == removed["id"])) == 0
+
+
+def test_site_removal_rolls_back_if_interrupted(monkeypatch, isolated_redis):
+    import app.account_removal as removal
+
+    original = removal.remove_site_data
+
+    def interrupted(db, sites):
+        original(db, sites)
+        raise OperationalError("synthetic interruption", {}, Exception("synthetic"))
+
+    with TestClient(app, base_url="https://testserver") as client:
+        headers, created, _, incident = populated_owner(client, isolated_redis)
+        monkeypatch.setattr(removal, "remove_site_data", interrupted)
+        response = client.post(f"/app/api/sites/{created['id']}/delete", headers=headers,
+                               json={"password":PASSWORD, "confirmation":created["domain"]})
+        assert response.status_code == 503
+        assert client.get(f"/app/api/incidents/{incident}").status_code == 200
+        assert client.get("/v1/config", headers={"X-API-Key":created["api_key"]}).status_code == 200
