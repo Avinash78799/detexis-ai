@@ -30,7 +30,8 @@ window.shieldApi = async function(path, body, csrf = '') {
     catch (_) {
       error.message = controller.signal.aborted
         ? 'Request timed out. It may have completed; refresh before retrying.'
-        : 'Shield returned an unexpected response. Refresh the page and try again.';
+        : (body === undefined ? 'Shield returned an unexpected response. Refresh the page and try again.'
+          : 'Shield returned an unreadable response. The action may have completed; refresh before retrying.');
       throw error;
     }
     if (!response.ok) {

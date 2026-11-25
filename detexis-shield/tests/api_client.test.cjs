@@ -31,6 +31,7 @@ test('server HTML and malformed responses produce useful errors', async () => {
   await assert.rejects(down.request('sites'), /temporarily unavailable/);
   const malformed = client(async () => ({status: 200, ok: true, json: async () => {throw new Error('html');}}));
   await assert.rejects(malformed.request('sites'), /unexpected response/);
+  await assert.rejects(malformed.request('sites', {domain:'fixture.example'}), /may have completed; refresh before retrying/);
 });
 
 test('session expiry differs from rejected sign-in credentials', async () => {
