@@ -4,6 +4,32 @@ The database is the durable record of sites, accounts, sensor-key verifiers,
 events, incidents, scans and alert delivery state. Keep backups private: they
 contain password/session/key verifiers and request telemetry. Never commit them.
 
+## Computer instance rehearsal, 25 November 2026
+
+A fresh custom-format backup at migration `0011` was restored into a disposable
+PostgreSQL container with networking disabled. All 12 public tables matched the
+live source by aggregate row digest, the constraints were valid, and PostgreSQL
+confirmed that the workspace attention index survived the restore. The live API
+passed trusted HTTPS readiness checks before and after the rehearsal.
+
+The archive was streamed into `pg_restore --exit-on-error --single-transaction`.
+The disposable container was removed after verification. This checks recovery
+from a backup stored on the same computer. Recovery from an off-device copy and
+cutover of the live computer-hosted instance remain untested.
+
+### Synthetic application cutover
+
+On the same schema, an isolated Shield API accepted a synthetic event while
+its worker was offline. The source API was stopped, and its PostgreSQL snapshot
+was restored into a different database. A replacement API and fresh Redis
+then started on the private Docker network. The original owner login, sensor
+key, and incident history worked over fixture HTTPS. Retrying the pending
+event returned a duplicate, and recovery queued it for a native RQ worker.
+The worker finished with no pending events or failed jobs.
+
+The rehearsal used unpublished ports and synthetic data. It did not test
+notification delivery, an off-device archive, or switching the live instance.
+
 ## Rehearsal performed on 2 November 2026
 
 The local validation database at migration `0006` was dumped using PostgreSQL 16
