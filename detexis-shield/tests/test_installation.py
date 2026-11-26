@@ -76,6 +76,26 @@ def test_public_data_guide_renders_without_an_account():
     assert page.headers["cache-control"] == "no-store"
 
 
+def test_public_data_guide_reports_recent_retention_and_stays_available_when_offline(isolated_redis, monkeypatch):
+    from redis.exceptions import ConnectionError
+    from app.maintenance_health import RETENTION_STATUS_KEY, record_success
+
+    with TestClient(app) as client:
+        record_success(isolated_redis, 7)
+        page = client.get("/app/data")
+        assert "latest successful maintenance cycle used a 7-day telemetry retention window" in page.text
+        isolated_redis.expire(RETENTION_STATUS_KEY, -1)
+        assert "Shield has no recent retention report" in client.get("/app/data").text
+
+        def offline(*_args):
+            raise ConnectionError("Synthetic Redis outage")
+
+        monkeypatch.setattr(isolated_redis, "get", offline)
+        page = client.get("/app/data")
+        assert page.status_code == 200
+        assert "Shield has no recent retention report" in page.text
+
+
 def test_operator_contact_is_optional_validated_and_visible_without_signin(monkeypatch):
     monkeypatch.setenv("SHIELD_SUPPORT_EMAIL", "shield.org787@gmail.com")
     with TestClient(app) as client:

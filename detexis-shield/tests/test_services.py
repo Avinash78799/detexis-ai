@@ -78,7 +78,10 @@ with TestClient(app) as transport:
 with ThreadPoolExecutor(max_workers=2) as pool:
     outcomes=list(pool.map(lambda _:worker_module.process_batch(site_id,[during["event_id"]],redis),range(2)))
 assert sorted(outcomes)==[0,1],outcomes
-with TestClient(app,base_url="https://testserver") as owner:
+# This suite shares Redis with other service tests. Keep its account rate
+# limit separate while both concurrent recovery attempts share one bucket.
+owner_address=("192.0.2.42",50000)
+with TestClient(app,base_url="https://testserver",client=owner_address) as owner:
     origin={"Origin":"https://testserver"}
     registered=owner.post("/app/api/register",headers=origin,json={"email":str(uuid.uuid4())+"@integration.example","password":"Synthetic-integration-passphrase"})
     assert registered.status_code==201,registered.text
@@ -139,7 +142,7 @@ with TestClient(app,base_url="https://testserver") as owner:
     from concurrent.futures import ThreadPoolExecutor
     recovery_payload={"email":registered.json()["email"],"password":"Concurrent-reset-test-passphrase","recovery_code":registered.json()["recovery_code"]}
     def recover_once():
-        with TestClient(app,base_url="https://testserver") as anonymous:
+        with TestClient(app,base_url="https://testserver",client=owner_address) as anonymous:
             return anonymous.post("/app/api/recover",headers=origin,json=recovery_payload).status_code
     with ThreadPoolExecutor(max_workers=2) as pool:
         outcomes=list(pool.map(lambda _:recover_once(),range(2)))

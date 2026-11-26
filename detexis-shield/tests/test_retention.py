@@ -19,7 +19,7 @@ def test_retention_removes_old_events_and_scans_but_keeps_recent():
         db.add(scan)
         db.commit()
         scan_id = scan.id
-    purge(30)
+    assert purge(30) == 30
     with SessionLocal() as db:
         assert db.get(Event, (expired, site)) is None
         assert db.get(Event, (recent, site)) is not None

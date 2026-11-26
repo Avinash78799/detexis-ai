@@ -125,6 +125,9 @@ delivery may duplicate externally. One outbox record is created per incident.
 Maintenance runs each minute, recovers unprocessed events and pending scans,
 delivers notifications and purges records after 30 days by default. Change
 `RETENTION_DAYS` on that process; minimum seven days preserves baseline history.
+The public data-handling page displays the retention window from the latest
+successful maintenance cycle. The report expires after 180 seconds and the
+page shows it as unavailable during a Redis outage.
 Observe failed RQ jobs and alert outbox status. Data retention also requires a
 backup-retention policy outside this code.
 

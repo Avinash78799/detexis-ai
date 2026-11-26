@@ -403,9 +403,11 @@ def installation_page(request: Request):
 
 
 @pages.get("/app/data")
-def data_handling_page(request: Request):
+def data_handling_page(request: Request, redis=Depends(get_redis)):
     from .dashboard import templates
-    return templates.TemplateResponse(request=request, name="data.html", context={})
+    from .maintenance_health import reported_retention_days
+    return templates.TemplateResponse(request=request, name="data.html",
+                                      context={"retention_days": reported_retention_days(redis)})
 
 
 @pages.get("/app/analyze")

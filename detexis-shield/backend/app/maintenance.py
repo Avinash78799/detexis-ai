@@ -49,6 +49,7 @@ def purge(days=None):
             # A failure rolls back this site's entire graph; completed sites
             # remain cleaned and later passes retry incomplete sites.
             db.commit()
+    return days
 
 
 def recover_events():
@@ -65,15 +66,15 @@ def tick():
     from .scan_jobs import schedule_rescans
     from .redis_store import get_redis
     schedule_rescans(get_redis())
-    purge()
+    return purge()
 
 
 def run_once():
-    tick()
+    retention_days = tick()
     # Refresh only after every maintenance operation completed successfully.
     from .maintenance_health import record_success
     from .redis_store import get_redis
-    record_success(get_redis())
+    record_success(get_redis(), retention_days)
 
 
 def run_forever():
