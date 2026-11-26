@@ -47,6 +47,33 @@ def test_asgi_host_exception_is_preserved(sink):
     assert sink.submit.call_args.args[0]["status"] == 500
 
 
+def test_asgi_reads_only_the_user_agent_value(sink):
+    class PrivateHeader(bytes):
+        def decode(self, *args, **kwargs):
+            pytest.fail("Telemetry decoded an unrelated header value")
+
+    private = PrivateHeader(b'synthetic sensitive value')
+    headers = [(b'cookie', private), (b'authorization', private), (b'user-agent', b'first'),
+               (b'User-Agent', b'\xff' * 700)]
+
+    async def app(scope, receive, send):
+        assert scope['headers'] is headers
+        assert scope['headers'][0][1] is private
+        await send({'type': 'http.response.start', 'status': 204})
+        await send({'type': 'http.response.body', 'body': b''})
+
+    messages = []
+
+    async def send(message):
+        messages.append(message)
+
+    asyncio.run(wrap(ShieldMiddleware, app)({'type':'http', 'headers':headers}, None, send))
+    assert messages[0]['status'] == 204
+    event = sink.submit.call_args.args[0]
+    assert event['ua'] == 'ÿ' * 512
+    assert 'synthetic sensitive value' not in str(event)
+
+
 def test_full_buffer_drops_without_network(monkeypatch):
     monkeypatch.setattr("threading.Thread.start", lambda self: None)
     client = ShieldClient("http://backend.invalid", "key", max_buffer=1)

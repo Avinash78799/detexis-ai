@@ -164,3 +164,14 @@ Heartbeat-gap source update: previously reporting sites now have tenant-scoped
 in-app signals and resumption history, checked by maintenance. Migration 0009,
 rollout scope and operational limits are in `SENSOR-HEALTH.md`. This is not an
 attack verdict or proof that a website is offline.
+
+### SDK 0.1.3 header handling
+
+The ASGI sensor reads header names and decodes only the final User-Agent value,
+up to 512 bytes. Cookie and Authorization values stay with the host application.
+The WSGI sensor also bounds User-Agent before encoding it. The event format is
+unchanged. In a local CPython 3.12 test of event construction with synthetic
+6,000-byte Cookie, 2,000-byte Authorization and 2,048-byte User-Agent values,
+the median peak increase in traced Python allocations fell from 13,039 bytes
+with the 0.1.2 wheel to 2,765 with 0.1.3 across 200 calls after warmup.
+Socket latency is measured separately in `SOCKET-OVERHEAD.md`.

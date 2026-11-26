@@ -7,6 +7,7 @@ from .features import MAX_PATH_STORED, extract_features
 from .redact import MAX_QUERY_INPUT, hash_ip, redact_query
 
 HONEYTOKEN_PATHS = {"/.env", "/admin-backup"}  # Fallback until a valid config is received.
+MAX_USER_AGENT = 512
 
 
 class ShieldMiddleware:
@@ -38,7 +39,10 @@ class ShieldMiddleware:
                 pass
 
     def _record(self, scope, code: int, latency_ms: float) -> None:
-        headers = {k.decode().lower(): v.decode("latin-1") for k, v in scope.get("headers", [])}
+        user_agent = b""
+        for name, value in scope.get("headers", []):
+            if name.lower() == b"user-agent":
+                user_agent = value
         client = scope.get("client") or ("0.0.0.0", 0)
         path = scope.get("path", "")[:MAX_PATH_STORED]
         query = redact_query(scope.get("query_string", b"")[:MAX_QUERY_INPUT].decode("latin-1"))
@@ -52,7 +56,7 @@ class ShieldMiddleware:
             "method": scope.get("method", "GET")[:10],
             "path": path,
             "query_redacted": query,
-            "ua": headers.get("user-agent", "")[:512],
+            "ua": user_agent[:MAX_USER_AGENT].decode("latin-1"),
             "status": code,
             "latency_ms": round(latency_ms, 3),
             "flags": flags,
