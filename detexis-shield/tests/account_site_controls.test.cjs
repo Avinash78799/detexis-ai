@@ -12,6 +12,8 @@ async function workspace(handler, attention = () => ({incidents:[], gaps:[]})) {
       classList:{add(){},remove(){}}, scrollIntoView(){}, querySelectorAll:()=>[], focus(){this.focused = true;},
       querySelector:()=>({focus(){}}), reset(){},
       setAttribute(k,v){this.attrs[k] = v;},
+      getAttribute(k){return this.attrs[k];},
+      removeAttribute(k){delete this.attrs[k];},
       addEventListener(k,v){this.handlers[k] = v;},
       append(...items){this.children.push(...items);},
       replaceChildren(...items){this.textContent = ''; this.children = items;},
@@ -210,4 +212,32 @@ test('a late attention response cannot repopulate a deleted workspace', async ()
   assert.equal(app.get('workspace').hidden, true);
   assert.equal(app.get('attention-status').textContent, '');
   assert.equal(app.get('attention-items').children.length, 0);
+});
+
+test('a published verification proof can be confirmed after refresh without rotation', async () => {
+  const app = await workspace(path => {
+    if (path.endsWith('/verification')) return {
+      record:'_detexis.first.example', value:'fixture-proof', http_url:'https://first.example/.well-known/detexis-shield.txt',
+    };
+    if (path.endsWith('/verify')) return {verified:true};
+    if (path.endsWith('/scans')) return {scan_id:'fixture-scan'};
+    throw new Error('Unexpected request');
+  });
+  const current = label => app.created.filter(item => item.attrs['aria-label'] === label + ' for first.example').at(-1);
+  const open = app.named('Verify domain & scan for first.example');
+  await open.handlers.click();
+  assert.equal(open.attrs['aria-expanded'], 'true');
+  assert.equal(app.calls.filter(call => call.path.endsWith('/verification')).length, 0);
+  await current('Generate new proof').handlers.click();
+  await app.get('refresh-sites').handlers.click();
+  const reopened = app.created.filter(item => item.attrs['aria-label'] === 'Verify domain & scan for first.example').at(-1);
+  await reopened.handlers.click();
+  await current('Confirm published proof').handlers.click();
+  assert.equal(reopened.textContent, 'Run security scan');
+  assert.equal(reopened.focused, true);
+  assert.equal(app.calls.filter(call => call.path.endsWith('/verification')).length, 1);
+  assert.equal(app.calls.filter(call => call.path.endsWith('/verify')).length, 1);
+  assert.equal(app.calls.filter(call => call.path.endsWith('/scans')).length, 0);
+  await reopened.handlers.click();
+  assert.equal(app.calls.filter(call => call.path.endsWith('/scans')).length, 1);
 });

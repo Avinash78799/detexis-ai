@@ -254,33 +254,76 @@ async function refreshSites() {
     const verify = document.createElement('button'); verify.className = 'secondary'; verify.textContent = site.verified ? 'Run security scan' : 'Verify domain & scan';
     verify.setAttribute('aria-label', verify.textContent + ' for ' + site.domain);
     const verificationPanel = document.createElement('div');
-    verify.addEventListener('click', async () => {
-      verify.disabled = true;
+    verificationPanel.id = 'verification-' + site.id;
+    verify.setAttribute('aria-controls', verificationPanel.id);
+    const status = document.createElement('p');
+    status.setAttribute('role', 'status');
+    verificationPanel.append(status);
+    const path = 'sites/' + encodeURIComponent(site.id);
+    async function scan(initiator) {
+      initiator.disabled = true;
+      status.textContent = 'Requesting a security scan…';
       try {
-        const path = 'sites/' + encodeURIComponent(site.id);
-        if (site.verified) {
-          await api(path + '/scans', {});
-          verificationPanel.textContent = 'Scan queued. Open this website’s dashboard for results.';
-          return;
-        }
-        const challenge = await api(path + '/verification', {});
-        verificationPanel.replaceChildren();
-        const instructions = document.createElement('p'); instructions.textContent = 'Publish this TXT record in your DNS, or serve the value at the exact HTTPS URL. Then confirm ownership.';
-        const proof = document.createElement('pre'); proof.textContent = 'TXT name: ' + challenge.record + '\nValue: ' + challenge.value + '\nAlternative HTTPS file: ' + challenge.http_url;
-        const confirmOwnership = document.createElement('button'); confirmOwnership.textContent = 'Confirm ownership';
-        confirmOwnership.addEventListener('click', async () => {
-          confirmOwnership.disabled = true;
-          try {
-            await api(path + '/verify', {}); instructions.textContent = 'Ownership verified. You can now request a security scan.';
-            const scan = document.createElement('button'); scan.textContent = 'Run security scan';
-            scan.addEventListener('click', async () => {scan.disabled = true; try {await api(path + '/scans', {}); instructions.textContent = 'Scan queued. Open this website’s dashboard for results.';} catch (error) {node('message').textContent = error.message; scan.disabled = false;}});
-            verificationPanel.replaceChildren(instructions, scan);
-          } catch (error) {node('message').textContent = error.message; confirmOwnership.disabled = false;}
-        });
-        verificationPanel.append(instructions, proof, confirmOwnership);
-      } catch (error) {node('message').textContent = error.message;}
-      finally {verify.disabled = false;}
+        await api(path + '/scans', {});
+        status.textContent = 'Scan queued. Open this website’s dashboard for results.';
+      } catch (error) {
+        status.textContent = error.message;
+      } finally {
+        initiator.disabled = false;
+      }
+    }
+    verify.addEventListener('click', async () => {
+      if (site.verified) return scan(verify);
+      if (verify.getAttribute('aria-expanded') === 'true') {
+        verificationPanel.hidden = true;
+        verify.setAttribute('aria-expanded', 'false');
+        return;
+      }
+      verificationPanel.hidden = false;
+      verify.setAttribute('aria-expanded', 'true');
     });
+    if (!site.verified) {
+      verificationPanel.hidden = true;
+      verify.setAttribute('aria-expanded', 'false');
+      const instructions = document.createElement('p');
+      instructions.textContent = 'Already published a Shield proof? Confirm it here. Generate a new proof only if you need to replace it.';
+      const proof = document.createElement('pre'); proof.hidden = true;
+      const generate = document.createElement('button'); generate.textContent = 'Generate new proof';
+      const confirmOwnership = document.createElement('button'); confirmOwnership.textContent = 'Confirm published proof';
+      generate.setAttribute('aria-label', 'Generate new proof for ' + site.domain);
+      confirmOwnership.setAttribute('aria-label', 'Confirm published proof for ' + site.domain);
+      async function verifyAction(action) {
+        generate.disabled = true;
+        confirmOwnership.disabled = true;
+        try {
+          await action();
+        } catch (error) {
+          status.textContent = error.message;
+        } finally {
+          generate.disabled = false;
+          confirmOwnership.disabled = false;
+        }
+      }
+      generate.addEventListener('click', () => verifyAction(async () => {
+        status.textContent = 'Generating a new ownership proof…';
+        const challenge = await api(path + '/verification', {});
+        proof.textContent = 'TXT name: ' + challenge.record + '\nValue: ' + challenge.value + '\nAlternative HTTPS file: ' + challenge.http_url;
+        proof.hidden = false;
+        status.textContent = 'Publish this TXT record in your DNS or serve the value at the exact HTTPS URL, then confirm it. A new proof replaces any previous one.';
+      }));
+      confirmOwnership.addEventListener('click', () => verifyAction(async () => {
+        status.textContent = 'Checking the published proof…';
+        await api(path + '/verify', {});
+        site.verified = true;
+        verify.textContent = 'Run security scan';
+        verify.setAttribute('aria-label', 'Run security scan for ' + site.domain);
+        verify.removeAttribute('aria-expanded');
+        status.textContent = 'Ownership verified. You can now request a security scan.';
+        verificationPanel.replaceChildren(status);
+        verify.focus();
+      }));
+      verificationPanel.append(instructions, generate, confirmOwnership, proof);
+    }
     card.append(connection, manage, verify, connectionPanel, keyStatus, panel, verificationPanel, siteRemoval(site, card)); node('sites').append(card);
   }
 }

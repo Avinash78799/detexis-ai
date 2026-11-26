@@ -97,8 +97,9 @@ future work; use the provided persistent demo for initial end-to-end monitoring.
 ## Ownership verification, including vercel.app
 
 Add the exact hostname in the signed-in workspace, then open **Verify domain & scan**.
-Shield provides a token, TXT record and fixed HTTPS URL. Publish either proof,
-then confirm ownership from the same website card.
+Choose **Generate new proof** to get a TXT record and a fixed HTTPS URL. Publish
+either proof, then choose **Confirm published proof**. You can reopen the website
+card later and confirm the same proof. Generating a new one replaces the previous proof.
 Verification lasts seven days and attempts have a one-minute cooldown.
 
 For `detexis.vercel.app`, the legacy app includes an optional well-known route.
