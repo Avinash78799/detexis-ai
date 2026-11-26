@@ -57,6 +57,17 @@ full-day packet downloads are required from the owner.
 
 ## Release gates
 
+On 26 November, an isolated Chrome run with a 390px viewport and 31 synthetic
+incidents verified keyboard focus across the final page of the inbox. Pressing
+Enter on Load more moved focus to the first new incident heading, and Tab
+reached its named Investigate button. After a keyboard-initiated save, focus
+returned to Save decision, the nearby status confirmed the save, and the note
+appeared in decision history. All 44 frontend tests and five inbox API tests
+passed. The Chrome fixture used loopback HTTPS, SQLite and fakeredis. It logged
+Windows connection resets during teardown. Screen-reader and production-stack
+browser acceptance remain open. Private report:
+`outputs/incident-keyboard-verified-20261126.json`.
+
 On 25 November, the incident inbox explanation and focus changes were deployed
 through commit `c1c4e89127100afd14089662139f24d353556ee8` after all four jobs in
 [Actions run 45460901431](https://github.com/Avinash78799/detexis-ai/actions/runs/45460901431)
