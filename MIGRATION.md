@@ -42,6 +42,23 @@ A temporary tunnel's hostname changes after restart. Update the public-origin
 setting and redeploy the entry point when that happens. The landing page does not
 probe backend availability, and its `/health` is entry-point liveness only.
 
+## Monitor the Detexis entry point locally
+
+The local launcher runs the same Flask application in Waitress and attaches the
+Shield WSGI sensor. The server binds to `127.0.0.1`. Set up local Shield HTTPS,
+then add a workspace site named `detexis-entry.test` as its local monitoring label and set
+`SHIELD_API_KEY`, `SHIELD_SALT`, and `SHIELD_URL=https://localhost:8443` from the
+site setup instructions. Point `SSL_CERT_FILE` at the reviewed PEM bundle as
+described in [Local HTTPS](detexis-shield/LOCAL-HTTPS.md#python-sensor-certificate-trust).
+The Python environment needs the Shield SDK and Waitress.
+
+```sh
+python run_local_sensor.py --port 8080
+```
+
+Open `http://127.0.0.1:8080`, then use **Check sensor connection** for the local site.
+This launch mode is separate from Vercel and the archived experiment.
+
 ## Preservation and rollback
 
 `archive/detexis-ai-app.py.txt` and `archive/detexis-ai-requirements.txt` preserve

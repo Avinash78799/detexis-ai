@@ -57,3 +57,14 @@ def test_entry_static_stylesheet_is_available(entry):
     client = entry.create_app().test_client()
     assert client.get("/static/shield-entry.css").status_code == 200
     assert client.get("/missing").status_code == 404
+
+
+def test_local_entry_can_link_to_loopback_shield_without_changing_public_origin_rules(entry, monkeypatch):
+    monkeypatch.setenv("SHIELD_PUBLIC_ORIGIN", "https://localhost:8443")
+    assert entry.create_app().test_client().get("/shield").status_code == 503
+    client = entry.create_app(local_shield_url="https://localhost:8443").test_client()
+    assert client.get("/shield").headers["Location"] == "https://localhost:8443/app"
+    assert client.get("/analyze").headers["Location"] == "https://localhost:8443/app/analyze"
+    for url in ("http://localhost:8443", "https://example.com:8443", "https://localhost:8443/path"):
+        with pytest.raises(ValueError, match="loopback HTTPS origin"):
+            entry.create_app(local_shield_url=url)

@@ -5,25 +5,37 @@ from flask import Flask, redirect, render_template
 from shield_verification import blueprint
 
 
-def shield_origin(value):
+def shield_origin(value, *, loopback_only=False):
     """Only accept an operator-configured HTTPS origin, never a request URL."""
     if not value or any(c.isspace() or ord(c) < 32 for c in value) or "\\" in value:
         return None
     try:
         url = urlsplit(value)
         if (url.scheme != "https" or not url.hostname or url.username is not None
-                or url.password is not None or url.port not in {None, 443}
+                or url.password is not None
                 or url.path not in {"", "/"} or url.query or url.fragment):
+            return None
+        port = url.port
+        if loopback_only:
+            if url.hostname not in {"localhost", "127.0.0.1", "::1"} or port == 0:
+                return None
+        elif port not in {None, 443}:
             return None
         return "https://" + url.netloc
     except ValueError:
         return None
 
 
-def create_app():
+def create_app(*, local_shield_url=None):
     app = Flask(__name__)
     app.register_blueprint(blueprint)
     app.config["MAX_CONTENT_LENGTH"] = 16384
+    local_origin = shield_origin(local_shield_url, loopback_only=True)
+    if local_shield_url is not None and local_origin is None:
+        raise ValueError("The local Shield URL must be a loopback HTTPS origin")
+
+    def configured_origin():
+        return local_origin or shield_origin(os.environ.get("SHIELD_PUBLIC_ORIGIN", ""))
 
     @app.after_request
     def headers(response):
@@ -32,7 +44,7 @@ def create_app():
         return response
 
     def page(archived=False, status=200):
-        configured = shield_origin(os.environ.get("SHIELD_PUBLIC_ORIGIN", ""))
+        configured = configured_origin()
         return render_template("shield_entry.html", configured=bool(configured), archived=archived), status
 
     @app.get("/")
@@ -41,12 +53,12 @@ def create_app():
 
     @app.get("/shield")
     def shield():
-        origin = shield_origin(os.environ.get("SHIELD_PUBLIC_ORIGIN", ""))
+        origin = configured_origin()
         return redirect(origin + "/app", code=303) if origin else page(status=503)
 
     @app.get("/analyze")
     def analyze():
-        origin = shield_origin(os.environ.get("SHIELD_PUBLIC_ORIGIN", ""))
+        origin = configured_origin()
         return redirect(origin + "/app/analyze", code=303) if origin else page(status=503)
 
     @app.get("/health")
