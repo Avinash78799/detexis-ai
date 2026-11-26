@@ -137,7 +137,10 @@ python tools/computer.py stop
 ```
 
 Replace the backup path with a private directory you control. Backup uses a
-unique custom-format PostgreSQL dump and preserves live data. Treat dumps as
+unique custom-format PostgreSQL dump and preserves live data. The command copies
+the archive into a temporary directory, compares its SHA-256 with the database
+container's copy, then publishes the completed `.dump` by renaming it. Its JSON
+result includes the checksum for verifying subsequent transfers. Treat dumps as
 sensitive: they contain account verifiers and telemetry. A same-computer backup
 does not protect against computer loss; keep an encrypted additional copy on
 another device/location and rehearse a separate-database restore using

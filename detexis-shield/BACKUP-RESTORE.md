@@ -161,3 +161,12 @@ TLS configuration and model artifacts separately from the database backup.
 
 The rehearsal database `shield_restore_rehearsal_20261102` was left isolated from
 the application for inspection. It is not an automatic failover database.
+## Verified local archive transfer and restore, 26 November 2026
+
+The computer backup command staged a 27,771-byte PostgreSQL archive in the
+private backup directory. The database container and Windows host reported the
+same SHA-256. A separate offline PostgreSQL container restored the archive in
+one transaction with `pg_restore --exit-on-error --single-transaction`. The
+restored database reported Alembic revision `0011` and zero unvalidated
+constraints. The temporary database was removed after verification. This drill
+covered a same-computer backup. Off-device recovery remains open.

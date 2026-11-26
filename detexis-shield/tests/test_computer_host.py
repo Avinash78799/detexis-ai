@@ -1,4 +1,5 @@
 import importlib.util
+import hashlib
 from pathlib import Path
 
 import pytest
@@ -6,6 +7,43 @@ import pytest
 spec = importlib.util.spec_from_file_location("computer_host", Path("tools/computer.py"))
 computer = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(computer)
+
+
+@pytest.mark.parametrize('copy_result', ['complete', 'interrupted', 'corrupt', 'empty'])
+def test_backup_only_publishes_a_complete_matching_archive(monkeypatch, tmp_path, copy_result):
+    archive = b'synthetic archive bytes'
+    checksum = hashlib.sha256(archive).hexdigest()
+    previous = tmp_path / 'previous.dump'
+    previous.write_bytes(b'previous backup')
+    removed = []
+
+    def compose(*args, capture=False):
+        if args[0] == 'cp':
+            staged = Path(args[-1])
+            assert staged.suffix == '.partial'
+            content = {'complete': archive, 'empty': b'', 'corrupt': bytes(len(archive)), 'interrupted': archive[:4]}
+            staged.write_bytes(content[copy_result])
+            assert list(tmp_path.glob('*.dump')) == [previous]
+            if copy_result == 'interrupted':
+                raise RuntimeError('interrupted copy')
+        elif 'sha256sum' in args:
+            assert capture
+            return f'{checksum}  {args[-1]}\n'
+        elif 'rm' in args:
+            removed.append(args[-1])
+
+    monkeypatch.setattr(computer, 'compose', compose)
+    if copy_result == 'complete':
+        result = computer.create_backup(tmp_path)
+        assert Path(result['backup']).read_bytes() == archive
+        assert result['bytes'] == len(archive) and result['sha256'] == checksum
+        assert removed == ['/tmp/' + Path(result['backup']).name]
+    else:
+        with pytest.raises(RuntimeError, match='interrupted|mismatch|empty'):
+            computer.create_backup(tmp_path)
+        assert list(tmp_path.iterdir()) == [previous]
+        assert not removed
+    assert previous.read_bytes() == b'previous backup'
 
 
 def test_new_computer_credentials_are_random_and_never_overwritten(tmp_path):

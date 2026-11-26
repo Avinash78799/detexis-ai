@@ -3,6 +3,7 @@
 No cloud account, public port, tunnel, OS startup setting or paid resource is created.
 """
 import argparse
+import hashlib
 from http.client import HTTPSConnection, HTTPException
 import json
 import os
@@ -11,6 +12,7 @@ import secrets
 import re
 import ssl
 import subprocess
+from tempfile import TemporaryDirectory
 from datetime import datetime, timezone
 from uuid import uuid4
 from urllib.request import urlopen
@@ -103,6 +105,33 @@ def resume_existing(local_https=False, malware=False, ca_file=None):
         print("Local workspace: https://localhost:8443/app")
 
 
+def create_backup(folder):
+    folder = folder.resolve()
+    folder.mkdir(parents=True, exist_ok=True)
+    name = 'shield-' + datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ') + '-' + uuid4().hex + '.dump'
+    destination = folder / name
+    temporary = '/tmp/' + name
+    compose('exec', '-T', 'db', 'pg_dump', '-U', 'detexis', '-d', 'detexis', '-Fc', '-f', temporary)
+    checksum = compose('exec', '-T', 'db', 'sha256sum', temporary, capture=True).partition(' ')[0]
+    if not re.fullmatch(r'[0-9a-f]{64}', checksum):
+        raise RuntimeError('Could not read the source dump checksum. Container dump retained at ' + temporary)
+    with TemporaryDirectory(dir=folder, prefix='.shield-backup-') as staging:
+        partial = Path(staging) / 'archive.partial'
+        compose('cp', 'db:' + temporary, str(partial))
+        if not partial.is_file() or partial.stat().st_size == 0:
+            raise RuntimeError('Backup copy is missing or empty. Container dump retained at ' + temporary)
+        digest = hashlib.sha256()
+        with partial.open('rb') as stream:
+            for chunk in iter(lambda: stream.read(1024 * 1024), b''):
+                digest.update(chunk)
+        if digest.hexdigest() != checksum:
+            raise RuntimeError('Backup copy checksum mismatch. Container dump retained at ' + temporary)
+        partial.replace(destination)
+    compose('exec', '-T', 'db', 'rm', temporary)
+    return {'backup': str(destination), 'bytes': destination.stat().st_size, 'sha256': checksum,
+            'note': 'Local copy only. Keep private; copy off this computer and rehearse restoration.'}
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("action", choices=["start", "resume", "status", "logs", "stop", "backup", "malware-start", "malware-stop"])
@@ -145,18 +174,7 @@ def main():
     elif args.action == "backup":
         if args.backup_dir is None:
             parser.error("backup requires --backup-dir pointing to a private directory")
-        folder = args.backup_dir.resolve()
-        folder.mkdir(parents=True, exist_ok=True)
-        name = "shield-" + datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ") + "-" + uuid4().hex[:8] + ".dump"
-        destination = folder / name
-        temporary = "/tmp/" + name
-        compose("exec", "-T", "db", "pg_dump", "-U", "detexis", "-d", "detexis", "-Fc", "-f", temporary)
-        compose("cp", "db:" + temporary, str(destination))
-        if not destination.is_file() or destination.stat().st_size == 0:
-            raise RuntimeError("Backup copy is missing or empty; container dump retained")
-        compose("exec", "-T", "db", "rm", temporary)
-        print(json.dumps({"backup": str(destination), "bytes": destination.stat().st_size,
-                          "note": "Local copy only. Keep private; copy off this computer and rehearse restoration."}))
+        print(json.dumps(create_backup(args.backup_dir)))
 
 
 if __name__ == "__main__":
