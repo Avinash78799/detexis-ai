@@ -372,3 +372,37 @@ python tools/profile_wsgi_sensor.py --output wsgi-profile.json
 ```
 
 Raw reports are in `outputs/linux-sdk-wsgi-profile-160b876e`.
+
+### Gunicorn gthread comparison
+
+Two more Linux Docker runs used the same SDK wheel, request profiles, client
+count, and acceptance thresholds with Gunicorn 26.2.0, one `gthread` worker,
+and four threads. The default request-line limit rejected the large synthetic
+query during calibration. The completed runs used an 8,190-byte limit for
+this benchmark. Deployment settings were unchanged.
+
+| Measurement | Run 1 worst p95 | Run 2 worst p95 | Profiles passing, run 1 / run 2 |
+| --- | ---: | ---: | ---: |
+| No-sensor calibration | 4.968 ms | 3.418 ms | — |
+| Collector online | 13.849 ms | 9.031 ms | 2/3 / 3/3 |
+| Collector refused connections | 11.873 ms | 5.886 ms | 2/3 / 3/3 |
+
+The first run missed the p95 target for the large online query and the
+nested-secret query with the collector unreachable. The repeat passed all
+six profiles. The highest client median across the sensor cases was 0.421 ms.
+Both online cases delivered all 2,640 events, with zero drops or seeded-secret
+leaks. Both refused cases completed the host responses and accounted for all
+2,640 dropped events at shutdown. The separate no-sensor calibration stayed
+below 5 ms p95 in both runs. The Linux WSGI tail-latency gate remains open
+because a deployment candidate needs repeatable passes.
+
+Run with SDK 0.1.2 and Gunicorn 26.2.0 installed in a Linux environment, using
+a new output path for each run. A latency miss writes the report and exits 1.
+
+```sh
+python tools/benchmark_gunicorn_sensor.py --output gunicorn-sockets.json
+```
+
+Raw reports are in `outputs/linux-gunicorn-012-e4fb5f18` in the workspace.
+Both record the hashes of the six imported SDK modules and confirm they match
+the checkout.
