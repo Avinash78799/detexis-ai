@@ -184,6 +184,10 @@ async function refreshSites() {
           reporting: 'Heartbeat received within three minutes. A sensor can reach Shield.',
           overdue: 'Heartbeat overdue. Check that your application is running and can reach the Shield URL.'
         };
+        if (status.recent_event_received) {
+          heartbeat.waiting = 'Request telemetry reached Shield in the past three minutes. The first heartbeat may take up to one minute.';
+          heartbeat.overdue = 'Request telemetry reached Shield in the past three minutes, but the heartbeat is overdue. Check the sensor sender if this continues.';
+        }
         const processing = {
           waiting: 'No request events received yet. Visit a route in your instrumented application and check again after a few seconds.',
           pending: 'The latest received event is waiting for processing. Check again shortly.',

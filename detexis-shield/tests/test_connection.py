@@ -25,6 +25,7 @@ def test_connection_diagnostics_lifecycle_and_tenant_privacy():
         assert first.json()["heartbeat"] == "waiting"
         assert first.json()["latest_event_processing"] == "waiting"
         assert first.json()["last_event_received_at"] is None
+        assert first.json()["recent_event_received"] is False
         assert first.json()["active_key"] is True
 
         sensor_headers = {"X-API-Key": created["api_key"]}
@@ -36,6 +37,7 @@ def test_connection_diagnostics_lifecycle_and_tenant_privacy():
         assert receiving.json()["heartbeat"] == "reporting"
         assert receiving.json()["latest_event_processing"] == "pending"
         assert receiving.json()["last_event_received_at"]
+        assert receiving.json()["recent_event_received"] is True
         assert "private-customer" not in receiving.text
         assert created["api_key"] not in receiving.text
         with SessionLocal() as db:
@@ -53,6 +55,10 @@ def test_connection_diagnostics_lifecycle_and_tenant_privacy():
             db.get(Event, (request_event["event_id"], site_id)).processed_at = datetime.now(timezone.utc)
             db.commit()
         assert owner.get(path).json()["latest_event_processing"] == "processed"
+        with SessionLocal() as db:
+            db.get(Event, (request_event["event_id"], site_id)).received_at = datetime.now(timezone.utc) - timedelta(minutes=4)
+            db.commit()
+        assert owner.get(path).json()["recent_event_received"] is False
 
 
 def test_connection_uses_receipt_time_and_excludes_other_sites():

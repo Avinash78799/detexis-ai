@@ -85,6 +85,24 @@ test('key feedback identifies its site while the private key stays outside live 
   assert.equal(live.some(x=>x.textContent.includes('Replacement key created')), true);
 });
 
+test('recent telemetry confirms arrival before the first heartbeat without hiding overdue heartbeats', async () => {
+  let heartbeat = 'waiting', recent = true;
+  const app = await workspace(() => ({
+    active_key:true, heartbeat, recent_event_received:recent,
+    latest_event_processing:'processed', checked_at:'2026-11-26T00:00:00Z',
+  }));
+  const button = app.named('Check sensor connection for first.example');
+  const panel = app.named('Sensor connection for first.example');
+  await button.handlers.click();
+  assert.match(panel.children[1].children[1].textContent, /Request telemetry reached Shield.*first heartbeat/);
+  heartbeat = 'overdue';
+  await button.handlers.click();
+  assert.match(panel.children[1].children[1].textContent, /Request telemetry reached Shield.*heartbeat is overdue/);
+  recent = false;
+  await button.handlers.click();
+  assert.match(panel.children[1].children[1].textContent, /^Heartbeat overdue\. Check/);
+});
+
 test('a failed key-list request announces the affected site and permits retry', async () => {
   let reject, succeed = false;
   const app = await workspace(() => succeed ? [] : new Promise((resolve,no)=>{reject = no;}));

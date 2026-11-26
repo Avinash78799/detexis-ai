@@ -340,6 +340,7 @@ def connection_status(site_id: str, user=Depends(owner), db=Depends(get_db)):
     return {"checked_at": now, "active_key": active_key, "heartbeat": heartbeat,
             "last_heartbeat": site.last_heartbeat,
             "last_event_received_at": latest.received_at if latest else None,
+            "recent_event_received": latest is not None and age(latest.received_at) <= 180,
             "latest_event_processing": processing}
 
 
