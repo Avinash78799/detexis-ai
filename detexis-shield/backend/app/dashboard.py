@@ -50,9 +50,14 @@ def context(db, site):
                      "Reporting" if age(site.last_heartbeat) <= timedelta(minutes=3) else "Heartbeat overdue")
     verification_status = ("Not verified" if site.verified_at is None else
                            "Verified" if age(site.verified_at) < timedelta(days=7) else "Verification expired")
-    states = db.scalars(select(Alert.status).where(Alert.site_id == site.id).order_by(Alert.created_at.desc()).limit(10)).all()
-    notifications = ("Delivery needs setup" if "unconfigured" in states else "Delivery failed" if "failed" in states
-                     else "Pending delivery" if "pending" in states else "Delivered" if states else "No alert records")
+    latest_alert = db.scalar(select(Alert.status).where(Alert.site_id == site.id)
+                             .order_by(Alert.created_at.desc(), Alert.id).limit(1))
+    external_delivery = {
+        "pending": "Awaiting delivery check",
+        "unconfigured": "No external destination",
+        "sent": "Delivered externally",
+        "failed": "External delivery failed",
+    }.get(latest_alert, "No attempts recorded")
     events = db.scalars(select(Event).where(Event.site_id == site.id)
                         .order_by(Event.received_at.desc()).limit(50)).all()
     pending_events = [event for event in events if event.processed_at is None]
@@ -65,7 +70,7 @@ def context(db, site):
         traffic_status = "delayed" if age(pending_events[-1].received_at) > timedelta(minutes=1) else "pending"
     return {"site": site,
             "sensor_status": sensor_status, "verification_status": verification_status,
-            "notifications": notifications,
+            "external_delivery": external_delivery,
             "traffic_status": traffic_status, "pending_count": len(pending_events), "events": events,
             "incidents": db.scalars(select(Incident).where(Incident.site_id == site.id).order_by(Incident.last_seen.desc()).limit(20)).all(),
             "scans": db.scalars(select(Scan).where(Scan.site_id == site.id).order_by(Scan.created_at.desc()).limit(5)).all()}

@@ -61,6 +61,31 @@ def test_dashboard_describes_historical_correlation_without_asserting_order():
         assert "Reconnaissance observed before an exploit indicator" not in page.text
 
 
+def test_dashboard_keeps_in_app_alerts_available_independently_of_external_delivery(isolated_redis):
+    from sqlalchemy import select
+    from app.db import SessionLocal
+    from app.models import Alert
+    from app.worker import process_batch
+
+    with TestClient(app, base_url="https://testserver") as client:
+        headers = register(client, "dashboard-alert-delivery")
+        created = client.post("/app/api/sites", headers=headers, json={"domain": "alerts.example"}).json()
+        page = f"/app/sites/{created['id']}/feed"
+        assert "Latest external alert: No attempts recorded" in client.get(page).text
+        event = seed(created["id"], "/.env")
+        assert process_batch(created["id"], [event], isolated_redis) == 1
+        assert "Latest external alert: Awaiting delivery check" in client.get(page).text
+        for state, label in (("unconfigured", "No external destination"),
+                             ("failed", "External delivery failed"), ("sent", "Delivered externally")):
+            with SessionLocal() as db:
+                db.scalar(select(Alert).where(Alert.site_id == created["id"])).status = state
+                db.commit()
+            response = client.get(page)
+            assert "Latest external alert: " + label in response.text
+            assert '<a href="/app/inbox">Review incident inbox</a>' in response.text
+            assert client.get("/app/api/inbox").json()["incidents"]
+
+
 def test_owner_dashboard_distinguishes_installation_and_processing_states():
     from datetime import datetime, timedelta, timezone
     from app.db import SessionLocal
