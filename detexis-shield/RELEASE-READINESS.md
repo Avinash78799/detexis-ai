@@ -57,6 +57,24 @@ full-day packet downloads are required from the owner.
 
 ## Release gates
 
+The 26 November Chrome rehearsal passed with the deployed API and worker images,
+PostgreSQL, Redis and synthetic owners on disposable loopback HTTPS. A request
+event submitted to ingest produced a worker-detected incident with request
+evidence. With 30 additional seeded incidents, keyboard pagination, triage and
+saved decision history passed. A second owner could neither read nor update the
+first owner's incident. Revocation returned 204, the old key returned 401, and
+both the replacement and the other site's key returned 200. An earlier run
+failed the old-key assertion without recording its HTTP status. The passing run
+waited for the revoke response and checked the specific key's saved state.
+All fixture resources were removed. Screen-reader testing and a permissioned
+real-site pilot remain open. Report: `outputs/incident-postgres-browser-key-evidence-20261126.json`.
+
+The inbox now checks one additional owner-scoped row before offering Load more.
+A second PostgreSQL rehearsal verified that exactly 31 incidents requested in
+one page return no continuation cursor and that default-size pagination still
+reaches the last item. Five inbox API tests and nine inbox UI tests passed.
+The candidate report is `outputs/incident-final-page-candidate-20261126.json`.
+
 On 26 November, an isolated Chrome run with a 390px viewport and 31 synthetic
 incidents verified keyboard focus across the final page of the inbox. Pressing
 Enter on Load more moved focus to the first new incident heading, and Tab

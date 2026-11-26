@@ -84,14 +84,20 @@ def test_inbox_cursor_preserves_incidents_with_equal_timestamps():
             db.commit()
         ids = []
         cursor = {}
-        for _ in range(3):
+        for index in range(3):
             response = client.get("/app/api/inbox", params={"limit":1, **cursor})
             assert response.status_code == 200
             page = response.json()
+            assert len(page["incidents"]) == 1
             ids.append(page["incidents"][0]["id"])
             cursor = page["next"]
-        assert len(set(ids)) == 3
-        assert client.get("/app/api/inbox", params={"limit":1, **cursor}).json()["incidents"] == []
+            if index < 2:
+                assert cursor["before_id"] == ids[-1]
+        assert ids == sorted(set(ids)) and len(ids) == 3
+        assert cursor is None
+        exact_page = client.get("/app/api/inbox", params={"limit":3}).json()
+        assert [row["id"] for row in exact_page["incidents"]] == ids
+        assert exact_page["next"] is None
 
 
 def test_logged_out_browser_preserves_inbox_destination_without_redirecting_api_calls():

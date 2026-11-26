@@ -60,9 +60,14 @@ def inbox(user=Depends(owner), db=Depends(get_db), before: datetime | None = Non
             raise HTTPException(422, "Use a timezone-aware cursor")
         query = query.where(or_(Incident.last_seen < before,
                             and_(Incident.last_seen == before, Incident.id > str(before_id))))
-    rows = db.execute(query.order_by(Incident.last_seen.desc(), Incident.id).limit(limit)).all()
+    rows = db.execute(query.order_by(Incident.last_seen.desc(), Incident.id).limit(limit + 1)).all()
+    next_cursor = None
+    if len(rows) > limit:
+        rows.pop()
+        last = rows[-1][0]
+        next_cursor = {"before": aware(last.last_seen), "before_id": last.id}
     return {"incidents": [incident_summary(row, domain) for row, domain in rows],
-            "next": {"before": aware(rows[-1][0].last_seen), "before_id": rows[-1][0].id} if len(rows) == limit else None}
+            "next": next_cursor}
 
 
 def find_incident(db, user, incident_id, lock=False):
