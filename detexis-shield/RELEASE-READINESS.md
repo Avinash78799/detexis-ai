@@ -68,6 +68,15 @@ Windows connection resets during teardown. Screen-reader and production-stack
 browser acceptance remain open. Private report:
 `outputs/incident-keyboard-verified-20261126.json`.
 
+The same inbox script and template from `c4d828b` are now active on the
+computer-hosted API. A private backup preceded activation. The candidate and
+running image matched the expected 67-file manifest, with just those two inbox
+files changed from the previous image. The existing differences from checkout
+in `maintenance.py` and `ml_runtime.py` were preserved in this UI-only release.
+Database row digests and other container identities stayed unchanged.
+CA-verified HTTPS readiness and the hash of the served inbox script passed.
+Private runtime evidence is in `outputs/incident-keyboard-20261126-runtime.json`.
+
 On 25 November, the incident inbox explanation and focus changes were deployed
 through commit `c1c4e89127100afd14089662139f24d353556ee8` after all four jobs in
 [Actions run 45460901431](https://github.com/Avinash78799/detexis-ai/actions/runs/45460901431)
