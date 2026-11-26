@@ -317,3 +317,58 @@ Reproduce using the intended installed SDK and new output filenames:
 python tools/calibrate_sensor_sockets.py --framework both --samples 200 --concurrency 4 --include-nested-profile --output C:\PRIVATE\sdk011-calibration.json
 python tools/benchmark_sensor_sockets.py --framework both --wsgi-server waitress --samples 200 --concurrency 4 --include-nested-profile --output C:\PRIVATE\sdk011-sockets.json
 ```
+
+## SDK 0.1.2 in Linux Docker — 26 November 2026
+
+The installed 0.1.2 wheel matched the SDK checkout byte-for-byte. Tests used
+prepared-request timing, four concurrent clients, 200 measured pairs per
+client/profile, 20 warmups, and the normal, large, and nested-secret profiles.
+The container ran on WSL2 without external networking. The comparison used
+Uvicorn for ASGI and Waitress 3.0.2 for WSGI.
+
+| Server | Worst added p95, run 1 / run 2 | Profiles passing, run 1 / run 2 | No-sensor worst p95 |
+| --- | ---: | ---: | ---: |
+| Uvicorn ASGI | 4.594 / 7.725 ms | 6/6 / 6/6 | 2.474 ms |
+| Waitress WSGI, four threads | 12.467 / 12.528 ms | 0/6 / 1/6 | 12.712 ms |
+| Waitress WSGI, eight threads | 12.010 / 12.399 ms | 3/6 / 1/6 | 11.872 ms |
+
+All client medians were below 5 ms. The unchanged p95 target is below 10 ms
+for every client and the pooled result. ASGI passed both runs. Neither Waitress
+configuration passed. Identical no-sensor paths also exceeded 10 ms under
+Waitress, so these results do not isolate the source of its tail latency.
+The calibration is a separate experiment and was not subtracted.
+
+Each online case delivered all 2,640 expected events with no seeded-secret
+leaks or drops. With the collector unreachable, host responses completed and
+the sender accounted for discarded events at shutdown. The reports cover this
+synthetic loopback workload. They do not measure the actual Shield backend,
+TLS overhead, or the latency of a customer's application.
+
+Raw run and calibration JSON are under `outputs/linux-sdk-012-b709b5c0` and
+`outputs/linux-sdk-012-wsgi8-4baacf03` in the workspace. Use the commands above
+with SDK 0.1.2 installed. For the eight-thread comparison, pass
+`--framework wsgi --wsgi-threads 8` to both commands.
+
+### Linux WSGI request-path profile
+
+Two additional Linux Docker runs called the WSGI interface directly, including
+iterable completion and close, with the same request profiles and four
+concurrent clients. The SDK wheel again matched the checkout. These runs kept
+the real background sender and measured paired differences in wall time and
+request-thread CPU time separately.
+
+| Collector | Worst added wall p95, run 1 / run 2 | Worst added thread CPU p95, run 1 / run 2 |
+| --- | ---: | ---: |
+| Online | 1.779 / 0.475 ms | 1.134 / 0.473 ms |
+| Connection refused | 0.915 / 1.368 ms | 0.912 / 1.319 ms |
+
+Both online cases delivered all 2,640 expected events with no seeded-secret
+leaks or drops. Both offline cases completed host responses and accounted for
+all 2,640 discarded events. The direct request path did not reproduce the
+Waitress socket tail. Its report deliberately leaves socket acceptance unset.
+
+```sh
+python tools/profile_wsgi_sensor.py --output wsgi-profile.json
+```
+
+Raw reports are in `outputs/linux-sdk-wsgi-profile-160b876e`.
