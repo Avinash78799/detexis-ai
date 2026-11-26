@@ -406,3 +406,15 @@ python tools/benchmark_gunicorn_sensor.py --output gunicorn-sockets.json
 Raw reports are in `outputs/linux-gunicorn-012-e4fb5f18` in the workspace.
 Both record the hashes of the six imported SDK modules and confirm they match
 the checkout.
+
+### SDK 0.1.3 on Linux Gunicorn
+
+Two runs with the verified 0.1.3 wheel passed all six profiles each, using the
+same Gunicorn configuration, four clients and per-client and pooled gates above.
+Worst added p95 with the collector online was 6.564 and 7.397 ms. With the
+collector unreachable it was 6.094 and 4.972 ms. The highest median across
+both sensor runs was 0.315 ms. Identical no-sensor paths measured 2.726 and
+2.879 ms worst p95 in calibration. Each online run delivered all 2,640 events
+with zero drops, and each offline run accounted for all 2,640 drops.
+The results apply to this synthetic Linux Docker loopback configuration.
+Raw reports are in `outputs/linux-gunicorn-013-0f4aa1cf`.

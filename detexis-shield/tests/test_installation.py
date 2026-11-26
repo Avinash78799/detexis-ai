@@ -30,8 +30,8 @@ def test_published_installation_examples_run_and_emit_redacted_events(monkeypatc
     page = TestClient(app).get("/app/install")
     assert page.status_code == 200
     assert page.headers["cache-control"] == "no-store"
-    assert "SDK 0.1.2" in page.text
-    assert "@00d700546396d9eedb4b70f5d991e9086ed6e318#subdirectory=" in page.text
+    assert "SDK 0.1.3" in page.text
+    assert "@eb28bffa48d0b0499b5bc692302b737e229309a2#subdirectory=" in page.text
 
     examples = Examples()
     examples.feed(page.text)
