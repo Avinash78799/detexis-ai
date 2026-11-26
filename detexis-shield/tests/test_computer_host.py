@@ -111,9 +111,12 @@ def test_resume_starts_existing_release_with_requested_profiles(monkeypatch, tmp
 
     monkeypatch.setattr(computer, "compose", compose)
     monkeypatch.setattr(computer, "urlopen", lambda *args, **kwargs: BytesIO(b'{"ok":true}'))
+    verified = []
+    monkeypatch.setattr(computer, "check_local_https_ready", verified.append)
     monkeypatch.setattr("sys.argv", ["computer.py", "resume", "--local-https", "--with-malware"])
     computer.main()
     profiles = ("--profile", "localtls", "--profile", "malware")
+    assert verified == [None]
     assert calls == [
         (*profiles, "ps", "--all", "--services"),
         (*profiles, "start", "--wait", "--wait-timeout", "240", *services),
@@ -133,3 +136,17 @@ def test_resume_reports_missing_containers_before_starting_any(monkeypatch, tmp_
     monkeypatch.setattr(computer, "compose", compose)
     with pytest.raises(RuntimeError, match="containers are missing for worker"):
         computer.resume_existing()
+
+
+def test_https_readiness_refuses_an_untrusted_proxy(monkeypatch):
+    from unittest.mock import Mock
+
+    connection = Mock()
+    connection.request.side_effect = computer.ssl.SSLCertVerificationError("fixture untrusted")
+    connect = Mock(return_value=connection)
+    monkeypatch.setattr(computer, "HTTPSConnection", connect)
+    with pytest.raises(RuntimeError, match="certificate verification failed"):
+        computer.check_local_https_ready()
+    context = connect.call_args.kwargs["context"]
+    assert context.verify_mode == computer.ssl.CERT_REQUIRED and context.check_hostname
+    connection.close.assert_called_once()

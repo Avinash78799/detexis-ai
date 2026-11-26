@@ -70,6 +70,10 @@ python tools/computer.py status
 ```
 
 Add `--with-malware` if you already set up ClamAV and want to resume it too.
+With `--local-https`, resume also verifies the certificate for `localhost` and
+requests `https://localhost:8443/ready` through the proxy. It uses system trust
+by default. If Python needs a separate trust file, pass `--ca-file` followed by
+the path to the reviewed PEM root certificate exported during local HTTPS setup.
 `resume` starts the existing containers and verifies API readiness. If any
 requested containers are missing, it reports them before starting anything.
 Use the original release configuration if you need to recreate them.

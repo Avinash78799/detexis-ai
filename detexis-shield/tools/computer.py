@@ -3,11 +3,13 @@
 No cloud account, public port, tunnel, OS startup setting or paid resource is created.
 """
 import argparse
+from http.client import HTTPSConnection, HTTPException
 import json
 import os
 from pathlib import Path
 import secrets
 import re
+import ssl
 import subprocess
 from datetime import datetime, timezone
 from uuid import uuid4
@@ -60,7 +62,23 @@ def check_api_ready():
             raise RuntimeError("Unexpected API readiness response")
 
 
-def resume_existing(local_https=False, malware=False):
+def check_local_https_ready(ca_file=None):
+    context = ssl.create_default_context(cafile=ca_file)
+    connection = HTTPSConnection("localhost", 8443, timeout=5, context=context)
+    try:
+        connection.request("GET", "/ready")
+        response = connection.getresponse()
+        if response.status != 200 or json.loads(response.read(1024)) != {"ok": True}:
+            raise RuntimeError("Unexpected HTTPS readiness response at https://localhost:8443/ready")
+    except ssl.SSLCertVerificationError as error:
+        raise RuntimeError("Local HTTPS certificate verification failed. Check the reviewed Shield root certificate in LOCAL-HTTPS.md.") from error
+    except (OSError, HTTPException, ValueError) as error:
+        raise RuntimeError("Could not confirm HTTPS readiness at https://localhost:8443/ready") from error
+    finally:
+        connection.close()
+
+
+def resume_existing(local_https=False, malware=False, ca_file=None):
     """Start the last deployed containers without rebuilding or recreating them."""
     prepare_env(ENV, existing_volume=True)
     profiles = []
@@ -78,6 +96,8 @@ def resume_existing(local_https=False, malware=False):
                            + ". Use the original release configuration to recreate them.")
     compose(*profiles, "start", "--wait", "--wait-timeout", "240", *required)
     check_api_ready()
+    if local_https:
+        check_local_https_ready(ca_file)
     print("Existing Shield containers resumed. API: http://127.0.0.1:8000/ready")
     if local_https:
         print("Local workspace: https://localhost:8443/app")
@@ -89,11 +109,14 @@ def main():
     parser.add_argument("--backup-dir", type=Path)
     parser.add_argument("--local-https", action="store_true", help="Start the optional loopback HTTPS proxy; does not install certificate trust")
     parser.add_argument("--with-malware", action="store_true", help="Resume the existing optional ClamAV container")
+    parser.add_argument("--ca-file", type=Path, help="Reviewed PEM root certificate for the local HTTPS resume check (default: system trust)")
     args = parser.parse_args()
     if args.local_https and args.action not in {"start", "resume"}:
         parser.error("--local-https applies only to start or resume")
     if args.with_malware and args.action != "resume":
         parser.error("--with-malware applies only to resume")
+    if args.ca_file and (args.action != "resume" or not args.local_https):
+        parser.error("--ca-file applies only to resume --local-https")
     command("info", "--format", "{{.ServerVersion}}", capture=True)
     if args.action == "start":
         volumes = command("volume", "ls", "--format", "{{.Name}}", capture=True).splitlines()
@@ -108,7 +131,7 @@ def main():
     elif not ENV.exists():
         raise RuntimeError("Start the computer instance first, or restore its .computer.env")
     elif args.action == "resume":
-        resume_existing(local_https=args.local_https, malware=args.with_malware)
+        resume_existing(local_https=args.local_https, malware=args.with_malware, ca_file=args.ca_file)
     elif args.action == "status":
         compose("--profile", "malware", "--profile", "localtls", "ps", "--all")
     elif args.action == "logs":
