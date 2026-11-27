@@ -1,0 +1,32 @@
+<section class="summary">
+  <article><span>Sensor heartbeat</span><strong>{{ sensor_status }}</strong><small>Last received: {{ site.last_heartbeat or 'never' }}</small></article>
+  <article><span>Recent incidents</span><strong>{{ incidents|length }} <small>shown</small></strong></article>
+  <article><span>Domain verification</span><strong>{{ verification_status }}</strong></article>
+  <article><span>In-app alerts</span><strong>{% if workspace_url %}<a href="/app/inbox">Review incident inbox</a>{% else %}<a href="#incidents">Review incidents here</a>{% endif %}</strong><small>Latest external alert: {{ external_delivery }}</small></article>
+</section>
+<section id="incidents"><h2>Incidents <small>Grouped in five-minute windows</small></h2>
+{% set correlation_labels = {'recon_to_exploit': 'Reconnaissance observed before an exploit indicator', 'recon_and_exploit': 'Reconnaissance and exploit indicators observed (order unverified)', 'repeated_login_failures': 'Repeated login failures', 'flood': 'Request flood'} %}
+{% for incident in incidents %}<article class="incident"><span class="badge {{ incident.severity }}">{{ incident.severity }}</span><strong>{% if workspace_url %}<a href="/app/inbox?incident={{ incident.id }}">{{ incident.rules|join(', ') }}</a>{% else %}{{ incident.rules|join(', ') }}{% endif %}</strong><span class="badge">{{ incident.status|replace('_', ' ') }}</span><span>{{ incident.event_count }} events · {{ incident.last_seen }}</span>{% if incident.reported_correlations %}<p>{% for label in incident.reported_correlations %}{{ correlation_labels.get(label, label|replace('_', ' ')) }}{% if not loop.last %} · {% endif %}{% endfor %}</p>{% endif %}</article>{% else %}<div class="empty">No incidents yet. Normal traffic still appears below.</div>{% endfor %}</section>
+<section id="requests"><h2>Live request feed <small>Latest 50 requests</small></h2>
+<p class="subtitle">
+{% if traffic_status == 'waiting' and not site.last_heartbeat %}
+Install and start the Python sensor, then open a page on your site. <a href="/app/install">Open the sensor installation guide</a>.
+{% elif traffic_status == 'waiting' %}
+The sensor has checked in, but Shield has no recent request events. Open a page on the monitored site and refresh this feed.
+{% elif pending_count %}
+{{ pending_count }} {{ 'request is' if pending_count == 1 else 'requests are' }} awaiting analysis in this feed.
+{% if traffic_status == 'delayed' %}The oldest pending request shown has waited more than a minute. If this continues, ask your Shield operator to check the workers.{% endif %}
+{% else %}
+Shield analyzed all requests shown. Review any findings in the feed below.
+{% endif %}
+</p>
+<div class="table-wrap"><table><thead><tr><th>Received (UTC)</th><th>Method</th><th>Path</th><th>Status</th><th>Signals</th></tr></thead><tbody>
+{% for event in events %}<tr><td>{{ event.received_at }}</td><td>{{ event.method }}</td><td class="path">{{ event.path }}</td><td>{{ event.status }}</td><td>{% for finding in event.findings %}<span class="badge {{ finding.severity }}">{{ finding.rule_id }}</span>{% else %}{{ 'No rule match' if event.processed_at else 'Pending analysis' }}{% endfor %}</td></tr>{% else %}<tr><td colspan="5">No requests received yet.</td></tr>{% endfor %}
+</tbody></table></div></section>
+<section id="scans"><h2>Domain scans</h2>{% for scan in scans %}<article class="incident">
+  <strong>{{ 'Canceled' if scan.status == 'unverified' else scan.status }}</strong><span>{{ scan.created_at }}</span>
+  {% if scan.status == 'unverified' %}
+  <p>Domain verification changed or expired before this scan could run. Verify ownership if needed, then request a new scan.</p>
+  {% endif %}
+  {% if scan.result.score is defined %}<p>Configuration score {{ scan.result.score }}/100 — a limited checklist, not a security guarantee.</p><details><summary>Review configuration checks</summary>{% for finding in scan.result.findings %}<p><strong>{{ finding.check }}</strong> · {{ 'Passed' if finding.passed is sameas true else 'Needs review' if finding.passed is sameas false else 'Not assessed' }}<br>{{ finding.detail }}</p>{% endfor %}</details>{% endif %}
+</article>{% else %}<div class="empty">Verify domain ownership before requesting a scan.</div>{% endfor %}</section>

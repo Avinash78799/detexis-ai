@@ -1,0 +1,1264 @@
+{
+  "summary": {
+    "passed": true,
+    "sdk_version": "0.1.1",
+    "measurement_version": 2,
+    "per_run_worst_client_median_ms": [
+      0.9011500000000003,
+      0.7145000000000001
+    ],
+    "per_run_worst_client_p95_ms": [
+      6.9479,
+      5.704899999999999
+    ],
+    "files": {
+      "sdk-011-calibration-20261123.json": "58be0435aa0353e7c76c40f56a45c45a7c12ac79c8159e5abac556ed9846834b",
+      "sdk-011-concurrent-20261123.json": "445ccc1c1d2c9c9455b5c5aaf0a76c1afdd3e69962e05bce8b5431d3692f0bbd",
+      "sdk-011-concurrent-repeat-20261123.json": "ca8f987c9b5c1accf1322efb2de22c008e85a70b6ea53a1ef94258d5c56630b0"
+    },
+    "wheel_sha256": "ff18c2246830814cb454888dd9a6b870342c6bbe2a3e9eb34f442ba5f707dac5",
+    "scope": "Synthetic Windows loopback, four clients, 200 measured pairs per client/profile, online and refused collectors, unchanged 5/10-ms gates. Prepared-request interval; no remote TLS, Linux, production capacity, adoption or long-duration claim."
+  },
+  "calibration": {
+    "kind": "no_sensor_calibration",
+    "sensor_acceptance": null,
+    "measurement_version": 2,
+    "request_preparation": "GET construction excluded; send through complete body read timed",
+    "checked_at": "2026-11-23T18:09:46.370298+00:00",
+    "scope": "Identical no-sensor apps on both loopback paths. No sender, collector, accounts or real traffic. Shared host scheduling and request parsing remain. This does not prove sensor latency acceptance.",
+    "cases": [
+      {
+        "framework": "asgi",
+        "concurrent_clients": 4,
+        "waitress_threads": null,
+        "profiles": {
+          "normal": {
+            "samples": 800,
+            "pooled_path_delta_ms": {
+              "median_ms": -0.06564999999999999,
+              "p95_ms": 3.2019
+            },
+            "per_client_path_delta_ms": [
+              {
+                "median_ms": -0.15700000000000003,
+                "p95_ms": 3.0956
+              },
+              {
+                "median_ms": -0.17120000000000002,
+                "p95_ms": 2.7417
+              },
+              {
+                "median_ms": -0.0645,
+                "p95_ms": 3.4136000000000006
+              },
+              {
+                "median_ms": 0.177,
+                "p95_ms": 3.5784000000000002
+              }
+            ],
+            "absolute_path_difference_ms": {
+              "median_ms": 1.2593999999999999,
+              "p95_ms": 4.5332
+            }
+          },
+          "large": {
+            "samples": 800,
+            "pooled_path_delta_ms": {
+              "median_ms": 0.01004999999999967,
+              "p95_ms": 2.3061000000000003
+            },
+            "per_client_path_delta_ms": [
+              {
+                "median_ms": -0.04590000000000011,
+                "p95_ms": 2.1914
+              },
+              {
+                "median_ms": -0.19169999999999976,
+                "p95_ms": 2.3353999999999995
+              },
+              {
+                "median_ms": 0.14349999999999996,
+                "p95_ms": 2.2392
+              },
+              {
+                "median_ms": 0.15450000000000008,
+                "p95_ms": 2.3183000000000002
+              }
+            ],
+            "absolute_path_difference_ms": {
+              "median_ms": 1.1608999999999998,
+              "p95_ms": 2.6456000000000004
+            }
+          },
+          "nested_secrets": {
+            "samples": 800,
+            "pooled_path_delta_ms": {
+              "median_ms": 0.09439999999999982,
+              "p95_ms": 3.8552000000000004
+            },
+            "per_client_path_delta_ms": [
+              {
+                "median_ms": 0.11214999999999975,
+                "p95_ms": 5.0703
+              },
+              {
+                "median_ms": -0.17700000000000005,
+                "p95_ms": 3.660199999999999
+              },
+              {
+                "median_ms": 0.03325,
+                "p95_ms": 3.8864
+              },
+              {
+                "median_ms": 0.5951499999999998,
+                "p95_ms": 3.6263999999999994
+              }
+            ],
+            "absolute_path_difference_ms": {
+              "median_ms": 1.3959500000000002,
+              "p95_ms": 5.8451
+            }
+          }
+        }
+      },
+      {
+        "framework": "wsgi",
+        "concurrent_clients": 4,
+        "waitress_threads": 4,
+        "profiles": {
+          "normal": {
+            "samples": 800,
+            "pooled_path_delta_ms": {
+              "median_ms": 0.08555000000000001,
+              "p95_ms": 3.6503999999999994
+            },
+            "per_client_path_delta_ms": [
+              {
+                "median_ms": 0.05549999999999988,
+                "p95_ms": 3.2321
+              },
+              {
+                "median_ms": 0.11755000000000027,
+                "p95_ms": 3.7016
+              },
+              {
+                "median_ms": 0.0927,
+                "p95_ms": 3.2395
+              },
+              {
+                "median_ms": 0.05844999999999989,
+                "p95_ms": 4.3659
+              }
+            ],
+            "absolute_path_difference_ms": {
+              "median_ms": 1.4852,
+              "p95_ms": 4.7081
+            }
+          },
+          "large": {
+            "samples": 800,
+            "pooled_path_delta_ms": {
+              "median_ms": -0.18805000000000005,
+              "p95_ms": 3.8672000000000004
+            },
+            "per_client_path_delta_ms": [
+              {
+                "median_ms": -0.019300000000000095,
+                "p95_ms": 3.9962
+              },
+              {
+                "median_ms": -0.3421000000000003,
+                "p95_ms": 3.2867
+              },
+              {
+                "median_ms": -0.06800000000000006,
+                "p95_ms": 4.110099999999999
+              },
+              {
+                "median_ms": -0.2502000000000002,
+                "p95_ms": 3.734
+              }
+            ],
+            "absolute_path_difference_ms": {
+              "median_ms": 1.71325,
+              "p95_ms": 4.5298
+            }
+          },
+          "nested_secrets": {
+            "samples": 800,
+            "pooled_path_delta_ms": {
+              "median_ms": 0.016350000000000087,
+              "p95_ms": 4.136900000000001
+            },
+            "per_client_path_delta_ms": [
+              {
+                "median_ms": -0.06900000000000006,
+                "p95_ms": 4.497400000000001
+              },
+              {
+                "median_ms": 0.07800000000000074,
+                "p95_ms": 3.6047000000000002
+              },
+              {
+                "median_ms": -0.12379999999999991,
+                "p95_ms": 3.7128
+              },
+              {
+                "median_ms": 0.2239,
+                "p95_ms": 4.182099999999999
+              }
+            ],
+            "absolute_path_difference_ms": {
+              "median_ms": 1.4338000000000002,
+              "p95_ms": 5.4365
+            }
+          }
+        }
+      }
+    ],
+    "source_sha256": {
+      "calibrate_sensor_sockets.py": "3639cbfc39ff6d1d165b8a5daafdcd846cd8b7b9b5a382c7fa2a6243410073a0",
+      "benchmark_sensor_sockets.py": "2fab4dd88d662b946ca595cb766e0acb546b7fda0205e63aa129b4c7f68456ab"
+    }
+  },
+  "runs": [
+    {
+      "measurement_version": 2,
+      "request_preparation": "GET URLs/headers built once per client/path before timing; send through complete body read is timed",
+      "checked_at": "2026-11-23T18:11:16.737452+00:00",
+      "python": "3.12.9",
+      "sdk": {
+        "version": "0.1.1",
+        "loaded_source_sha256": {
+          "client.py": "508654edde9ae6643f1dbd8622f6e8d3002d9c374edcc62e3429629dbd6eb522",
+          "features.py": "e5a17ac183308339b9c0561a94f3bdfe502b1080f34cb4e7dbf8545b98ecf782",
+          "middleware.py": "cf6d7bed42b988206902ae35d1a88a9ad9c1d536aedeb0618ceb4403929be751",
+          "redact.py": "9e36853bb7678c6b1c7863d71ec312f992a0a56c8406fbf4f085b7ff74675433",
+          "wsgi.py": "71cacff1160dfdd3bbb908e42404c542dd5a7911de95af59a2a56a7610be39b3",
+          "__init__.py": "9f285333e68327d1fc357608e270ef308813903954d584ac34726b363db4d07b"
+        },
+        "matches_checkout": true
+      },
+      "source_sha256": {
+        "tools\\benchmark_sensor_sockets.py": "2fab4dd88d662b946ca595cb766e0acb546b7fda0205e63aa129b4c7f68456ab",
+        "sensor-sdk\\detexis_shield\\__init__.py": "9f285333e68327d1fc357608e270ef308813903954d584ac34726b363db4d07b",
+        "sensor-sdk\\detexis_shield\\client.py": "508654edde9ae6643f1dbd8622f6e8d3002d9c374edcc62e3429629dbd6eb522",
+        "sensor-sdk\\detexis_shield\\features.py": "e5a17ac183308339b9c0561a94f3bdfe502b1080f34cb4e7dbf8545b98ecf782",
+        "sensor-sdk\\detexis_shield\\middleware.py": "cf6d7bed42b988206902ae35d1a88a9ad9c1d536aedeb0618ceb4403929be751",
+        "sensor-sdk\\detexis_shield\\redact.py": "9e36853bb7678c6b1c7863d71ec312f992a0a56c8406fbf4f085b7ff74675433",
+        "sensor-sdk\\detexis_shield\\wsgi.py": "71cacff1160dfdd3bbb908e42404c542dd5a7911de95af59a2a56a7610be39b3"
+      },
+      "cases": [
+        {
+          "framework": "asgi",
+          "host_server": "uvicorn",
+          "wsgi_threads": null,
+          "concurrent_clients": 4,
+          "collector": "online",
+          "profiles": {
+            "normal": {
+              "samples": 800,
+              "samples_per_client": 200,
+              "baseline": {
+                "median_ms": 4.38845,
+                "p95_ms": 10.9866
+              },
+              "with_sensor": {
+                "median_ms": 4.56505,
+                "p95_ms": 11.1428
+              },
+              "paired_added_latency": {
+                "median_ms": 0.2274499999999997,
+                "p95_ms": 3.8651
+              },
+              "per_client_added_latency": [
+                {
+                  "median_ms": 0.04540000000000033,
+                  "p95_ms": 3.149
+                },
+                {
+                  "median_ms": 0.5144499999999996,
+                  "p95_ms": 3.9766000000000004
+                },
+                {
+                  "median_ms": 0.28644999999999987,
+                  "p95_ms": 4.0618
+                },
+                {
+                  "median_ms": 0.18815000000000026,
+                  "p95_ms": 3.2604
+                }
+              ],
+              "target_passed": true
+            },
+            "large": {
+              "samples": 800,
+              "samples_per_client": 200,
+              "baseline": {
+                "median_ms": 5.2810500000000005,
+                "p95_ms": 11.1542
+              },
+              "with_sensor": {
+                "median_ms": 6.0361,
+                "p95_ms": 12.9975
+              },
+              "paired_added_latency": {
+                "median_ms": 0.7233999999999998,
+                "p95_ms": 5.091100000000001
+              },
+              "per_client_added_latency": [
+                {
+                  "median_ms": 0.6622000000000008,
+                  "p95_ms": 5.2947999999999995
+                },
+                {
+                  "median_ms": 0.64595,
+                  "p95_ms": 3.8979999999999997
+                },
+                {
+                  "median_ms": 0.7399999999999998,
+                  "p95_ms": 5.335699999999999
+                },
+                {
+                  "median_ms": 0.9011500000000003,
+                  "p95_ms": 5.427199999999999
+                }
+              ],
+              "target_passed": true
+            },
+            "nested_secrets": {
+              "samples": 800,
+              "samples_per_client": 200,
+              "baseline": {
+                "median_ms": 5.08505,
+                "p95_ms": 13.1874
+              },
+              "with_sensor": {
+                "median_ms": 5.4773499999999995,
+                "p95_ms": 14.7032
+              },
+              "paired_added_latency": {
+                "median_ms": 0.48754999999999993,
+                "p95_ms": 4.6691
+              },
+              "per_client_added_latency": [
+                {
+                  "median_ms": 0.7290500000000002,
+                  "p95_ms": 5.073
+                },
+                {
+                  "median_ms": 0.5263500000000003,
+                  "p95_ms": 4.9176
+                },
+                {
+                  "median_ms": 0.3637999999999999,
+                  "p95_ms": 3.834199999999999
+                },
+                {
+                  "median_ms": 0.4437500000000001,
+                  "p95_ms": 4.334899999999999
+                }
+              ],
+              "target_passed": true
+            }
+          },
+          "sender": {
+            "expected_synthetic_events": 2640,
+            "events": 2640,
+            "redaction_failures": 0,
+            "dropped_before_close": 0,
+            "buffered_before_close": 0,
+            "dropped_after_close": 0
+          }
+        },
+        {
+          "framework": "asgi",
+          "host_server": "uvicorn",
+          "wsgi_threads": null,
+          "concurrent_clients": 4,
+          "collector": "connection_refused",
+          "profiles": {
+            "normal": {
+              "samples": 800,
+              "samples_per_client": 200,
+              "baseline": {
+                "median_ms": 3.90775,
+                "p95_ms": 6.3841
+              },
+              "with_sensor": {
+                "median_ms": 4.1945,
+                "p95_ms": 6.6091
+              },
+              "paired_added_latency": {
+                "median_ms": 0.32594999999999974,
+                "p95_ms": 2.7061999999999995
+              },
+              "per_client_added_latency": [
+                {
+                  "median_ms": 0.2348999999999999,
+                  "p95_ms": 2.6826999999999996
+                },
+                {
+                  "median_ms": 0.5253500000000003,
+                  "p95_ms": 2.6159999999999997
+                },
+                {
+                  "median_ms": 0.4224999999999999,
+                  "p95_ms": 2.8891999999999998
+                },
+                {
+                  "median_ms": 0.17835000000000045,
+                  "p95_ms": 2.5820000000000003
+                }
+              ],
+              "target_passed": true
+            },
+            "large": {
+              "samples": 800,
+              "samples_per_client": 200,
+              "baseline": {
+                "median_ms": 5.1564,
+                "p95_ms": 8.3806
+              },
+              "with_sensor": {
+                "median_ms": 5.6327,
+                "p95_ms": 9.0731
+              },
+              "paired_added_latency": {
+                "median_ms": 0.5277999999999996,
+                "p95_ms": 3.9591000000000003
+              },
+              "per_client_added_latency": [
+                {
+                  "median_ms": 0.4518500000000003,
+                  "p95_ms": 3.8233999999999995
+                },
+                {
+                  "median_ms": 0.5125999999999995,
+                  "p95_ms": 3.7959999999999994
+                },
+                {
+                  "median_ms": 0.7136499999999999,
+                  "p95_ms": 4.4868
+                },
+                {
+                  "median_ms": 0.3744000000000003,
+                  "p95_ms": 3.4151999999999996
+                }
+              ],
+              "target_passed": true
+            },
+            "nested_secrets": {
+              "samples": 800,
+              "samples_per_client": 200,
+              "baseline": {
+                "median_ms": 4.07895,
+                "p95_ms": 6.2714
+              },
+              "with_sensor": {
+                "median_ms": 4.26205,
+                "p95_ms": 6.7013
+              },
+              "paired_added_latency": {
+                "median_ms": 0.15184999999999982,
+                "p95_ms": 2.5544
+              },
+              "per_client_added_latency": [
+                {
+                  "median_ms": 0.3706999999999998,
+                  "p95_ms": 2.4594
+                },
+                {
+                  "median_ms": 0.13850000000000007,
+                  "p95_ms": 2.6148
+                },
+                {
+                  "median_ms": 0.08550000000000013,
+                  "p95_ms": 2.546
+                },
+                {
+                  "median_ms": 0.1027499999999999,
+                  "p95_ms": 2.5494000000000003
+                }
+              ],
+              "target_passed": true
+            }
+          },
+          "sender": {
+            "expected_synthetic_events": 2640,
+            "events": 0,
+            "redaction_failures": 0,
+            "dropped_before_close": 0,
+            "buffered_before_close": 2639,
+            "dropped_after_close": 2640
+          }
+        },
+        {
+          "framework": "wsgi",
+          "host_server": "waitress",
+          "wsgi_threads": 4,
+          "concurrent_clients": 4,
+          "collector": "online",
+          "profiles": {
+            "normal": {
+              "samples": 800,
+              "samples_per_client": 200,
+              "baseline": {
+                "median_ms": 5.86085,
+                "p95_ms": 14.0833
+              },
+              "with_sensor": {
+                "median_ms": 6.189349999999999,
+                "p95_ms": 14.3239
+              },
+              "paired_added_latency": {
+                "median_ms": 0.3503499999999997,
+                "p95_ms": 6.374899999999999
+              },
+              "per_client_added_latency": [
+                {
+                  "median_ms": 0.28810000000000024,
+                  "p95_ms": 5.909300000000001
+                },
+                {
+                  "median_ms": 0.5048999999999997,
+                  "p95_ms": 5.5711
+                },
+                {
+                  "median_ms": 0.31375,
+                  "p95_ms": 6.9479
+                },
+                {
+                  "median_ms": 0.21064999999999978,
+                  "p95_ms": 5.8477
+                }
+              ],
+              "target_passed": true
+            },
+            "large": {
+              "samples": 800,
+              "samples_per_client": 200,
+              "baseline": {
+                "median_ms": 4.88225,
+                "p95_ms": 9.143
+              },
+              "with_sensor": {
+                "median_ms": 5.36955,
+                "p95_ms": 10.5568
+              },
+              "paired_added_latency": {
+                "median_ms": 0.44510000000000005,
+                "p95_ms": 5.5433
+              },
+              "per_client_added_latency": [
+                {
+                  "median_ms": 0.46740000000000004,
+                  "p95_ms": 5.423
+                },
+                {
+                  "median_ms": 0.2351000000000001,
+                  "p95_ms": 5.306699999999999
+                },
+                {
+                  "median_ms": 0.2573500000000002,
+                  "p95_ms": 5.3793999999999995
+                },
+                {
+                  "median_ms": 0.7147000000000001,
+                  "p95_ms": 5.6751000000000005
+                }
+              ],
+              "target_passed": true
+            },
+            "nested_secrets": {
+              "samples": 800,
+              "samples_per_client": 200,
+              "baseline": {
+                "median_ms": 3.7914000000000003,
+                "p95_ms": 7.3348
+              },
+              "with_sensor": {
+                "median_ms": 4.1061499999999995,
+                "p95_ms": 8.0177
+              },
+              "paired_added_latency": {
+                "median_ms": 0.18755,
+                "p95_ms": 3.476300000000001
+              },
+              "per_client_added_latency": [
+                {
+                  "median_ms": 0.04469999999999952,
+                  "p95_ms": 3.5722000000000005
+                },
+                {
+                  "median_ms": 0.1310499999999999,
+                  "p95_ms": 3.1076
+                },
+                {
+                  "median_ms": 0.14389999999999992,
+                  "p95_ms": 3.2981
+                },
+                {
+                  "median_ms": 0.36130000000000007,
+                  "p95_ms": 3.4916000000000005
+                }
+              ],
+              "target_passed": true
+            }
+          },
+          "sender": {
+            "expected_synthetic_events": 2640,
+            "events": 2640,
+            "redaction_failures": 0,
+            "dropped_before_close": 0,
+            "buffered_before_close": 0,
+            "dropped_after_close": 0
+          }
+        },
+        {
+          "framework": "wsgi",
+          "host_server": "waitress",
+          "wsgi_threads": 4,
+          "concurrent_clients": 4,
+          "collector": "connection_refused",
+          "profiles": {
+            "normal": {
+              "samples": 800,
+              "samples_per_client": 200,
+              "baseline": {
+                "median_ms": 3.4185499999999998,
+                "p95_ms": 6.0221
+              },
+              "with_sensor": {
+                "median_ms": 3.4979,
+                "p95_ms": 6.2054
+              },
+              "paired_added_latency": {
+                "median_ms": 0.1761999999999999,
+                "p95_ms": 2.7513999999999994
+              },
+              "per_client_added_latency": [
+                {
+                  "median_ms": -0.0019500000000001183,
+                  "p95_ms": 2.4255
+                },
+                {
+                  "median_ms": 0.21394999999999986,
+                  "p95_ms": 2.6615999999999995
+                },
+                {
+                  "median_ms": 0.18399999999999994,
+                  "p95_ms": 2.771
+                },
+                {
+                  "median_ms": 0.18369999999999953,
+                  "p95_ms": 3.106299999999999
+                }
+              ],
+              "target_passed": true
+            },
+            "large": {
+              "samples": 800,
+              "samples_per_client": 200,
+              "baseline": {
+                "median_ms": 4.01395,
+                "p95_ms": 6.81
+              },
+              "with_sensor": {
+                "median_ms": 4.47745,
+                "p95_ms": 7.3419
+              },
+              "paired_added_latency": {
+                "median_ms": 0.46665,
+                "p95_ms": 3.8345
+              },
+              "per_client_added_latency": [
+                {
+                  "median_ms": 0.4636500000000001,
+                  "p95_ms": 3.3805000000000005
+                },
+                {
+                  "median_ms": 0.41790000000000016,
+                  "p95_ms": 3.556
+                },
+                {
+                  "median_ms": 0.3422500000000004,
+                  "p95_ms": 4.0432
+                },
+                {
+                  "median_ms": 0.5455499999999995,
+                  "p95_ms": 4.3603000000000005
+                }
+              ],
+              "target_passed": true
+            },
+            "nested_secrets": {
+              "samples": 800,
+              "samples_per_client": 200,
+              "baseline": {
+                "median_ms": 3.52405,
+                "p95_ms": 5.7867
+              },
+              "with_sensor": {
+                "median_ms": 3.65425,
+                "p95_ms": 5.981
+              },
+              "paired_added_latency": {
+                "median_ms": 0.15669999999999984,
+                "p95_ms": 2.8245000000000005
+              },
+              "per_client_added_latency": [
+                {
+                  "median_ms": 0.24209999999999976,
+                  "p95_ms": 2.7887
+                },
+                {
+                  "median_ms": 0.1944999999999999,
+                  "p95_ms": 2.7474000000000003
+                },
+                {
+                  "median_ms": 0.07179999999999986,
+                  "p95_ms": 2.7482
+                },
+                {
+                  "median_ms": -0.02815000000000012,
+                  "p95_ms": 3.0795999999999997
+                }
+              ],
+              "target_passed": true
+            }
+          },
+          "sender": {
+            "expected_synthetic_events": 2640,
+            "events": 0,
+            "redaction_failures": 0,
+            "dropped_before_close": 0,
+            "buffered_before_close": 2639,
+            "dropped_after_close": 2640
+          }
+        }
+      ],
+      "targets_passed": true,
+      "scope": "Alternating loopback TCP pairs per independent client, one shared host process and real background sender. Clients start each profile together; shared-host contention can affect both paired paths. Aggregated and every-client latency gates apply. Server choice, Waitress thread count and concurrency are recorded. Synthetic collector only; no actual ingest/Redis/DB, remote TLS, production capacity or representative traffic claim. Offline telemetry loss is expected and counted."
+    },
+    {
+      "measurement_version": 2,
+      "request_preparation": "GET URLs/headers built once per client/path before timing; send through complete body read is timed",
+      "checked_at": "2026-11-23T18:12:27.766043+00:00",
+      "python": "3.12.9",
+      "sdk": {
+        "version": "0.1.1",
+        "loaded_source_sha256": {
+          "client.py": "508654edde9ae6643f1dbd8622f6e8d3002d9c374edcc62e3429629dbd6eb522",
+          "features.py": "e5a17ac183308339b9c0561a94f3bdfe502b1080f34cb4e7dbf8545b98ecf782",
+          "middleware.py": "cf6d7bed42b988206902ae35d1a88a9ad9c1d536aedeb0618ceb4403929be751",
+          "redact.py": "9e36853bb7678c6b1c7863d71ec312f992a0a56c8406fbf4f085b7ff74675433",
+          "wsgi.py": "71cacff1160dfdd3bbb908e42404c542dd5a7911de95af59a2a56a7610be39b3",
+          "__init__.py": "9f285333e68327d1fc357608e270ef308813903954d584ac34726b363db4d07b"
+        },
+        "matches_checkout": true
+      },
+      "source_sha256": {
+        "tools\\benchmark_sensor_sockets.py": "2fab4dd88d662b946ca595cb766e0acb546b7fda0205e63aa129b4c7f68456ab",
+        "sensor-sdk\\detexis_shield\\__init__.py": "9f285333e68327d1fc357608e270ef308813903954d584ac34726b363db4d07b",
+        "sensor-sdk\\detexis_shield\\client.py": "508654edde9ae6643f1dbd8622f6e8d3002d9c374edcc62e3429629dbd6eb522",
+        "sensor-sdk\\detexis_shield\\features.py": "e5a17ac183308339b9c0561a94f3bdfe502b1080f34cb4e7dbf8545b98ecf782",
+        "sensor-sdk\\detexis_shield\\middleware.py": "cf6d7bed42b988206902ae35d1a88a9ad9c1d536aedeb0618ceb4403929be751",
+        "sensor-sdk\\detexis_shield\\redact.py": "9e36853bb7678c6b1c7863d71ec312f992a0a56c8406fbf4f085b7ff74675433",
+        "sensor-sdk\\detexis_shield\\wsgi.py": "71cacff1160dfdd3bbb908e42404c542dd5a7911de95af59a2a56a7610be39b3"
+      },
+      "cases": [
+        {
+          "framework": "asgi",
+          "host_server": "uvicorn",
+          "wsgi_threads": null,
+          "concurrent_clients": 4,
+          "collector": "online",
+          "profiles": {
+            "normal": {
+              "samples": 800,
+              "samples_per_client": 200,
+              "baseline": {
+                "median_ms": 2.82255,
+                "p95_ms": 4.2007
+              },
+              "with_sensor": {
+                "median_ms": 3.16865,
+                "p95_ms": 4.6744
+              },
+              "paired_added_latency": {
+                "median_ms": 0.3183,
+                "p95_ms": 1.8646000000000003
+              },
+              "per_client_added_latency": [
+                {
+                  "median_ms": 0.34450000000000003,
+                  "p95_ms": 1.8646000000000003
+                },
+                {
+                  "median_ms": 0.4475999999999999,
+                  "p95_ms": 1.8302999999999998
+                },
+                {
+                  "median_ms": 0.25739999999999985,
+                  "p95_ms": 1.7473999999999998
+                },
+                {
+                  "median_ms": 0.20930000000000004,
+                  "p95_ms": 1.8789999999999996
+                }
+              ],
+              "target_passed": true
+            },
+            "large": {
+              "samples": 800,
+              "samples_per_client": 200,
+              "baseline": {
+                "median_ms": 4.4779,
+                "p95_ms": 10.1338
+              },
+              "with_sensor": {
+                "median_ms": 4.8713999999999995,
+                "p95_ms": 11.6323
+              },
+              "paired_added_latency": {
+                "median_ms": 0.4596499999999999,
+                "p95_ms": 3.6092999999999993
+              },
+              "per_client_added_latency": [
+                {
+                  "median_ms": 0.7145000000000001,
+                  "p95_ms": 3.9148000000000014
+                },
+                {
+                  "median_ms": 0.27280000000000015,
+                  "p95_ms": 3.312499999999999
+                },
+                {
+                  "median_ms": 0.45669999999999994,
+                  "p95_ms": 3.5531000000000006
+                },
+                {
+                  "median_ms": 0.35590000000000055,
+                  "p95_ms": 3.6092999999999993
+                }
+              ],
+              "target_passed": true
+            },
+            "nested_secrets": {
+              "samples": 800,
+              "samples_per_client": 200,
+              "baseline": {
+                "median_ms": 3.5460000000000003,
+                "p95_ms": 7.3666
+              },
+              "with_sensor": {
+                "median_ms": 3.8305499999999997,
+                "p95_ms": 8.3583
+              },
+              "paired_added_latency": {
+                "median_ms": 0.33069999999999977,
+                "p95_ms": 2.6691
+              },
+              "per_client_added_latency": [
+                {
+                  "median_ms": 0.34350000000000014,
+                  "p95_ms": 2.4293000000000005
+                },
+                {
+                  "median_ms": 0.23850000000000016,
+                  "p95_ms": 3.1722
+                },
+                {
+                  "median_ms": 0.20995000000000008,
+                  "p95_ms": 2.3914999999999997
+                },
+                {
+                  "median_ms": 0.6210500000000001,
+                  "p95_ms": 2.8081
+                }
+              ],
+              "target_passed": true
+            }
+          },
+          "sender": {
+            "expected_synthetic_events": 2640,
+            "events": 2640,
+            "redaction_failures": 0,
+            "dropped_before_close": 0,
+            "buffered_before_close": 0,
+            "dropped_after_close": 0
+          }
+        },
+        {
+          "framework": "asgi",
+          "host_server": "uvicorn",
+          "wsgi_threads": null,
+          "concurrent_clients": 4,
+          "collector": "connection_refused",
+          "profiles": {
+            "normal": {
+              "samples": 800,
+              "samples_per_client": 200,
+              "baseline": {
+                "median_ms": 3.04495,
+                "p95_ms": 4.7563
+              },
+              "with_sensor": {
+                "median_ms": 3.22515,
+                "p95_ms": 5.2565
+              },
+              "paired_added_latency": {
+                "median_ms": 0.21209999999999996,
+                "p95_ms": 1.9485000000000001
+              },
+              "per_client_added_latency": [
+                {
+                  "median_ms": 0.18524999999999991,
+                  "p95_ms": 1.9449999999999998
+                },
+                {
+                  "median_ms": 0.20910000000000029,
+                  "p95_ms": 2.4383000000000004
+                },
+                {
+                  "median_ms": 0.19694999999999996,
+                  "p95_ms": 1.8038999999999996
+                },
+                {
+                  "median_ms": 0.2467999999999999,
+                  "p95_ms": 1.8361
+                }
+              ],
+              "target_passed": true
+            },
+            "large": {
+              "samples": 800,
+              "samples_per_client": 200,
+              "baseline": {
+                "median_ms": 3.9791499999999997,
+                "p95_ms": 8.5234
+              },
+              "with_sensor": {
+                "median_ms": 4.4104,
+                "p95_ms": 9.9427
+              },
+              "paired_added_latency": {
+                "median_ms": 0.46310000000000007,
+                "p95_ms": 2.8334
+              },
+              "per_client_added_latency": [
+                {
+                  "median_ms": 0.4354,
+                  "p95_ms": 2.9886000000000004
+                },
+                {
+                  "median_ms": 0.4469000000000003,
+                  "p95_ms": 2.802199999999999
+                },
+                {
+                  "median_ms": 0.5074499999999997,
+                  "p95_ms": 2.7146000000000003
+                },
+                {
+                  "median_ms": 0.4524499999999998,
+                  "p95_ms": 3.0559000000000003
+                }
+              ],
+              "target_passed": true
+            },
+            "nested_secrets": {
+              "samples": 800,
+              "samples_per_client": 200,
+              "baseline": {
+                "median_ms": 3.1450500000000003,
+                "p95_ms": 5.161
+              },
+              "with_sensor": {
+                "median_ms": 3.53025,
+                "p95_ms": 5.7036
+              },
+              "paired_added_latency": {
+                "median_ms": 0.4008500000000004,
+                "p95_ms": 2.3068000000000004
+              },
+              "per_client_added_latency": [
+                {
+                  "median_ms": 0.4022999999999999,
+                  "p95_ms": 2.4205
+                },
+                {
+                  "median_ms": 0.58375,
+                  "p95_ms": 2.5145999999999997
+                },
+                {
+                  "median_ms": 0.1926500000000002,
+                  "p95_ms": 1.9882
+                },
+                {
+                  "median_ms": 0.43635,
+                  "p95_ms": 2.285
+                }
+              ],
+              "target_passed": true
+            }
+          },
+          "sender": {
+            "expected_synthetic_events": 2640,
+            "events": 0,
+            "redaction_failures": 0,
+            "dropped_before_close": 0,
+            "buffered_before_close": 2639,
+            "dropped_after_close": 2640
+          }
+        },
+        {
+          "framework": "wsgi",
+          "host_server": "waitress",
+          "wsgi_threads": 4,
+          "concurrent_clients": 4,
+          "collector": "online",
+          "profiles": {
+            "normal": {
+              "samples": 800,
+              "samples_per_client": 200,
+              "baseline": {
+                "median_ms": 3.3052,
+                "p95_ms": 6.1142
+              },
+              "with_sensor": {
+                "median_ms": 3.45535,
+                "p95_ms": 6.2623
+              },
+              "paired_added_latency": {
+                "median_ms": 0.14479999999999982,
+                "p95_ms": 2.7651000000000003
+              },
+              "per_client_added_latency": [
+                {
+                  "median_ms": 0.09729999999999994,
+                  "p95_ms": 2.6003
+                },
+                {
+                  "median_ms": 0.19369999999999998,
+                  "p95_ms": 2.754
+                },
+                {
+                  "median_ms": 0.14480000000000004,
+                  "p95_ms": 2.8178
+                },
+                {
+                  "median_ms": 0.16139999999999977,
+                  "p95_ms": 2.7651000000000003
+                }
+              ],
+              "target_passed": true
+            },
+            "large": {
+              "samples": 800,
+              "samples_per_client": 200,
+              "baseline": {
+                "median_ms": 4.38755,
+                "p95_ms": 10.6207
+              },
+              "with_sensor": {
+                "median_ms": 4.8405000000000005,
+                "p95_ms": 12.0416
+              },
+              "paired_added_latency": {
+                "median_ms": 0.4990999999999999,
+                "p95_ms": 4.5477
+              },
+              "per_client_added_latency": [
+                {
+                  "median_ms": 0.47834999999999983,
+                  "p95_ms": 4.199199999999999
+                },
+                {
+                  "median_ms": 0.5170500000000002,
+                  "p95_ms": 4.7054
+                },
+                {
+                  "median_ms": 0.35650000000000004,
+                  "p95_ms": 4.5143
+                },
+                {
+                  "median_ms": 0.5248999999999999,
+                  "p95_ms": 4.824300000000001
+                }
+              ],
+              "target_passed": true
+            },
+            "nested_secrets": {
+              "samples": 800,
+              "samples_per_client": 200,
+              "baseline": {
+                "median_ms": 3.5666,
+                "p95_ms": 6.5685
+              },
+              "with_sensor": {
+                "median_ms": 3.7548500000000002,
+                "p95_ms": 6.8766
+              },
+              "paired_added_latency": {
+                "median_ms": 0.24729999999999985,
+                "p95_ms": 3.1915
+              },
+              "per_client_added_latency": [
+                {
+                  "median_ms": 0.043199999999999905,
+                  "p95_ms": 2.9751000000000003
+                },
+                {
+                  "median_ms": 0.19735000000000014,
+                  "p95_ms": 3.3078000000000003
+                },
+                {
+                  "median_ms": 0.3690000000000002,
+                  "p95_ms": 3.06
+                },
+                {
+                  "median_ms": 0.3131999999999999,
+                  "p95_ms": 3.5641999999999996
+                }
+              ],
+              "target_passed": true
+            }
+          },
+          "sender": {
+            "expected_synthetic_events": 2640,
+            "events": 2640,
+            "redaction_failures": 0,
+            "dropped_before_close": 0,
+            "buffered_before_close": 0,
+            "dropped_after_close": 0
+          }
+        },
+        {
+          "framework": "wsgi",
+          "host_server": "waitress",
+          "wsgi_threads": 4,
+          "concurrent_clients": 4,
+          "collector": "connection_refused",
+          "profiles": {
+            "normal": {
+              "samples": 800,
+              "samples_per_client": 200,
+              "baseline": {
+                "median_ms": 3.3106,
+                "p95_ms": 6.169
+              },
+              "with_sensor": {
+                "median_ms": 3.4250499999999997,
+                "p95_ms": 6.2581
+              },
+              "paired_added_latency": {
+                "median_ms": 0.12365000000000004,
+                "p95_ms": 2.7979999999999996
+              },
+              "per_client_added_latency": [
+                {
+                  "median_ms": 0.10589999999999988,
+                  "p95_ms": 2.5207999999999995
+                },
+                {
+                  "median_ms": 0.016349999999999865,
+                  "p95_ms": 2.8396999999999997
+                },
+                {
+                  "median_ms": 0.16605000000000003,
+                  "p95_ms": 2.4985999999999997
+                },
+                {
+                  "median_ms": 0.16925000000000012,
+                  "p95_ms": 3.0600000000000005
+                }
+              ],
+              "target_passed": true
+            },
+            "large": {
+              "samples": 800,
+              "samples_per_client": 200,
+              "baseline": {
+                "median_ms": 4.3122,
+                "p95_ms": 12.2768
+              },
+              "with_sensor": {
+                "median_ms": 4.87365,
+                "p95_ms": 13.0448
+              },
+              "paired_added_latency": {
+                "median_ms": 0.5020000000000002,
+                "p95_ms": 4.821299999999999
+              },
+              "per_client_added_latency": [
+                {
+                  "median_ms": 0.6072999999999995,
+                  "p95_ms": 4.4826000000000015
+                },
+                {
+                  "median_ms": 0.49665000000000004,
+                  "p95_ms": 5.704899999999999
+                },
+                {
+                  "median_ms": 0.3094500000000002,
+                  "p95_ms": 4.8248
+                },
+                {
+                  "median_ms": 0.6888000000000001,
+                  "p95_ms": 4.209900000000001
+                }
+              ],
+              "target_passed": true
+            },
+            "nested_secrets": {
+              "samples": 800,
+              "samples_per_client": 200,
+              "baseline": {
+                "median_ms": 3.39695,
+                "p95_ms": 5.8758
+              },
+              "with_sensor": {
+                "median_ms": 3.5641499999999997,
+                "p95_ms": 5.9265
+              },
+              "paired_added_latency": {
+                "median_ms": 0.20469999999999988,
+                "p95_ms": 2.7451000000000003
+              },
+              "per_client_added_latency": [
+                {
+                  "median_ms": 0.2015499999999999,
+                  "p95_ms": 2.5201000000000002
+                },
+                {
+                  "median_ms": 0.17434999999999978,
+                  "p95_ms": 2.7265
+                },
+                {
+                  "median_ms": 0.3549500000000001,
+                  "p95_ms": 2.7584999999999997
+                },
+                {
+                  "median_ms": 0.18335000000000012,
+                  "p95_ms": 3.1061000000000005
+                }
+              ],
+              "target_passed": true
+            }
+          },
+          "sender": {
+            "expected_synthetic_events": 2640,
+            "events": 0,
+            "redaction_failures": 0,
+            "dropped_before_close": 0,
+            "buffered_before_close": 2639,
+            "dropped_after_close": 2640
+          }
+        }
+      ],
+      "targets_passed": true,
+      "scope": "Alternating loopback TCP pairs per independent client, one shared host process and real background sender. Clients start each profile together; shared-host contention can affect both paired paths. Aggregated and every-client latency gates apply. Server choice, Waitress thread count and concurrency are recorded. Synthetic collector only; no actual ingest/Redis/DB, remote TLS, production capacity or representative traffic claim. Offline telemetry loss is expected and counted."
+    }
+  ]
+}

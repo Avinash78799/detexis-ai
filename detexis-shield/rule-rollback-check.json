@@ -1,0 +1,81 @@
+{
+  "passed": true,
+  "checked_at": "2026-11-14T13:36:02.099965+00:00",
+  "before": {
+    "api": {
+      "image": "sha256:614ec5f3fc641c2e988e71439bd450cc87a141bc7b360178aaca6d9af1a42c70",
+      "image_reference": "detexis-shield-computer-api",
+      "version": 2,
+      "release": "2026.11.14.1",
+      "rules_sha256": "d39123a7a05e7c29bfd1e29976edd5d22b9eae2710b39159d5e6fdb6fd2bdf80",
+      "schema_version": "0008"
+    },
+    "worker": {
+      "image": "sha256:cff5640abf637a5b4ea91b45171364500ce7591251a303ab1466bb4271ee853d",
+      "image_reference": "detexis-shield-computer-worker",
+      "version": 2,
+      "release": "2026.11.14.1",
+      "rules_sha256": "d39123a7a05e7c29bfd1e29976edd5d22b9eae2710b39159d5e6fdb6fd2bdf80"
+    },
+    "maintenance": {
+      "image": "sha256:e1b19f436acfb97dbb98a5041c46916f06ec5482bf2155746fd84d79fde10b90",
+      "image_reference": "detexis-shield-computer-maintenance",
+      "version": 2,
+      "release": "2026.11.14.1",
+      "rules_sha256": "d39123a7a05e7c29bfd1e29976edd5d22b9eae2710b39159d5e6fdb6fd2bdf80"
+    }
+  },
+  "rolled_back": {
+    "api": {
+      "image": "sha256:9da45b3de4e9eebd0d315c895610f618ac892b6f43d95cf7587d7cd40528b414",
+      "image_reference": "detexis-shield-rule-rollback-api:b634970cae8e",
+      "version": 1,
+      "release": "legacy-v1",
+      "rules_sha256": "7c40363fbaf745f6f7328c262138c7dad71ad00cb0cb4bf7b3e7a7eedba90c18",
+      "schema_version": "0008"
+    },
+    "worker": {
+      "image": "sha256:9da45b3de4e9eebd0d315c895610f618ac892b6f43d95cf7587d7cd40528b414",
+      "image_reference": "detexis-shield-rule-rollback-worker:b0c3c8be7fa1",
+      "version": 1,
+      "release": "legacy-v1",
+      "rules_sha256": "7c40363fbaf745f6f7328c262138c7dad71ad00cb0cb4bf7b3e7a7eedba90c18"
+    },
+    "maintenance": {
+      "image": "sha256:9da45b3de4e9eebd0d315c895610f618ac892b6f43d95cf7587d7cd40528b414",
+      "image_reference": "detexis-shield-rule-rollback-maintenance:230cd3c9184e",
+      "version": 1,
+      "release": "legacy-v1",
+      "rules_sha256": "7c40363fbaf745f6f7328c262138c7dad71ad00cb0cb4bf7b3e7a7eedba90c18"
+    }
+  },
+  "restored": {
+    "api": {
+      "image": "sha256:614ec5f3fc641c2e988e71439bd450cc87a141bc7b360178aaca6d9af1a42c70",
+      "image_reference": "detexis-shield-computer-api",
+      "version": 2,
+      "release": "2026.11.14.1",
+      "rules_sha256": "d39123a7a05e7c29bfd1e29976edd5d22b9eae2710b39159d5e6fdb6fd2bdf80",
+      "schema_version": "0008"
+    },
+    "worker": {
+      "image": "sha256:cff5640abf637a5b4ea91b45171364500ce7591251a303ab1466bb4271ee853d",
+      "image_reference": "detexis-shield-computer-worker",
+      "version": 2,
+      "release": "2026.11.14.1",
+      "rules_sha256": "d39123a7a05e7c29bfd1e29976edd5d22b9eae2710b39159d5e6fdb6fd2bdf80"
+    },
+    "maintenance": {
+      "image": "sha256:e1b19f436acfb97dbb98a5041c46916f06ec5482bf2155746fd84d79fde10b90",
+      "image_reference": "detexis-shield-computer-maintenance",
+      "version": 2,
+      "release": "2026.11.14.1",
+      "rules_sha256": "d39123a7a05e7c29bfd1e29976edd5d22b9eae2710b39159d5e6fdb6fd2bdf80"
+    }
+  },
+  "scope": "Configuration/image rollback with zero sites and an idle empty queue. API readiness, source consistency and unchanged migration were verified; live traffic, account sessions and active jobs were not tested.",
+  "baseline_provenance": {
+    "rebuilt_from_commit": "24ac7df615c4d6180567312558a61b3a0266d953",
+    "note": "Previous source rebuilt locally after the original image reference proved unavailable. This verifies source-compatible rollback, not byte-for-byte recovery of the original deployed artifact."
+  }
+}

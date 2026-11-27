@@ -1,0 +1,111 @@
+{
+  "checked_at": "2026-11-15T06:40:31.801783+00:00",
+  "python": "3.12.9",
+  "source_sha256": {
+    "tools\\benchmark_sensor_sockets.py": "feb9d5c6069879b21fff22fe352324a6c8bfa5fc3d0d1d66856305a6c74ed43d",
+    "sensor-sdk\\detexis_shield\\__init__.py": "9f285333e68327d1fc357608e270ef308813903954d584ac34726b363db4d07b",
+    "sensor-sdk\\detexis_shield\\client.py": "508654edde9ae6643f1dbd8622f6e8d3002d9c374edcc62e3429629dbd6eb522",
+    "sensor-sdk\\detexis_shield\\features.py": "b95bc9218a3f9f532a40117094ce2029f17e28f3b99879a6e503464fd0bbfc86",
+    "sensor-sdk\\detexis_shield\\middleware.py": "cf6d7bed42b988206902ae35d1a88a9ad9c1d536aedeb0618ceb4403929be751",
+    "sensor-sdk\\detexis_shield\\redact.py": "cea1c9f9be5ebb32d8da31e907d8feab11ca70e476275d52db9b9d8c36abf4ee",
+    "sensor-sdk\\detexis_shield\\wsgi.py": "71cacff1160dfdd3bbb908e42404c542dd5a7911de95af59a2a56a7610be39b3"
+  },
+  "cases": [
+    {
+      "framework": "wsgi",
+      "host_server": "waitress",
+      "collector": "online",
+      "profiles": {
+        "normal": {
+          "samples": 400,
+          "baseline": {
+            "median_ms": 1.34185,
+            "p95_ms": 2.3307
+          },
+          "with_sensor": {
+            "median_ms": 1.5023499999999999,
+            "p95_ms": 2.7657
+          },
+          "paired_added_latency": {
+            "median_ms": 0.16100000000000003,
+            "p95_ms": 0.9811000000000001
+          },
+          "target_passed": true
+        },
+        "large": {
+          "samples": 400,
+          "baseline": {
+            "median_ms": 4.669700000000001,
+            "p95_ms": 7.2803
+          },
+          "with_sensor": {
+            "median_ms": 5.7414,
+            "p95_ms": 8.5039
+          },
+          "paired_added_latency": {
+            "median_ms": 1.0092,
+            "p95_ms": 3.4548999999999994
+          },
+          "target_passed": true
+        }
+      },
+      "sender": {
+        "expected_synthetic_events": 840,
+        "events": 840,
+        "redaction_failures": 0,
+        "dropped_before_close": 0,
+        "buffered_before_close": 0,
+        "dropped_after_close": 0
+      }
+    },
+    {
+      "framework": "wsgi",
+      "host_server": "waitress",
+      "collector": "connection_refused",
+      "profiles": {
+        "normal": {
+          "samples": 400,
+          "baseline": {
+            "median_ms": 1.53965,
+            "p95_ms": 2.2809
+          },
+          "with_sensor": {
+            "median_ms": 1.64455,
+            "p95_ms": 2.5328
+          },
+          "paired_added_latency": {
+            "median_ms": 0.14105,
+            "p95_ms": 0.8855000000000002
+          },
+          "target_passed": true
+        },
+        "large": {
+          "samples": 400,
+          "baseline": {
+            "median_ms": 4.88355,
+            "p95_ms": 6.8768
+          },
+          "with_sensor": {
+            "median_ms": 5.8184000000000005,
+            "p95_ms": 8.2766
+          },
+          "paired_added_latency": {
+            "median_ms": 1.01585,
+            "p95_ms": 3.0625999999999998
+          },
+          "target_passed": true
+        }
+      },
+      "sender": {
+        "expected_synthetic_events": 840,
+        "events": 0,
+        "redaction_failures": 0,
+        "dropped_before_close": 0,
+        "buffered_before_close": 839,
+        "dropped_after_close": 840
+      }
+    }
+  ],
+  "targets_passed": true,
+  "scope": "Alternating sequential loopback TCP pairs, one host process and real background sender. Server choice is recorded per case; Waitress uses four worker threads. Collector acknowledges synthetic events only; no actual ingest/Redis/DB, remote TLS, concurrency, production-server capacity or representative traffic claim. Offline telemetry loss is expected and explicitly counted."
+}

@@ -1,0 +1,14 @@
+{
+  "passed": true,
+  "image": "sha256:0429c84028226462eb9af3c67aff0e0dba81bd4b49d1c931e5ac6b6537595ac9",
+  "scope": "One synthetic 120-second Redis-marker job, native RQ fork/timeouts and registration watcher. No application DB, HTTP ingest, customer traffic, host suspend or Redis outage.",
+  "elapsed_seconds": 122.84399999999914,
+  "restarts": 1,
+  "warm_shutdown_observed": true,
+  "job_finished_once": true,
+  "native_health": true,
+  "new_registration": true,
+  "fixture_stopped": true,
+  "checked_date": "2026-11-22",
+  "harness_sha256": "40768b536ce0d75b4e1e765e18c73bdc2f43f73ddc83313457d468d83830153c"
+}

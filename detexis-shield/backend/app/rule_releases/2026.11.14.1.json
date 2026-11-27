@@ -1,0 +1,14 @@
+{
+  "release_id": "2026.11.14.1",
+  "rules_version": 2,
+  "released_on": "2026-11-14",
+  "rules_source_sha256": "d39123a7a05e7c29bfd1e29976edd5d22b9eae2710b39159d5e6fdb6fd2bdf80",
+  "changes": [
+    "Handle bounded SQL block comments and MySQL executable comments for SQL pattern checks.",
+    "Keep request fields separate so normalization cannot combine them into an invented finding.",
+    "Preserve original HTML evidence and record detector release metadata."
+  ],
+  "references": [
+    "https://wstg.owasp.org/v4.2/4-Web_Application_Security_Testing/07-Input_Validation_Testing/05-Testing_for_SQL_Injection/"
+  ]
+}

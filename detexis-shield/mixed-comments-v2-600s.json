@@ -1,0 +1,245 @@
+{
+  "profile": "mixed_comments",
+  "target_rate": 500,
+  "duration_seconds": 600,
+  "events": 300000,
+  "accepted": 300000,
+  "failed": 0,
+  "elapsed_seconds": 599.9369999999999,
+  "accepted_per_second": 500.052505513079,
+  "batch_latency_median_ms": 81.51960000031977,
+  "batch_latency_p95_ms": 160.64820000065083,
+  "http_responses": {
+    "202": 3000
+  },
+  "transport_errors": {},
+  "note": "Ingest acceptance only. Check pending events, RQ failures and processing lag separately.",
+  "backlog_samples_each_minute": [
+    {
+      "total": 30603,
+      "pending": 200
+    },
+    {
+      "total": 61403,
+      "pending": 500
+    },
+    {
+      "total": 92203,
+      "pending": 200
+    },
+    {
+      "total": 122903,
+      "pending": 200
+    },
+    {
+      "total": 153703,
+      "pending": 400
+    },
+    {
+      "total": 184403,
+      "pending": 100
+    },
+    {
+      "total": 215003,
+      "pending": 100
+    },
+    {
+      "total": 245703,
+      "pending": 100
+    },
+    {
+      "total": 276503,
+      "pending": 200
+    }
+  ],
+  "state": "completed",
+  "site_id": "84bfb605-6baf-44e8-8e3e-490e0233a1d0",
+  "runtime_details": {
+    "python": "3.12.16",
+    "visible_cpus": 8,
+    "packages": {
+      "fastapi": "0.162.0",
+      "uvicorn": "0.34.0",
+      "starlette": "1.10.0",
+      "pydantic": "2.10.4",
+      "httpx": "0.28.1",
+      "sqlalchemy": "2.0.36",
+      "rq": "2.1.0",
+      "psycopg2-binary": "2.9.10"
+    },
+    "postgresql": "16.15",
+    "redis": "7.4.10",
+    "postgresql_settings": {
+      "shared_buffers": "512MB",
+      "wal_compression": "pglz",
+      "bgwriter_lru_maxpages": "1000",
+      "checkpoint_timeout": "5min",
+      "fsync": "on",
+      "synchronous_commit": "on"
+    },
+    "migration": "0008",
+    "model_enabled": false,
+    "detection_release": {
+      "release_id": "2026.11.14.1",
+      "rules_version": 2,
+      "bundled_on": "2026-11-14",
+      "rules_source_sha256": "d39123a7a05e7c29bfd1e29976edd5d22b9eae2710b39159d5e6fdb6fd2bdf80",
+      "release_record_verified": true,
+      "mode": "monitor",
+      "delivery": "bundled_with_deployment",
+      "remote_update_status": "not_configured",
+      "limits": {
+        "path_characters": 2048,
+        "query_characters": 2048,
+        "query_fields": 50,
+        "user_agent_characters": 512
+      },
+      "rules": [
+        {
+          "id": "sqli_boolean",
+          "severity": "high",
+          "cwe": "CWE-89",
+          "owasp": "A05:2025",
+          "reason": "SQL boolean tautology",
+          "scope": "single_request"
+        },
+        {
+          "id": "sqli_union",
+          "severity": "high",
+          "cwe": "CWE-89",
+          "owasp": "A05:2025",
+          "reason": "UNION SELECT syntax",
+          "scope": "single_request"
+        },
+        {
+          "id": "sqli_time",
+          "severity": "high",
+          "cwe": "CWE-89",
+          "owasp": "A05:2025",
+          "reason": "SQL delay function syntax",
+          "scope": "single_request"
+        },
+        {
+          "id": "xss",
+          "severity": "high",
+          "cwe": "CWE-79",
+          "owasp": "A05:2025",
+          "reason": "Executable HTML or JavaScript pattern",
+          "scope": "single_request"
+        },
+        {
+          "id": "path_traversal",
+          "severity": "high",
+          "cwe": "CWE-22",
+          "owasp": "A01:2025",
+          "reason": "Parent-directory traversal syntax",
+          "scope": "single_request"
+        },
+        {
+          "id": "command_injection",
+          "severity": "high",
+          "cwe": "CWE-78",
+          "owasp": "A05:2025",
+          "reason": "Shell separator followed by executable",
+          "scope": "single_request"
+        },
+        {
+          "id": "ssrf_params",
+          "severity": "high",
+          "cwe": "CWE-918",
+          "owasp": "A01:2025",
+          "reason": "URL parameter points at nonpublic destination",
+          "scope": "single_request"
+        },
+        {
+          "id": "scanner_ua",
+          "severity": "low",
+          "cwe": "CWE-200",
+          "owasp": "A02:2025",
+          "reason": "Known automated scanning client; may be authorized",
+          "scope": "single_request"
+        },
+        {
+          "id": "sensitive_path",
+          "severity": "medium",
+          "cwe": "CWE-200",
+          "owasp": "A02:2025",
+          "reason": "Probe for a commonly exposed sensitive file",
+          "scope": "single_request"
+        },
+        {
+          "id": "login_brute_force",
+          "severity": "high",
+          "cwe": "CWE-307",
+          "owasp": "A07:2025",
+          "reason": "Repeated failed logins from the same daily IP hash",
+          "scope": "traffic_history"
+        },
+        {
+          "id": "honeytoken",
+          "severity": "high",
+          "cwe": "CWE-200",
+          "owasp": "A02:2025",
+          "reason": "Configured canary path accessed; verify scanner context",
+          "scope": "site_configuration"
+        },
+        {
+          "id": "request_flood",
+          "severity": "medium",
+          "cwe": "CWE-400",
+          "owasp": "A06:2025",
+          "reason": "Request rate exceeds the site's configured threshold",
+          "scope": "traffic_history"
+        }
+      ],
+      "limitations": [
+        "Findings are review signals, not proof of exploitation.",
+        "Raw bodies, cookies and authorization headers are not inspected.",
+        "Named secret query fields are redacted; unrecognized fields may still contain sensitive data.",
+        "This is a bounded heuristic engine, not a complete WAF or a SQL parser.",
+        "A bundled release date does not prove coverage of all threats disclosed afterward."
+      ]
+    },
+    "worker_source_sha256": "55febf9306b75e5ef65e8ec4d9d0dfbc02dda66a2677e1e033b12a098ed362f4"
+  },
+  "postprocessing_recovery": {
+    "reason": "The original load process finished and saved its draining checkpoint, then failed parsing the generated evidence-query source. The workload was not repeated.",
+    "method": "Corrected read-only complete_measurement function from af707f7cec19495343f7db06ac1ef8e7509b204e; revalidated dedicated API origin and unchanged worker/rule identities before querying actual database results.",
+    "snapshot_limit": "The database snapshot at the exact end of load was not preserved by the original process. The subsequent recovery snapshot and final empty queue were observed directly. Drain timing covers read-only report completion, not the interval since load ended."
+  },
+  "database_at_load_end": null,
+  "database_after_drain": {
+    "total": 300003,
+    "pending": 0
+  },
+  "processing": {
+    "lag_median_seconds": 0.187455,
+    "lag_p95_seconds": 1.2119356999999904,
+    "failed_jobs": 0,
+    "queued_jobs": 0
+  },
+  "rules_evidence": {
+    "matching_release_events": 300003,
+    "sqli_union_events": 30001
+  },
+  "rules_evidence_passed": true,
+  "functional_checks": {
+    "ingest_idempotency": true,
+    "rq_incident": true,
+    "dashboard_auth": true,
+    "real_backend_outage_fail_open": true
+  },
+  "environment": "Dedicated local Docker validation stack; see runtime_details",
+  "project": "detexis-shield-validation-v2",
+  "api_origin": "http://127.0.0.1:18000",
+  "compose_override": true,
+  "capacity_passed": true,
+  "max_processing_p95_seconds": 10,
+  "latency_target_passed": true,
+  "acceptance_passed": true,
+  "database_at_report_recovery": {
+    "total": 300003,
+    "pending": 0
+  },
+  "report_completion_drain_seconds": 0.0
+}

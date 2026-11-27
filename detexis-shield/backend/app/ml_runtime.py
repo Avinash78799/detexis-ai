@@ -1,0 +1,71 @@
+"""Optional model loading; any failure leaves rule detection available."""
+import json
+import hashlib
+from io import BytesIO
+import logging
+import os
+import math
+from functools import lru_cache
+from pathlib import Path
+
+from detexis_shield.features import FEATURE_SCHEMA_VERSION
+
+FEATURE_NAMES = ["payload_len", "special_char_ratio", "num_params", "path_depth"]
+log = logging.getLogger(__name__)
+
+
+@lru_cache(maxsize=1)
+def load_model(path):
+    root = Path(path)
+    metadata = json.loads((root / "metadata.json").read_text())
+    if metadata["schema_version"] != FEATURE_SCHEMA_VERSION or metadata["feature_names"] != FEATURE_NAMES:
+        raise ValueError("model schema mismatch")
+    if not 0 <= metadata["threshold"] <= 1 or metadata.get("evaluation_status") != "validated":
+        raise ValueError("model has no validated operating threshold")
+    target = metadata["target_fpr"]
+    splits = ("calibration", "temporal_test", "cross_dataset")
+    bounds = ("fpr_upper_95", "session_fpr_upper_95")
+    if not 0 < target < 1 or any(not 0 <= metadata["metrics"][split][bound] <= target
+                                 for split in splits for bound in bounds):
+        raise ValueError("model lacks validated request and session false-positive bounds")
+    min_recall = metadata["min_recall"]
+    if not 0 <= min_recall <= 1 or any(not min_recall <= metadata["metrics"][split]["recall"] <= 1
+                                        for split in splits):
+        raise ValueError("model lacks validated recall")
+    expected_digest = metadata["model_sha256"]
+    model_bytes = (root / "model.joblib").read_bytes()
+    if hashlib.sha256(model_bytes).hexdigest() != expected_digest:
+        raise ValueError("model file differs from evaluated artifact")
+    import joblib  # Only deserialize trusted, locally trained artifacts.
+    return joblib.load(BytesIO(model_bytes)), metadata
+
+
+@lru_cache(maxsize=1)
+def warn_unavailable(path):
+    log.warning("ML unavailable; using rules", exc_info=False)
+
+
+def classify(features):
+    path = os.getenv("SHIELD_MODEL_DIR")
+    if not path:
+        return None
+    try:
+        model, metadata = load_model(path)
+        probability = float(model.predict_proba([[features[n] for n in FEATURE_NAMES]])[0][1])
+        if not math.isfinite(probability) or not 0 <= probability <= 1:
+            raise ValueError("invalid model probability")
+        result = {"probability": probability, "alert": probability > metadata["threshold"],
+                  "model_version": metadata["model_version"], "reasons": []}
+        if result["alert"] and metadata.get("model_kind") == "xgboost":
+            try:
+                import shap
+                import numpy as np
+                values = shap.TreeExplainer(model).shap_values(np.asarray([[features[n] for n in FEATURE_NAMES]]))[0]
+                result["reasons"] = [{"feature": FEATURE_NAMES[i], "contribution": float(values[i])}
+                                     for i in sorted(range(len(values)), key=lambda i: abs(values[i]), reverse=True)[:3]]
+            except Exception:
+                result["explanation_status"] = "unavailable"
+        return result
+    except Exception:
+        warn_unavailable(path)
+        return None

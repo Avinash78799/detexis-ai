@@ -1,0 +1,16 @@
+{
+  "passed": true,
+  "source_commit": "0a64d7c9d05c8b4c02ef444b22dcb29c000d75c0",
+  "wheel": "detexis_shield-0.1.1-py3-none-any.whl",
+  "wheel_sha256": "ff18c2246830814cb454888dd9a6b870342c6bbe2a3e9eb34f442ba5f707dac5",
+  "installed_version": "0.1.1",
+  "source_files_matched": {
+    "client.py": "508654edde9ae6643f1dbd8622f6e8d3002d9c374edcc62e3429629dbd6eb522",
+    "features.py": "e5a17ac183308339b9c0561a94f3bdfe502b1080f34cb4e7dbf8545b98ecf782",
+    "middleware.py": "cf6d7bed42b988206902ae35d1a88a9ad9c1d536aedeb0618ceb4403929be751",
+    "redact.py": "9e36853bb7678c6b1c7863d71ec312f992a0a56c8406fbf4f085b7ff74675433",
+    "wsgi.py": "71cacff1160dfdd3bbb908e42404c542dd5a7911de95af59a2a56a7610be39b3",
+    "__init__.py": "9f285333e68327d1fc357608e270ef308813903954d584ac34726b363db4d07b"
+  },
+  "scope": "Fresh target installation, no dependency changes; verified actual package path/version, byte matching and synthetic nested redaction/features. No runtime deployment, target traffic or public PyPI publication."
+}

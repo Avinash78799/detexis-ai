@@ -1,0 +1,12 @@
+detexis-shield/
+run_local_sensor.py
+archive/
+Models/
+TestCases/
+Notebook*
+*.csv
+*.db
+*.dump
+.env*
+__pycache__/
+.git/

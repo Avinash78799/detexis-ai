@@ -1,0 +1,191 @@
+import importlib.util
+import hashlib
+import json
+from datetime import datetime, timedelta, timezone
+from pathlib import Path
+
+import pytest
+
+spec = importlib.util.spec_from_file_location("shield_training", Path("ml/train.py"))
+training = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(training)
+
+
+def records(count=100):
+    start = datetime(2025, 1, 1, tzinfo=timezone.utc)
+    return [{"path": "/", "query_redacted": "", "ts": (start + timedelta(minutes=i)).isoformat(),
+             "session_id": str(i), "dataset": "primary", "label": i % 2} for i in range(count)]
+
+
+def test_temporal_split_has_no_session_overlap_and_purges_spanning_sessions():
+    rows = records()
+    rows[0]["session_id"] = rows[-1]["session_id"] = "spanning"
+    rows += [{**rows[0], "dataset": "cross"}]
+    fit, cal, test, cross, audit = training.prepare(rows, "cross")
+    assert not {r["session_id"] for r in fit} & {r["session_id"] for r in test}
+    assert max(r["_time"] for r in fit) < min(r["_time"] for r in cal)
+    assert max(r["_time"] for r in cal) < min(r["_time"] for r in test)
+    assert audit["purged_session_rows"] == 2
+    assert audit["duplicate_request_overlap"]
+
+
+def test_small_benign_sample_cannot_claim_one_percent_fpr():
+    with pytest.raises(ValueError, match="insufficient"):
+        training.choose_threshold([0] * 20, [.1] * 20, .01)
+
+
+def test_threshold_selected_from_benign_fpr_confidence_bound():
+    labels = [0] * 1000 + [1] * 100
+    probabilities = [.1] * 1000 + [.9] * 100
+    threshold = training.choose_threshold(labels, probabilities, .01)
+    result = training.metrics(labels, probabilities, threshold)
+    assert result["fp"] == 0
+    assert result["fpr_upper_95"] < .01
+    assert result["recall"] == 1
+
+
+def test_session_fpr_counts_one_trial_per_dataset_and_session():
+    rows = records(1000)
+    for row in rows:
+        row["label"] = 0
+        row["session_id"] = "same-session"
+    rows[0]["label"] = 1
+    rows[-1]["dataset"] = "separate-source"
+    scores = training.benign_session_scores(rows, [.99, .8] + [.1] * 998)
+    result = training.session_metrics(scores, .5)
+    assert result["benign_sessions"] == 2
+    assert result["false_positive_sessions"] == 1
+    assert result["session_fpr"] == .5
+    assert training.session_metrics(scores, .8)["false_positive_sessions"] == 0
+    assert training.session_metrics(scores, .8)["session_fpr_upper_95"] > .01
+
+
+def test_fast_threshold_matches_exhaustive_search_with_ties_and_endpoints():
+    import random
+    rng = random.Random(42)
+    labels = [0] * 200 + [1] * 60
+    probabilities = [rng.choice([0, .1, .25, .5, .9, 1]) for _ in labels]
+    for target in (.05, .2, .8):
+        candidates = sorted({0.0, 1.0, *probabilities})
+        expected = next(value for value in candidates
+                        if training.metrics(labels, probabilities, value)["fpr_upper_95"] <= target)
+        assert training.choose_threshold(labels, probabilities, target) == expected
+
+
+@pytest.mark.parametrize("labels,probabilities", [
+    ([0, 1], [.1]), ([0], [float("nan")]), ([0], [float("inf")]),
+    ([0], [-.1]), ([1], [1.1]), ([2], [.5]), ([True], [.5]), ([], []),
+])
+def test_invalid_evaluation_scores_cannot_silently_improve_metrics(labels, probabilities):
+    with pytest.raises(ValueError):
+        training.metrics(labels, probabilities, .5)
+    with pytest.raises(ValueError):
+        training.choose_threshold(labels, probabilities, .1)
+
+
+def test_large_distinct_score_calibration_selects_first_feasible_threshold():
+    probabilities = [index / 20000 for index in range(20000)]
+    threshold = training.choose_threshold([0] * len(probabilities), probabilities, .01)
+    index = probabilities.index(threshold)
+    assert training.upper_fpr(len(probabilities) - index - 1, len(probabilities)) <= .01
+    assert training.upper_fpr(len(probabilities) - index, len(probabilities)) > .01
+
+
+def test_rejected_artifact_is_not_loaded(tmp_path, monkeypatch):
+    import json
+    from app.ml_runtime import classify
+    (tmp_path / "metadata.json").write_text(json.dumps({"schema_version": 99}))
+    monkeypatch.setenv("SHIELD_MODEL_DIR", str(tmp_path))
+    assert classify({}) is None
+
+
+@pytest.mark.parametrize('model_kind', ['logistic', 'xgboost'])
+def test_pipeline_artifact_and_runtime_on_controlled_fixture(tmp_path, monkeypatch, model_kind):
+    if model_kind == 'xgboost':
+        pytest.importorskip('xgboost')
+    # This is a software test, not evidence of real-world classifier performance.
+    rows = records(2000)
+    for index, row in enumerate(rows):
+        row["label"] = int(index % 5 == 0)
+        row["path"] = "/../../private/secret" if row["label"] else "/home"
+        row["query_redacted"] = "q=%3Cscript%3E" if row["label"] else "q=hello"
+    rows += [{**row, "dataset": "independent-fixture"} for row in rows[:500]]
+    metadata = training.train(rows, tmp_path / "artifact", "independent-fixture", target_fpr=.05, model_kind=model_kind)
+    assert metadata["evaluation_status"] == "validated"
+    assert metadata["metrics"]["cross_dataset"]["benign_sessions"] == 400
+    assert metadata["metrics"]["cross_dataset"]["session_fpr_upper_95"] <= .05
+    assert (tmp_path / "artifact/model.joblib").is_file()
+    assert metadata["model_sha256"] == hashlib.sha256((tmp_path / "artifact/model.joblib").read_bytes()).hexdigest()
+    from app.ml_runtime import classify
+    from detexis_shield.features import extract_features
+    monkeypatch.setenv("SHIELD_MODEL_DIR", str(tmp_path / "artifact"))
+    assert classify(extract_features("/home", "q=hello"))["alert"] is False
+    assert classify(extract_features("/../../private/secret", "q=%3Cscript%3E"))["alert"] is True
+
+
+def test_repeated_benign_holdout_requests_cannot_validate_an_artifact(tmp_path):
+    rows = records(2000)
+    for index, row in enumerate(rows):
+        row["label"] = int(index % 5 == 0)
+        row["path"] = "/fixture-review" if row["label"] else "/"
+    rows += [{**row, "dataset":"cross", "session_id":"repeated"} for row in rows[:500]]
+    metadata = training.train(rows, tmp_path / "rejected", "cross", target_fpr=.05)
+    cross = metadata["metrics"]["cross_dataset"]
+    assert cross["fpr_upper_95"] <= .05
+    assert cross["session_fpr_upper_95"] > .05 and cross["benign_sessions"] == 1
+    assert metadata["evaluation_status"] == "rejected"
+    assert not (tmp_path / "rejected/model.joblib").exists()
+
+
+def test_legacy_model_metadata_falls_back_before_loading_pickle(tmp_path, monkeypatch):
+    import json
+    import joblib
+    from app.ml_runtime import classify
+    (tmp_path / "metadata.json").write_text(json.dumps({
+        "schema_version": training.FEATURE_SCHEMA_VERSION, "feature_names": training.NAMES,
+        "threshold": .5, "evaluation_status": "validated", "target_fpr": .01,
+    }))
+    monkeypatch.setenv("SHIELD_MODEL_DIR", str(tmp_path))
+
+    from unittest.mock import Mock
+    load = Mock()
+    monkeypatch.setattr(joblib, "load", load)
+    assert classify({name: 0 for name in training.NAMES}) is None
+    load.assert_not_called()
+
+
+def test_nonfinite_model_probability_falls_back_to_rules(monkeypatch):
+    from unittest.mock import Mock
+    from app.ml_runtime import classify
+    model = Mock()
+    model.predict_proba.return_value = [[0, float("nan")]]
+    monkeypatch.setenv("SHIELD_MODEL_DIR", "unit-test-invalid-model")
+    monkeypatch.setattr("app.ml_runtime.load_model", lambda path: (model, {"threshold": .5}))
+    assert classify({name: 0 for name in training.NAMES}) is None
+
+
+@pytest.mark.parametrize('defect', ['file_changed', 'missing_hash', 'recall_below_minimum'])
+def test_evaluation_must_match_model_before_deserialization(tmp_path, monkeypatch, defect):
+    from unittest.mock import Mock
+    import joblib
+    from app.ml_runtime import classify
+
+    original = b'synthetic fixture model'
+    metadata = {
+        'schema_version': training.FEATURE_SCHEMA_VERSION, 'feature_names': training.NAMES,
+        'threshold': .5, 'evaluation_status': 'validated', 'target_fpr': .01, 'min_recall': .1,
+        'metrics': {split: {'fpr_upper_95': .005, 'session_fpr_upper_95': .005, 'recall': .4}
+                    for split in ('calibration', 'temporal_test', 'cross_dataset')},
+        'model_sha256': hashlib.sha256(original).hexdigest(),
+    }
+    if defect == 'missing_hash':
+        del metadata['model_sha256']
+    if defect == 'recall_below_minimum':
+        metadata['metrics']['cross_dataset']['recall'] = .05
+    (tmp_path / 'metadata.json').write_text(json.dumps(metadata), encoding='utf-8')
+    (tmp_path / 'model.joblib').write_bytes(b'different model' if defect == 'file_changed' else original)
+    load = Mock()
+    monkeypatch.setattr(joblib, 'load', load)
+    monkeypatch.setenv('SHIELD_MODEL_DIR', str(tmp_path))
+    assert classify(dict.fromkeys(training.NAMES, 0)) is None
+    load.assert_not_called()

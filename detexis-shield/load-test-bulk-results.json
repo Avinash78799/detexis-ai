@@ -1,0 +1,92 @@
+{
+  "target_rate": 500,
+  "duration_seconds": 600,
+  "events": 300000,
+  "accepted": 300000,
+  "failed": 0,
+  "elapsed_seconds": 600.0149999999994,
+  "accepted_per_second": 499.98750031249267,
+  "batch_latency_median_ms": 149.42680000240216,
+  "batch_latency_p95_ms": 3200.694700004533,
+  "http_responses": {
+    "202": 3000
+  },
+  "transport_errors": {},
+  "note": "Ingest acceptance only. Check pending events, RQ failures and processing lag separately.",
+  "backlog_samples_each_minute": [
+    {
+      "total": 30803,
+      "pending": 1800
+    },
+    {
+      "total": 62303,
+      "pending": 1800
+    },
+    {
+      "total": 93803,
+      "pending": 3800
+    },
+    {
+      "total": 125103,
+      "pending": 2900
+    },
+    {
+      "total": 156403,
+      "pending": 5400
+    },
+    {
+      "total": 185203,
+      "pending": 25200
+    },
+    {
+      "total": 225903,
+      "pending": 27800
+    },
+    {
+      "total": 259403,
+      "pending": 35500
+    }
+  ],
+  "database_at_load_end": {
+    "total": 300003,
+    "pending": 53300
+  },
+  "database_after_drain": {
+    "total": 300003,
+    "pending": 0
+  },
+  "processing_drain_seconds": 119.59400000001187,
+  "processing": {
+    "lag_median_seconds": 10.260654,
+    "lag_p95_seconds": 128.00452520000002,
+    "failed_jobs": 0,
+    "queued_jobs": 0
+  },
+  "functional_checks": {
+    "ingest_idempotency": true,
+    "rq_incident": true,
+    "dashboard_auth": true,
+    "real_backend_outage_fail_open": true
+  },
+  "environment": "Dedicated local Docker validation stack; see runtime_details",
+  "runtime_details": {
+    "python": "3.12.16",
+    "visible_cpus": 8,
+    "packages": {
+      "fastapi": "0.115.6",
+      "sqlalchemy": "2.0.36",
+      "rq": "2.1.0",
+      "psycopg2-binary": "2.9.10"
+    },
+    "postgresql": "16.15 (Debian 16.15-1.pgdg12+2)",
+    "redis": "7.4.10",
+    "migration": "0007",
+    "model_enabled": false,
+    "worker_source_sha256": "3ea03bce27f38163b6871356620bd54594d819684ee20a210ca02dd794a17fe2"
+  },
+  "compose_override": true,
+  "capacity_passed": true,
+  "max_processing_p95_seconds": 10.0,
+  "latency_target_passed": false,
+  "acceptance_passed": false
+}

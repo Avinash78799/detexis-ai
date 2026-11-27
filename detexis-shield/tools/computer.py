@@ -1,0 +1,184 @@
+"""Manage the separate computer-hosted instance. Requires Python and Docker Compose.
+
+No cloud account, public port, tunnel, OS startup setting or paid resource is created.
+"""
+import argparse
+import hashlib
+from http.client import HTTPSConnection, HTTPException
+import json
+import os
+from pathlib import Path
+import secrets
+import re
+import ssl
+import subprocess
+from tempfile import TemporaryDirectory
+from datetime import datetime, timezone
+from uuid import uuid4
+from urllib.request import urlopen
+
+ROOT = Path(__file__).resolve().parents[1]
+PROJECT = "detexis-shield-computer"
+ENV = ROOT / ".computer.env"
+
+
+def command(*args, capture=False):
+    environment = dict(os.environ)
+    # Compose must use this instance's saved credentials, not another shell's.
+    environment.pop("POSTGRES_PASSWORD", None)
+    environment.pop("POSTGRES_SHARED_BUFFERS", None)
+    result = subprocess.run(["docker", *args], cwd=ROOT, text=True,
+                            capture_output=capture, env=environment)
+    if result.returncode:
+        raise RuntimeError("Docker command failed; check Docker Desktop and the displayed service logs")
+    return result.stdout if capture else None
+
+
+def prepare_env(path, existing_volume):
+    if path.exists():
+        passwords = [line.partition("=")[2] for line in path.read_text().splitlines()
+                     if line.startswith("POSTGRES_PASSWORD=")]
+        if len(passwords) != 1 or not re.fullmatch(r"[0-9a-fA-F]{64}", passwords[0]):
+            raise RuntimeError("Invalid .computer.env: restore its original 64-character hexadecimal database password. Do not change a live database password by editing this file.")
+        return
+    if existing_volume:
+        raise RuntimeError("Database volume already exists but .computer.env is missing. Restore that private file; do not generate a replacement password.")
+    descriptor = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+    with os.fdopen(descriptor, "w", encoding="utf-8") as handle:
+        handle.write("POSTGRES_PASSWORD=" + secrets.token_hex(32) + "\nPOSTGRES_SHARED_BUFFERS=512MB\n")
+
+
+def compose(*args, capture=False):
+    return command("compose", "-p", PROJECT, "--env-file", str(ENV),
+                   "-f", "docker-compose.yml", "-f", "docker-compose.computer.yml",
+                   "-f", "docker-compose.malware.yml",
+                   "-f", "docker-compose.local-tls.yml",
+                   *args, capture=capture)
+
+
+def check_api_ready():
+    if not compose("port", "api", "8000", capture=True).strip():
+        raise RuntimeError("API has no host port mapping. Check port 8000 conflicts before recreating only the API container.")
+    with urlopen("http://127.0.0.1:8000/ready", timeout=5) as response:
+        if json.load(response) != {"ok": True}:
+            raise RuntimeError("Unexpected API readiness response")
+
+
+def check_local_https_ready(ca_file=None):
+    context = ssl.create_default_context(cafile=ca_file)
+    connection = HTTPSConnection("localhost", 8443, timeout=5, context=context)
+    try:
+        connection.request("GET", "/ready")
+        response = connection.getresponse()
+        if response.status != 200 or json.loads(response.read(1024)) != {"ok": True}:
+            raise RuntimeError("Unexpected HTTPS readiness response at https://localhost:8443/ready")
+    except ssl.SSLCertVerificationError as error:
+        raise RuntimeError("Local HTTPS certificate verification failed. Check the reviewed Shield root certificate in LOCAL-HTTPS.md.") from error
+    except (OSError, HTTPException, ValueError) as error:
+        raise RuntimeError("Could not confirm HTTPS readiness at https://localhost:8443/ready") from error
+    finally:
+        connection.close()
+
+
+def resume_existing(local_https=False, malware=False, ca_file=None):
+    """Start the last deployed containers without rebuilding or recreating them."""
+    prepare_env(ENV, existing_volume=True)
+    profiles = []
+    required = ["db", "redis", "api", "worker", "maintenance", "scanner"]
+    if local_https:
+        profiles.extend(("--profile", "localtls"))
+        required.append("localproxy")
+    if malware:
+        profiles.extend(("--profile", "malware"))
+        required.append("clamav")
+    existing = set(compose(*profiles, "ps", "--all", "--services", capture=True).splitlines())
+    missing = [service for service in required if service not in existing]
+    if missing:
+        raise RuntimeError("Cannot resume because containers are missing for " + ", ".join(missing)
+                           + ". Use the original release configuration to recreate them.")
+    compose(*profiles, "start", "--wait", "--wait-timeout", "240", *required)
+    check_api_ready()
+    if local_https:
+        check_local_https_ready(ca_file)
+    print("Existing Shield containers resumed. API: http://127.0.0.1:8000/ready")
+    if local_https:
+        print("Local workspace: https://localhost:8443/app")
+
+
+def create_backup(folder):
+    folder = folder.resolve()
+    folder.mkdir(parents=True, exist_ok=True)
+    name = 'shield-' + datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ') + '-' + uuid4().hex + '.dump'
+    destination = folder / name
+    temporary = '/tmp/' + name
+    compose('exec', '-T', 'db', 'pg_dump', '-U', 'detexis', '-d', 'detexis', '-Fc', '-f', temporary)
+    checksum = compose('exec', '-T', 'db', 'sha256sum', temporary, capture=True).partition(' ')[0]
+    if not re.fullmatch(r'[0-9a-f]{64}', checksum):
+        raise RuntimeError('Could not read the source dump checksum. Container dump retained at ' + temporary)
+    with TemporaryDirectory(dir=folder, prefix='.shield-backup-') as staging:
+        partial = Path(staging) / 'archive.partial'
+        compose('cp', 'db:' + temporary, str(partial))
+        if not partial.is_file() or partial.stat().st_size == 0:
+            raise RuntimeError('Backup copy is missing or empty. Container dump retained at ' + temporary)
+        digest = hashlib.sha256()
+        with partial.open('rb') as stream:
+            for chunk in iter(lambda: stream.read(1024 * 1024), b''):
+                digest.update(chunk)
+        if digest.hexdigest() != checksum:
+            raise RuntimeError('Backup copy checksum mismatch. Container dump retained at ' + temporary)
+        partial.replace(destination)
+    compose('exec', '-T', 'db', 'rm', temporary)
+    return {'backup': str(destination), 'bytes': destination.stat().st_size, 'sha256': checksum,
+            'note': 'Local copy only. Keep private; copy off this computer and rehearse restoration.'}
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("action", choices=["start", "resume", "status", "logs", "stop", "backup", "malware-start", "malware-stop"])
+    parser.add_argument("--backup-dir", type=Path)
+    parser.add_argument("--local-https", action="store_true", help="Start the optional loopback HTTPS proxy; does not install certificate trust")
+    parser.add_argument("--with-malware", action="store_true", help="Resume the existing optional ClamAV container")
+    parser.add_argument("--ca-file", type=Path, help="Reviewed PEM root certificate for the local HTTPS resume check (default: system trust)")
+    args = parser.parse_args()
+    if args.local_https and args.action not in {"start", "resume"}:
+        parser.error("--local-https applies only to start or resume")
+    if args.with_malware and args.action != "resume":
+        parser.error("--with-malware applies only to resume")
+    if args.ca_file and (args.action != "resume" or not args.local_https):
+        parser.error("--ca-file applies only to resume --local-https")
+    command("info", "--format", "{{.ServerVersion}}", capture=True)
+    if args.action == "start":
+        volumes = command("volume", "ls", "--format", "{{.Name}}", capture=True).splitlines()
+        prepare_env(ENV, PROJECT + "_pgdata" in volumes)
+        profiles = ["--profile", "localtls"] if args.local_https else []
+        compose(*profiles, "up", "--build", "-d", "--wait")
+        check_api_ready()
+        print("Computer instance started. API: http://127.0.0.1:8000/ready")
+        print("Account UI requires HTTPS; see COMPUTER-HOSTING.md. Keep .computer.env private and back it up.")
+        if args.local_https:
+            print("Local proxy requested: https://localhost:8443/app. Verify certificate trust using LOCAL-HTTPS.md before entering credentials.")
+    elif not ENV.exists():
+        raise RuntimeError("Start the computer instance first, or restore its .computer.env")
+    elif args.action == "resume":
+        resume_existing(local_https=args.local_https, malware=args.with_malware, ca_file=args.ca_file)
+    elif args.action == "status":
+        compose("--profile", "malware", "--profile", "localtls", "ps", "--all")
+    elif args.action == "logs":
+        compose("--profile", "localtls", "logs", "--tail", "100", "api", "worker", "maintenance", "scanner", "localproxy")
+    elif args.action == "stop":
+        compose("--profile", "malware", "--profile", "localtls", "stop")  # Preserve containers, credentials and volumes.
+    elif args.action == "malware-start":
+        compose("--profile", "malware", "up", "-d", "--wait", "--wait-timeout", "240", "clamav")
+    elif args.action == "malware-stop":
+        compose("--profile", "malware", "stop", "clamav")
+    elif args.action == "backup":
+        if args.backup_dir is None:
+            parser.error("backup requires --backup-dir pointing to a private directory")
+        print(json.dumps(create_backup(args.backup_dir)))
+
+
+if __name__ == "__main__":
+    try:
+        main()
+    except (RuntimeError, OSError) as error:
+        raise SystemExit(str(error))

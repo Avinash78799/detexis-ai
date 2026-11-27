@@ -1,0 +1,52 @@
+{
+  "at": "2026-11-06T17:25:48.559858+00:00",
+  "scope": "sequential warm ASGI application; real PostgreSQL/Redis; no network/TLS/browser",
+  "fixture_site": "e44ad818-ab8a-4202-80f3-22d0f9806186",
+  "events": 10000,
+  "incidents": 100,
+  "warmups_per_route": 5,
+  "results": [
+    {
+      "route": "/app",
+      "samples": 100,
+      "median_ms": 0.961,
+      "p95_ms": 1.232
+    },
+    {
+      "route": "/app/api/session",
+      "samples": 100,
+      "median_ms": 5.025,
+      "p95_ms": 8.951
+    },
+    {
+      "route": "/app/api/sites",
+      "samples": 100,
+      "median_ms": 14.587,
+      "p95_ms": 17.145
+    },
+    {
+      "route": "/app/api/inbox",
+      "samples": 100,
+      "median_ms": 7.103,
+      "p95_ms": 24.922
+    },
+    {
+      "route": "/app/api/sites/{site_id}/connection",
+      "samples": 100,
+      "median_ms": 7.668,
+      "p95_ms": 11.289
+    },
+    {
+      "route": "/app/sites/{site_id}",
+      "samples": 100,
+      "median_ms": 13.425,
+      "p95_ms": 44.087
+    },
+    {
+      "route": "/app/sites/{site_id}/feed",
+      "samples": 100,
+      "median_ms": 12.481,
+      "p95_ms": 15.38
+    }
+  ]
+}
