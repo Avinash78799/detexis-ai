@@ -180,9 +180,11 @@ def train(rows, output, cross_dataset, target_fpr=.01, model_kind="logistic", mi
                     [r["path"], r["query_redacted"], r["ts"], r["session_id"], r["dataset"], r["label"]]
                     for r in rows], sort_keys=True).encode()).hexdigest()}
     output.mkdir(parents=True, exist_ok=True)
-    (output / "metadata.json").write_text(json.dumps(metadata, indent=2), encoding="utf-8")
     if validated:
-        joblib.dump(model, output / "model.joblib")
+        model_path = output / "model.joblib"
+        joblib.dump(model, model_path)
+        metadata["model_sha256"] = hashlib.sha256(model_path.read_bytes()).hexdigest()
+    (output / "metadata.json").write_text(json.dumps(metadata, indent=2), encoding="utf-8")
     return metadata
 
 

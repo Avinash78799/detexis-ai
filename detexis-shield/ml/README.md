@@ -79,7 +79,10 @@ Use a new artifact directory for each run. Only a validated artifact contains
 `model.joblib`. After independently reviewing its report, mount it read-only in the
 worker, install compatible ML dependencies, set `SHIELD_MODEL_DIR`, and restart the
 worker. Never accept uploaded joblib files. Schema/load/prediction failures fall
-back to rules. Older artifacts without session-level bounds require re-evaluation.
+back to rules. Training records the model file's SHA-256 in `metadata.json`.
+The worker checks the request and session false-positive bounds, recall on each
+evaluation split, and the digest before deserializing the verified bytes. Use
+the training pipeline to regenerate older artifacts missing this evidence.
 XGBoost alerts attempt SHAP reasons in raw model-output units (log
 odds for its default binary objective); contributions are not causal explanations.
 See [SHAP's TreeExplainer documentation](https://shap.readthedocs.io/en/latest/generated/shap.TreeExplainer.html).

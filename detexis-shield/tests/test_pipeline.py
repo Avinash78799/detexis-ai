@@ -25,8 +25,9 @@ def seed(site_id, path, **extra):
 def test_pipeline_is_tenant_scoped_idempotent_and_recomputes_features(isolated_redis):
     a, _ = make_site("pipeline-a.test")
     b, _ = make_site("pipeline-b.test")
-    probe = seed(a, "/.env", features={"schema_version": 99}, flags=["fake"])
-    exploit = seed(a, "/search", query_redacted="q=union+select+password")
+    stamp = datetime.now(timezone.utc).replace(second=0, microsecond=0)
+    probe = seed(a, "/.env", features={"schema_version": 99}, flags=["fake"], received_at=stamp)
+    exploit = seed(a, "/search", query_redacted="q=union+select+password", received_at=stamp + timedelta(seconds=1))
     other = seed(b, "/private")
     assert process_batch(a, [probe, exploit, other], isolated_redis) == 2
     assert process_batch(a, [probe, exploit], isolated_redis) == 0

@@ -1,4 +1,6 @@
 import importlib.util
+import hashlib
+import json
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -97,7 +99,10 @@ def test_rejected_artifact_is_not_loaded(tmp_path, monkeypatch):
     assert classify({}) is None
 
 
-def test_logistic_pipeline_artifact_and_runtime_on_controlled_fixture(tmp_path, monkeypatch):
+@pytest.mark.parametrize('model_kind', ['logistic', 'xgboost'])
+def test_pipeline_artifact_and_runtime_on_controlled_fixture(tmp_path, monkeypatch, model_kind):
+    if model_kind == 'xgboost':
+        pytest.importorskip('xgboost')
     # This is a software test, not evidence of real-world classifier performance.
     rows = records(2000)
     for index, row in enumerate(rows):
@@ -105,11 +110,12 @@ def test_logistic_pipeline_artifact_and_runtime_on_controlled_fixture(tmp_path, 
         row["path"] = "/../../private/secret" if row["label"] else "/home"
         row["query_redacted"] = "q=%3Cscript%3E" if row["label"] else "q=hello"
     rows += [{**row, "dataset": "independent-fixture"} for row in rows[:500]]
-    metadata = training.train(rows, tmp_path / "artifact", "independent-fixture", target_fpr=.05)
+    metadata = training.train(rows, tmp_path / "artifact", "independent-fixture", target_fpr=.05, model_kind=model_kind)
     assert metadata["evaluation_status"] == "validated"
     assert metadata["metrics"]["cross_dataset"]["benign_sessions"] == 400
     assert metadata["metrics"]["cross_dataset"]["session_fpr_upper_95"] <= .05
     assert (tmp_path / "artifact/model.joblib").is_file()
+    assert metadata["model_sha256"] == hashlib.sha256((tmp_path / "artifact/model.joblib").read_bytes()).hexdigest()
     from app.ml_runtime import classify
     from detexis_shield.features import extract_features
     monkeypatch.setenv("SHIELD_MODEL_DIR", str(tmp_path / "artifact"))
@@ -156,3 +162,30 @@ def test_nonfinite_model_probability_falls_back_to_rules(monkeypatch):
     monkeypatch.setenv("SHIELD_MODEL_DIR", "unit-test-invalid-model")
     monkeypatch.setattr("app.ml_runtime.load_model", lambda path: (model, {"threshold": .5}))
     assert classify({name: 0 for name in training.NAMES}) is None
+
+
+@pytest.mark.parametrize('defect', ['file_changed', 'missing_hash', 'recall_below_minimum'])
+def test_evaluation_must_match_model_before_deserialization(tmp_path, monkeypatch, defect):
+    from unittest.mock import Mock
+    import joblib
+    from app.ml_runtime import classify
+
+    original = b'synthetic fixture model'
+    metadata = {
+        'schema_version': training.FEATURE_SCHEMA_VERSION, 'feature_names': training.NAMES,
+        'threshold': .5, 'evaluation_status': 'validated', 'target_fpr': .01, 'min_recall': .1,
+        'metrics': {split: {'fpr_upper_95': .005, 'session_fpr_upper_95': .005, 'recall': .4}
+                    for split in ('calibration', 'temporal_test', 'cross_dataset')},
+        'model_sha256': hashlib.sha256(original).hexdigest(),
+    }
+    if defect == 'missing_hash':
+        del metadata['model_sha256']
+    if defect == 'recall_below_minimum':
+        metadata['metrics']['cross_dataset']['recall'] = .05
+    (tmp_path / 'metadata.json').write_text(json.dumps(metadata), encoding='utf-8')
+    (tmp_path / 'model.joblib').write_bytes(b'different model' if defect == 'file_changed' else original)
+    load = Mock()
+    monkeypatch.setattr(joblib, 'load', load)
+    monkeypatch.setenv('SHIELD_MODEL_DIR', str(tmp_path))
+    assert classify(dict.fromkeys(training.NAMES, 0)) is None
+    load.assert_not_called()

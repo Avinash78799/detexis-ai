@@ -1,5 +1,7 @@
 """Optional model loading; any failure leaves rule detection available."""
 import json
+import hashlib
+from io import BytesIO
 import logging
 import os
 import math
@@ -26,8 +28,16 @@ def load_model(path):
     if not 0 < target < 1 or any(not 0 <= metadata["metrics"][split][bound] <= target
                                  for split in splits for bound in bounds):
         raise ValueError("model lacks validated request and session false-positive bounds")
+    min_recall = metadata["min_recall"]
+    if not 0 <= min_recall <= 1 or any(not min_recall <= metadata["metrics"][split]["recall"] <= 1
+                                        for split in splits):
+        raise ValueError("model lacks validated recall")
+    expected_digest = metadata["model_sha256"]
+    model_bytes = (root / "model.joblib").read_bytes()
+    if hashlib.sha256(model_bytes).hexdigest() != expected_digest:
+        raise ValueError("model file differs from evaluated artifact")
     import joblib  # Only deserialize trusted, locally trained artifacts.
-    return joblib.load(root / "model.joblib"), metadata
+    return joblib.load(BytesIO(model_bytes)), metadata
 
 
 @lru_cache(maxsize=1)
