@@ -57,6 +57,23 @@ full-day packet downloads are required from the owner.
 
 ## Release gates
 
+On 27 November, the local installation page served the Git pin for SDK 0.1.3.
+Pip installed that revision in a separate directory. Both middleware imports
+and all installed SDK modules matched the pinned source. On a disposable
+PostgreSQL, Redis and RQ stack, the FastAPI and Flask examples from the served
+page each emitted a request for its own synthetic site. The worker processed
+both requests. PostgreSQL contained the expected paths and statuses, with the
+seeded password value redacted. The Flask honeytoken hit appeared in the inbox
+and its owner saved a review. The second owner received 404 for that incident.
+
+An earlier rehearsal closed each sender immediately after the request and
+failed the delivery assertion. In the passing run, each app stayed running
+until its connection status reported processing. The sensor buffers events in
+memory and immediate process shutdown can lose a pending batch. The guide
+activation and browser results are in `outputs/sdk013-install-guide-20261127-runtime.json`
+and `outputs/sdk013-guide-browser-persistent-20261127.json`. A permissioned
+real-site trial remains open.
+
 The 26 November Chrome rehearsal passed with the deployed API and worker images,
 PostgreSQL, Redis and synthetic owners on disposable loopback HTTPS. A request
 event submitted to ingest produced a worker-detected incident with request
